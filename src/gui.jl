@@ -39,6 +39,9 @@ function make_gui(path,name)
     delete_button=Button("Delete Whisker")
     control_grid[1,5]=delete_button
 
+    combine_button=ToggleButton("Combine Segments")
+    control_grid[1,6]=combine_button
+
     grid[2,1]=control_grid
 
     win = Window(grid, "Whisker Tracker") |> showall
@@ -47,7 +50,7 @@ function make_gui(path,name)
     frame_slider,adj_frame,trace_button,Array{Whisker1}(0),zeros(UInt32,640,480),
     hist_c,vid[:,:,1],50,0,falses(size(vid,3)),Array{Whisker1}(size(vid,3)),
     0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
-    (0,0),delete_button)
+    (0.0,0.0),delete_button,combine_button,0,Whisker1())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -57,6 +60,7 @@ function make_gui(path,name)
     signal_connect(erase_cb,erase_button, "clicked",Void,(),false,(handles,))
     signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
+    signal_connect(combine_cb,combine_button,"clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -127,6 +131,15 @@ function erase_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+function combine_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.combine_mode = getproperty(han.combine_button,:active,Bool)
+
+    nothing
+end
+
 function plot_image(han,img)
 
    ctx=Gtk.getgc(han.c)
@@ -179,9 +192,82 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
 
     if han.erase_mode
         erase_start(han,m_x,m_y)
+    elseif han.combine_mode>0
+        if han.combine_mode == 1
+            combine_start(han,m_x,m_y)
+        else
+            combine_end(han,m_x,m_y)
+        end
     else
         plot_whiskers(han)
     end
+
+    nothing
+end
+
+function combine_start(han,x,y)
+
+    println("start")
+    han.partial = deepcopy(han.whiskers[han.woi_id])
+    han.combine_mode = 2
+
+    nothing
+end
+
+ccw(x1,x2,x3,y1,y2,y3)=(y3-y1) * (x2-x1) > (y2-y1) * (x3-x1)
+
+function intersect(x1,x2,x3,x4,y1,y2,y3,y4)
+    (ccw(x1,x3,x4,y1,y3,y4) != ccw(x2,x3,x4,y2,y3,y4))&&(ccw(x1,x2,x3,y1,y2,y3) != ccw(x1,x2,x4,y1,y2,y4))
+end
+
+function combine_end(han,x,y)
+
+    out1=1
+    out2=1
+
+    for i=2:han.partial.len
+        for j=2:han.whiskers[han.woi_id].len
+            if intersect(han.partial.x[i-1],han.partial.x[i],han.whiskers[han.woi_id].x[j-1],
+            han.whiskers[han.woi_id].x[j],han.partial.y[i-1],han.partial.y[i],
+            han.whiskers[han.woi_id].y[j-1],han.whiskers[han.woi_id].y[j])
+                out1=i
+                out2=j
+                break
+            end
+        end
+    end
+
+    if out1==1
+        println("No intersection found, looking for closest match")
+
+        for i=2:han.partial.len
+            for j=2:han.whiskers[han.woi_id].len
+                if sqrt((han.partial.x[i]-han.whiskers[han.woi_id].x[j]).^2+(han.partial.y[i]-han.whiskers[han.woi_id].y[j]).^2)<2.0
+                    out1=i
+                    out2=j
+                    break
+                end
+            end
+        end
+    end
+
+    if out1>1
+        println("Segments combined")
+        new_x = [han.whiskers[han.woi_id].x[1:out2]; han.partial.x[out1:end]]
+        new_y = [han.whiskers[han.woi_id].y[1:out2]; han.partial.y[out1:end]]
+        new_scores = [han.whiskers[han.woi_id].scores[1:out2]; han.partial.scores[out1:end]]
+        new_thick = [han.whiskers[han.woi_id].thick[1:out2]; han.partial.thick[out1:end]]
+        han.woi[han.frame].x=new_x
+        han.woi[han.frame].y=new_y
+        han.woi[han.frame].thick=new_thick
+        han.woi[han.frame].scores=new_scores
+        han.woi[han.frame].len = length(new_thick)
+    else
+        println("No intersection found")
+    end
+
+    han.combine_mode = 1
+    plot_whiskers(han)
 
     nothing
 end
@@ -240,6 +326,10 @@ function erase_stop(han,x,y,ctxcopy)
 
     han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
 
+    pop!((han.c.mouse, :button1motion))
+    pop!((han.c.mouse, :motion))
+    pop!((han.c.mouse, :button1release))
+
     nothing
 end
 
@@ -268,11 +358,18 @@ function WT_constraints(han)
 
     han.whiskers=han.whiskers[pass]
 
-    #order whiskers
-    #for i=1:length(han.whiskers)
-        #(han.whiskers[1].x[1]-han.pad_pos[1])^2+(han.whiskers[1].y[1]-pad_pos)^2
+    #order whiskers so that the last index is closest to the whisker pad
+    for i=1:length(han.whiskers)
+        front_dist = (han.whiskers[i].x[1]-han.pad_pos[1])^2+(han.whiskers[i].y[1]-han.pad_pos[2])^2
+        end_dist = (han.whiskers[i].x[end]-han.pad_pos[1])^2+(han.whiskers[i].y[end]-han.pad_pos[2])^2
 
-    #end
+        if front_dist < end_dist #
+            han.whiskers[i].x = flipdim(han.whiskers[i].x,1)
+            han.whiskers[i].y = flipdim(han.whiskers[i].y,1)
+            han.whiskers[i].scores = flipdim(han.whiskers[i].scores,1)
+            han.whiskers[i].thick = flipdim(han.whiskers[i].thick,1)
+        end
+    end
 
     #Apply mask
     apply_mask(han)
@@ -361,14 +458,21 @@ function plot_whiskers(han::Tracker_Handles)
 
     for w=1:length(han.whiskers)
 
-        if han.woi_id == w
-            set_source_rgb(ctx,1.0,0.0,0.0)
-        else
-            set_source_rgb(ctx,0.0,0.0,1.0)
-        end
+        set_source_rgb(ctx,0.0,0.0,1.0)
+
         move_to(ctx,han.whiskers[w].x[1],han.whiskers[w].y[1])
         for i=2:han.whiskers[w].len
             line_to(ctx,han.whiskers[w].x[i],han.whiskers[w].y[i])
+        end
+        stroke(ctx)
+    end
+
+    if han.tracked[han.frame]
+        set_source_rgb(ctx,1.0,0.0,0.0)
+
+        move_to(ctx,han.woi[han.frame].x[1],han.woi[han.frame].y[1])
+        for i=2:han.woi[han.frame].len
+            line_to(ctx,han.woi[han.frame].x[i],han.woi[han.frame].y[i])
         end
         stroke(ctx)
     end

@@ -111,8 +111,11 @@ type Tracker_Handles
     mask::BitArray{2}
     track_attempt::Int64
     tracked::BitArray{1}
-    pad_pos::Tuple{Int64,Int64}
+    pad_pos::Tuple{Float32,Float32}
     delete_button::Gtk.GtkButtonLeaf
+    combine_button::Gtk.GtkToggleButtonLeaf
+    combine_mode::Int64
+    partial::Whisker1
 end
 
 jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
