@@ -106,10 +106,13 @@ type Tracker_Handles
     woi_y_f::Float64
     auto_button::Gtk.GtkToggleButtonLeaf
     auto_mode::Bool
-    mask_button::Gtk.GtkToggleButtonLeaf
-    mask_mode::Bool
+    erase_button::Gtk.GtkToggleButtonLeaf
+    erase_mode::Bool
     mask::BitArray{2}
     track_attempt::Int64
+    tracked::BitArray{1}
+    pad_pos::Tuple{Int64,Int64}
+    delete_button::Gtk.GtkButtonLeaf
 end
 
 jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"

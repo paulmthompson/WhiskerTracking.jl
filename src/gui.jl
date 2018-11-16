@@ -33,8 +33,11 @@ function make_gui(path,name)
     auto_button=ToggleButton("Auto")
     control_grid[1,3]=auto_button
 
-    mask_button=ToggleButton("Mask")
-    control_grid[1,4]=mask_button
+    erase_button=ToggleButton("Erase Mode")
+    control_grid[1,4]=erase_button
+
+    delete_button=Button("Delete Whisker")
+    control_grid[1,5]=delete_button
 
     grid[2,1]=control_grid
 
@@ -43,15 +46,17 @@ function make_gui(path,name)
     handles = Tracker_Handles(path,name,vid_name,whisk_path,meas_path,win,c,vid,1,
     frame_slider,adj_frame,trace_button,Array{Whisker1}(0),zeros(UInt32,640,480),
     hist_c,vid[:,:,1],50,0,falses(size(vid,3)),Array{Whisker1}(size(vid,3)),
-    0.0,0.0,auto_button,false,mask_button,false,falses(640,480),0)
+    0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
+    (0,0),delete_button)
 
     #plot_image(handles,vid[:,:,1]')
 
     signal_connect(frame_select, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(trace_cb,trace_button, "clicked", Void, (), false, (handles,))
     signal_connect(auto_cb,auto_button, "clicked",Void,(),false,(handles,))
-    signal_connect(mask_cb,mask_button, "clicked",Void,(),false,(handles,))
+    signal_connect(erase_cb,erase_button, "clicked",Void,(),false,(handles,))
     signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+    signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -67,6 +72,21 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     han.track_attempt=0 #Reset
 
     plot_image(han,han.current_frame')
+
+    #Plot whisker if it has been previously tracked
+    if han.tracked[han.frame]
+        han.whiskers=[han.woi[han.frame]]
+        han.woi_id = 1
+        plot_whiskers(han)
+    end
+
+    #Load prior position of tracked whisker (if it exists)
+    if han.frame-1 != 0
+        if han.tracked[han.frame-1]
+            han.woi_x_f = han.woi[han.frame-1].x[end]
+            han.woi_y_f = han.woi[han.frame-1].y[end]
+        end
+    end
 
     nothing
 end
@@ -87,11 +107,22 @@ function auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function mask_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.mask_mode = getproperty(han.mask_button,:active,Bool)
+    han.tracked[han.frame]=false
+    han.current_frame = han.vid[:,:,han.frame]
+    plot_image(han,han.current_frame')
+
+    nothing
+end
+
+function erase_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.erase_mode = getproperty(han.erase_button,:active,Bool)
 
     nothing
 end
@@ -130,22 +161,84 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     m_x = event.x
     m_y = event.y
 
-    println(m_x, " ", m_y)
-
+    #Find whisker of interest
     for i=1:length(han.whiskers)
         for j=1:han.whiskers[i].len
             if (m_x>han.whiskers[i].x[j]-5.0)&(m_x<han.whiskers[i].x[j]+5.0)
                 if (m_y>han.whiskers[i].y[j]-5.0)&(m_y<han.whiskers[i].y[j]+5.0)
                     han.woi_id = i
-                    han.woi_x_f = han.whiskers[han.woi_id].x[1]
-                    han.woi_y_f = han.whiskers[han.woi_id].y[end]
+                    #han.woi_x_f = han.whiskers[han.woi_id].x[end]
+                    #han.woi_y_f = han.whiskers[han.woi_id].y[end]
+                    han.tracked[han.frame]=true
+                    han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
                     break
                 end
             end
         end
     end
 
+    if han.erase_mode
+        erase_start(han,m_x,m_y)
+    else
+        plot_whiskers(han)
+    end
+
+    nothing
+end
+
+function erase_start(han,x,y)
+
+    plot_image(han,han.current_frame')
+    r = Gtk.getgc(han.c)
+    Cairo.save(r)
+    ctxcopy = copy(r)
+
     plot_whiskers(han)
+
+    push!((han.c.mouse, :button1motion),  (c, event) -> erase_move(han, event.x, event.y, ctxcopy))
+    push!((han.c.mouse, :motion), Gtk.default_mouse_cb)
+    push!((han.c.mouse, :button1release), (c, event) -> erase_stop(han, event.x, event.y, ctxcopy))
+
+    nothing
+end
+
+function erase_move(han, x,y,ctxcopy)
+
+    r=Gtk.getgc(han.c)
+
+    #check for whisker overlap and erase points that are overlapping
+    keep=trues(han.whiskers[han.woi_id].len)
+    for i=1:han.whiskers[han.woi_id].len
+        if (x+5.0>han.whiskers[han.woi_id].x[i])&(x-5.0<han.whiskers[han.woi_id].x[i])
+            if (y+5.0>han.whiskers[han.woi_id].y[i])&(y-5.0<han.whiskers[han.woi_id].y[i])
+                keep[i]=false
+            end
+        end
+    end
+
+    if length(find(keep.==false))>0
+        keep[1:findfirst(keep.==false)]=false
+    end
+
+    han.whiskers[han.woi_id].x=han.whiskers[han.woi_id].x[keep]
+    han.whiskers[han.woi_id].y=han.whiskers[han.woi_id].y[keep]
+    han.whiskers[han.woi_id].thick=han.whiskers[han.woi_id].thick[keep]
+    han.whiskers[han.woi_id].scores=han.whiskers[han.woi_id].scores[keep]
+
+    han.whiskers[han.woi_id].len=length(han.whiskers[han.woi_id].x)
+
+    #redraw whisker
+    set_source(r,ctxcopy)
+    paint(r)
+
+    plot_whiskers(han)
+
+    nothing
+end
+
+function erase_stop(han,x,y,ctxcopy)
+
+    han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
 
     nothing
 end
@@ -175,27 +268,33 @@ function WT_constraints(han)
 
     han.whiskers=han.whiskers[pass]
 
+    #order whiskers
+    #for i=1:length(han.whiskers)
+        #(han.whiskers[1].x[1]-han.pad_pos[1])^2+(han.whiskers[1].y[1]-pad_pos)^2
+
+    #end
+
     #Apply mask
-    if han.mask_mode
-        apply_mask(han)
-    end
+    apply_mask(han)
 
     #Find most similar whisker follicle position
-    min_dist = sqrt((han.whiskers[1].x[1]-han.woi_x_f)^2+(han.whiskers[1].y[end]-han.woi_y_f)^2)
+    min_dist = sqrt((han.whiskers[1].x[end]-han.woi_x_f)^2+(han.whiskers[1].y[end]-han.woi_y_f)^2)
     han.woi_id = 1
     for i=2:length(han.whiskers)
-        mydist = sqrt((han.whiskers[i].x[1]-han.woi_x_f)^2+(han.whiskers[i].y[end]-han.woi_y_f)^2)
+        mydist = sqrt((han.whiskers[i].x[end]-han.woi_x_f)^2+(han.whiskers[i].y[end]-han.woi_y_f)^2)
         if mydist<min_dist
             min_dist = mydist
             han.woi_id = i
         end
     end
 
-    #Whisker should not move more than 0.64 mm / s  (1.28 mm / 2ms)
+    #Whisker should not move more than 0.64 mm / ms  (1.28 mm / 2ms)
     # If about 0.07 mm / pixel or about 20 pixels
+    #If we don't have a whisker with this criteria met, adjust paramters
+    #and try again
     if min_dist <20.0
-        han.woi_x_f = han.whiskers[han.woi_id].x[1]
-        han.woi_y_f = han.whiskers[han.woi_id].y[end]
+        han.tracked[han.frame]=true
+        han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
     else
         han.track_attempt+=1
         if han.track_attempt==1
