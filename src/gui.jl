@@ -57,6 +57,12 @@ function make_gui(path,name)
     background_button = CheckButton("Subtract Background")
     control_grid[1,9]=background_button
 
+    save_button = Button("Save")
+    control_grid[1,10]=save_button
+
+    load_button = Button("Load")
+    control_grid[1,11]=load_button
+
     grid[2,1]=control_grid
 
     win = Window(grid, "Whisker Tracker") |> showall
@@ -66,7 +72,8 @@ function make_gui(path,name)
     hist_c,vid[:,:,1],50,0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
-    contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0)
+    contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
+    save_button, load_button)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -81,8 +88,74 @@ function make_gui(path,name)
     signal_connect(adjust_contrast_cb,contrast_min_slider,"value-changed",Void,(),false,(handles,))
     signal_connect(adjust_contrast_cb,contrast_max_slider,"value-changed",Void,(),false,(handles,))
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
+    signal_connect(save_cb, save_button, "clicked",Void,(),false,(handles,))
+    signal_connect(load_cb, load_button, "clicked",Void,(),false,(handles,))
 
     handles
+end
+
+function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = save_dialog("Save Whisker Tracking",han.win)
+
+    if filepath != ""
+
+        if filepath[end-3:end]==".jld"
+        else
+            filepath=string(filepath,".jld")
+        end
+
+        file=jldopen(filepath,"w")
+
+        mywhiskers=Array{Whisker1}(0)
+
+        for i=1:length(han.tracked)
+            if han.tracked[i]
+                han.woi[i].time = i
+                push!(mywhiskers,deepcopy(han.woi[i]))
+            end
+        end
+
+        write(file,"Whiskers",mywhiskers)
+        write(file,"Frames_Tracked",han.tracked)
+
+        close(file)
+
+    end
+
+    nothing
+end
+
+function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = open_dialog("Load Whisker Tracking",han.win)
+
+    if filepath != ""
+
+        file = jldopen(filepath,"r")
+        mywhiskers = read(file,"Whiskers")
+        mytracked = read(file, "Frames_Tracked")
+
+        close(file)
+
+        if size(han.vid,3) != length(mytracked)
+            println("Error: Number of loaded whisker frames does not match number of video frames")
+        else
+
+            for i=1:length(mywhiskers)
+                han.woi[mywhiskers[i].time] = deepcopy(mywhiskers[i])
+            end
+            han.tracked = mytracked
+
+        end
+
+    end
+
+    nothing
 end
 
 function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})

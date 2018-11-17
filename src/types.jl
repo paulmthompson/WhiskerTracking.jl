@@ -123,6 +123,8 @@ type Tracker_Handles
     adj_contrast_max::Gtk.GtkAdjustmentLeaf
     contrast_max::Int64
     contrast_min::Int64
+    save_button::Gtk.GtkButtonLeaf
+    load_button::Gtk.GtkButtonLeaf
 end
 
 jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
