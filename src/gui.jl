@@ -27,20 +27,35 @@ function make_gui(path,name)
 
     control_grid[1,1]=hist_c
 
+    contrast_min_slider = Scale(false,0,255,1)
+    adj_contrast_min=Adjustment(contrast_min_slider)
+    setproperty!(adj_contrast_min,:value,0)
+    control_grid[1,2]=contrast_min_slider
+    control_grid[2,2]=Label("Minimum")
+
+    contrast_max_slider = Scale(false,0,255,1)
+    adj_contrast_max=Adjustment(contrast_max_slider)
+    setproperty!(adj_contrast_max,:value,255)
+    control_grid[1,3]=contrast_max_slider
+    control_grid[2,3]=Label("Maximum")
+
     trace_button=Button("Trace")
-    control_grid[1,2]=trace_button
+    control_grid[1,4]=trace_button
 
     auto_button=ToggleButton("Auto")
-    control_grid[1,3]=auto_button
+    control_grid[1,5]=auto_button
 
     erase_button=ToggleButton("Erase Mode")
-    control_grid[1,4]=erase_button
+    control_grid[1,6]=erase_button
 
     delete_button=Button("Delete Whisker")
-    control_grid[1,5]=delete_button
+    control_grid[1,7]=delete_button
 
     combine_button=ToggleButton("Combine Segments")
-    control_grid[1,6]=combine_button
+    control_grid[1,8]=combine_button
+
+    background_button = CheckButton("Subtract Background")
+    control_grid[1,9]=background_button
 
     grid[2,1]=control_grid
 
@@ -48,9 +63,10 @@ function make_gui(path,name)
 
     handles = Tracker_Handles(path,name,vid_name,whisk_path,meas_path,win,c,vid,1,
     frame_slider,adj_frame,trace_button,Array{Whisker1}(0),zeros(UInt32,640,480),
-    hist_c,vid[:,:,1],50,0,falses(size(vid,3)),Array{Whisker1}(size(vid,3)),
+    hist_c,vid[:,:,1],50,0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
-    (0.0,0.0),delete_button,combine_button,0,Whisker1())
+    (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
+    contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -61,8 +77,50 @@ function make_gui(path,name)
     signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
     signal_connect(combine_cb,combine_button,"clicked",Void,(),false,(handles,))
+    signal_connect(background_cb,background_button,"clicked",Void,(),false,(handles,))
+    signal_connect(adjust_contrast_cb,contrast_min_slider,"value-changed",Void,(),false,(handles,))
+    signal_connect(adjust_contrast_cb,contrast_max_slider,"value-changed",Void,(),false,(handles,))
+    signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
 
     handles
+end
+
+function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    event = unsafe_load(param_tuple)
+
+    if event.keyval == 0xff53 #Right arrow
+        setproperty!(han.adj_frame,:value,han.frame+1)
+    elseif event.keyval == 0xff51 #Left arrow
+        setproperty!(han.adj_frame,:value,han.frame-1)
+    end
+
+    nothing
+end
+
+function adjust_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.contrast_min = getproperty(han.adj_contrast_min,:value,Int64)
+    han.contrast_max = getproperty(han.adj_contrast_max,:value,Int64)
+
+    adjust_contrast(han)
+
+    plot_image(han,han.current_frame')
+
+    nothing
+end
+
+function background_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.background_mode = getproperty(han.background_button,:active,Bool)
+
+    nothing
 end
 
 function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -72,6 +130,8 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     han.frame = getproperty(han.adj_frame,:value,Int64)
 
     han.current_frame = han.vid[:,:,han.frame]
+
+    adjust_contrast(han)
 
     han.track_attempt=0 #Reset
 
@@ -389,21 +449,31 @@ function WT_constraints(han)
     # If about 0.07 mm / pixel or about 20 pixels
     #If we don't have a whisker with this criteria met, adjust paramters
     #and try again
-    if min_dist <20.0
-        han.tracked[han.frame]=true
-        han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
-    else
-        han.track_attempt+=1
-        if han.track_attempt==1
-            subtract_background(han)
-            han.whiskers = WT_trace(han.frame,han.current_frame')
-            WT_constraints(han)
+    if !han.tracked[han.frame]
+        if min_dist <5.0
+            han.tracked[han.frame]=true
+            han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
         else
+            han.track_attempt+=1
+            if han.track_attempt==1
+                subtract_background(han)
+                han.whiskers = WT_trace(han.frame,han.current_frame')
+                WT_constraints(han)
+            elseif han.track_attempt==2
+                sharpen_image(han)
+                han.whiskers = WT_trace(han.frame,han.current_frame')
+                WT_constraints(han)
+            else
+                if min_dist <20.0
+                    han.tracked[han.frame]=true
+                    han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
+                end
+            end
 
+            #Tracking Statistics
+            println("Frame number: ", han.frame, " Distance: ", min_dist)
+            println("Track attempt: ", han.track_attempt)
         end
-
-        println("Frame number: ", han.frame, " Distance: ", min_dist)
-        println("Track attempt: ", han.track_attempt)
     end
 
     #Find

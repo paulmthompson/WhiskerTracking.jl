@@ -34,3 +34,15 @@ function upload_mask(han,mask_file)
 
     nothing
 end
+
+function adjust_contrast(han)
+
+    myimg = han.vid[:,:,han.frame]
+
+    myimg[myimg.>han.contrast_max]=255
+    myimg[myimg.<han.contrast_min]=0
+
+    han.current_frame = myimg
+
+    nothing
+end

@@ -100,7 +100,6 @@ type Tracker_Handles
     current_frame::Array{UInt8,2}
     min_length::Int64 #In pixels
     woi_id::Int64
-    woi_found::BitArray{1}
     woi::Array{Whisker1,1}
     woi_x_f::Float64
     woi_y_f::Float64
@@ -116,6 +115,14 @@ type Tracker_Handles
     combine_button::Gtk.GtkToggleButtonLeaf
     combine_mode::Int64
     partial::Whisker1
+    background_button::Gtk.GtkCheckButtonLeaf
+    background_mode::Bool
+    contrast_min_slider::Gtk.GtkScaleLeaf
+    adj_contrast_min::Gtk.GtkAdjustmentLeaf
+    contrast_max_slider::Gtk.GtkScaleLeaf
+    adj_contrast_max::Gtk.GtkAdjustmentLeaf
+    contrast_max::Int64
+    contrast_min::Int64
 end
 
 jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
