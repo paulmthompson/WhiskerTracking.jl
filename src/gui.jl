@@ -3,11 +3,24 @@ export make_gui
 
 function make_gui(path,name)
 
-    vid_name = string(path,name,".tif")
+    vid_name = string(path,name)
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
 
-    vid=reinterpret(UInt8,load(vid_name))
+    xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+
+    vid=zeros(UInt8,0)
+
+    temp=zeros(UInt8,640,480)
+    vid_length=0;
+    while !eof(xx[1])
+      read!(xx[1],temp)
+      myind=1
+      append!(vid,temp'[:])
+      vid_length+=1
+    end
+
+    vid = reshape(vid,480,640,vid_length)
 
     c=Canvas(640,480)
 

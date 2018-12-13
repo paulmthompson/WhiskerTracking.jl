@@ -1,6 +1,9 @@
 
 const libwhisk_path = "/home/wanglab/Programs/whisk/build/libwhisk.so"
+jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
 libwhisk = Libdl.dlopen(libwhisk_path)
+const ffmpeg_path = "/home/wanglab/Programs/ffmpeg-4.1/ffmpeg"
+
 
 type WT_Image
     kind::Int32 #bytes per pixel
@@ -126,7 +129,5 @@ type Tracker_Handles
     save_button::Gtk.GtkButtonLeaf
     load_button::Gtk.GtkButtonLeaf
 end
-
-jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)
