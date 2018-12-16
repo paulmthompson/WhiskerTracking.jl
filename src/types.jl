@@ -2,7 +2,7 @@
 const libwhisk_path = "/home/wanglab/Programs/whisk/build/libwhisk.so"
 jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
 libwhisk = Libdl.dlopen(libwhisk_path)
-const ffmpeg_path = "/home/wanglab/Programs/ffmpeg-4.1/ffmpeg"
+const ffmpeg_path = "/home/wanglab/Programs/ffmpeg/ffmpeg"
 
 
 type WT_Image

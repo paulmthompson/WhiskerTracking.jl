@@ -1,23 +1,43 @@
 
 export make_gui
 
-function make_gui(path,name)
+function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
 
     vid_name = string(path,name)
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
 
-    xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+    if !frame_range[1]
 
-    vid=zeros(UInt8,0)
+        xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
 
-    temp=zeros(UInt8,640,480)
-    vid_length=0;
-    while !eof(xx[1])
-      read!(xx[1],temp)
-      myind=1
-      append!(vid,temp'[:])
-      vid_length+=1
+        vid=zeros(UInt8,0)
+
+        temp=zeros(UInt8,640,480)
+        vid_length=0;
+        while !eof(xx[1])
+            read!(xx[1],temp)
+            append!(vid,temp'[:])
+            vid_length+=1
+        end
+
+        #Specific range to track
+    else
+        start_time=string(frame_range[2][1],":",frame_range[2][2],":",frame_range[2][3])
+        xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+
+        vid_length = (frame_range[3][1] - frame_range[2][1]) * 3600 + (frame_range[3][2] - frame_range[2][2]) * 60 + (frame_range[3][3] - frame_range[2][3])
+        vid_length = vid_length * 25;
+
+        vid=zeros(UInt8,0)
+        temp=zeros(UInt8,640,480)
+
+        for i=1:vid_length
+            read!(xx[1],temp)
+            append!(vid,temp'[:])
+        end
+        close(xx[1])
+
     end
 
     vid = reshape(vid,480,640,vid_length)
