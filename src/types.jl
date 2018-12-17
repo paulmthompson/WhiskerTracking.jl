@@ -128,6 +128,7 @@ type Tracker_Handles
     contrast_min::Int64
     save_button::Gtk.GtkButtonLeaf
     load_button::Gtk.GtkButtonLeaf
+    start_frame::Int64
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

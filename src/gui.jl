@@ -20,14 +20,15 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
             append!(vid,temp'[:])
             vid_length+=1
         end
-
+        start_frame = 1
         #Specific range to track
     else
         start_time=string(frame_range[2][1],":",frame_range[2][2],":",frame_range[2][3])
         xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
 
-        vid_length = (frame_range[3][1] - frame_range[2][1]) * 3600 + (frame_range[3][2] - frame_range[2][2]) * 60 + (frame_range[3][3] - frame_range[2][3])
-        vid_length = vid_length * 25;
+        tt1=Base.Dates.Time(frame_range[2]...)
+        tt2=Base.Dates.Time(frame_range[3]...)
+        vid_length = frames_between(tt1,tt2,25)
 
         vid=zeros(UInt8,0)
         temp=zeros(UInt8,640,480)
@@ -37,6 +38,8 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
             append!(vid,temp'[:])
         end
         close(xx[1])
+
+        start_frame = total_frames(tt1,25)
 
     end
 
@@ -106,7 +109,7 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
-    save_button, load_button)
+    save_button, load_button,start_frame)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -153,6 +156,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         write(file,"Whiskers",mywhiskers)
         write(file,"Frames_Tracked",han.tracked)
+        write(file,"Start_Frame", han.start_frame)
 
         close(file)
 
@@ -172,6 +176,7 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         file = jldopen(filepath,"r")
         mywhiskers = read(file,"Whiskers")
         mytracked = read(file, "Frames_Tracked")
+        start_frame = read(file,"Start_Frame")
 
         close(file)
 
@@ -184,6 +189,10 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             end
             han.tracked = mytracked
 
+        end
+
+        if han.start_frame != start_frame
+            println("Error: This data was not tracked starting at the same point in the video")
         end
 
     end
@@ -503,6 +512,9 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    if han.background_mode
+        subtract_background(han)
+    end
     han.whiskers = WT_trace(han.frame,han.current_frame')
 
     WT_constraints(han)
@@ -541,14 +553,18 @@ function WT_constraints(han)
     apply_mask(han)
 
     #Find most similar whisker follicle position
-    min_dist = sqrt((han.whiskers[1].x[end]-han.woi_x_f)^2+(han.whiskers[1].y[end]-han.woi_y_f)^2)
-    han.woi_id = 1
-    for i=2:length(han.whiskers)
-        mydist = sqrt((han.whiskers[i].x[end]-han.woi_x_f)^2+(han.whiskers[i].y[end]-han.woi_y_f)^2)
-        if mydist<min_dist
-            min_dist = mydist
-            han.woi_id = i
+    if length(han.whiskers)>0
+        min_dist = sqrt((han.whiskers[1].x[end]-han.woi_x_f)^2+(han.whiskers[1].y[end]-han.woi_y_f)^2)
+        han.woi_id = 1
+        for i=2:length(han.whiskers)
+            mydist = sqrt((han.whiskers[i].x[end]-han.woi_x_f)^2+(han.whiskers[i].y[end]-han.woi_y_f)^2)
+            if mydist<min_dist
+                min_dist = mydist
+                han.woi_id = i
+            end
         end
+    else
+        min_dist=100.0
     end
 
     #Whisker should not move more than 0.64 mm / ms  (1.28 mm / 2ms)
@@ -594,6 +610,19 @@ function apply_mask(han)
         for j=1:length(han.whiskers[i].x)
             x_ind = round(Int64,han.whiskers[i].y[j])
             y_ind = round(Int64,han.whiskers[i].x[j])
+
+            if x_ind<1
+                x_ind=1
+            elseif x_ind>480
+                x_ind=480
+            end
+
+            if y_ind<1
+                y_ind=1
+            elseif y_ind>640
+                y_ind=540
+            end
+
             if han.mask[x_ind,y_ind]
                 save_points[j]=false
             end

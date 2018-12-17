@@ -46,3 +46,14 @@ function adjust_contrast(han)
 
     nothing
 end
+
+function total_frames(tt,fps)
+    h=Base.Dates.hour(tt)
+    m=Base.Dates.minute(tt)
+    s=Base.Dates.second(tt)
+    (h*3600+m*60+s)*fps + 1
+end
+
+function frames_between(tt1,tt2,fps)
+    total_frames(tt2,fps)-total_frames(tt1,fps)
+end
