@@ -129,6 +129,7 @@ type Tracker_Handles
     save_button::Gtk.GtkButtonLeaf
     load_button::Gtk.GtkButtonLeaf
     start_frame::Int64
+    cov1::Array{Int64,1}
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

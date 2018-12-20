@@ -109,7 +109,7 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
-    save_button, load_button,start_frame)
+    save_button, load_button,start_frame,zeros(Int64,vid_length))
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -336,6 +336,12 @@ function plot_image(han,img)
     rectangle(ctx, 0, 0, w, h)
 
     fill(ctx)
+
+    if han.cov1[han.frame]>0
+        set_source_rgb(ctx,0,0,0)
+        rectangle(ctx,0,0,10,10)
+        fill(ctx)
+    end
 
     reveal(han.c)
 end
