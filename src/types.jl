@@ -134,6 +134,7 @@ type Tracker_Handles
     sharpen_mode::Bool
     draw_button::Gtk.GtkToggleButtonLeaf
     draw_mode::Bool
+    connect_button::Gtk.GtkButtonLeaf
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

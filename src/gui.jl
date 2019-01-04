@@ -87,6 +87,9 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     draw_button=ToggleButton("Draw Mode")
     control_grid[1,7]=draw_button
 
+    connect_button=Button("Connect to Pad")
+    control_grid[2,7]=connect_button
+
     delete_button=Button("Delete Whisker")
     control_grid[1,8]=delete_button
 
@@ -116,7 +119,7 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
-    draw_button,false)
+    draw_button,false,connect_button)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -135,6 +138,7 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     signal_connect(load_cb, load_button, "clicked",Void,(),false,(handles,))
     signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
+    signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -252,6 +256,38 @@ function sharpen_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.sharpen_mode = getproperty(han.sharpen_button,:active,Bool)
+
+    nothing
+end
+
+function connect_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    if han.tracked[han.frame-1]
+        x_1=han.woi[han.frame-1].x[end]
+        y_1=han.woi[han.frame-1].y[end]
+        thick_1=han.woi[han.frame-1].thick[end]
+        scores_1=han.woi[han.frame-1].scores[end]
+    end
+
+    dist=round(Int64,sqrt((han.whiskers[han.woi_id].x[end]-x_1)^2+(han.whiskers[han.woi_id].y[end]-y_1)^2))
+
+    xs=linspace(han.whiskers[han.woi_id].x[end],x_1,dist)
+    ys=linspace(han.whiskers[han.woi_id].y[end],y_1,dist)
+
+    for i=2:length(xs)
+        push!(han.whiskers[han.woi_id].x,xs[i])
+        push!(han.whiskers[han.woi_id].y,ys[i])
+        push!(han.whiskers[han.woi_id].thick,thick_1)
+        push!(han.whiskers[han.woi_id].scores,scores_1)
+    end
+
+    han.whiskers[han.woi_id].len=length(han.whiskers[han.woi_id].x)
+
+    plot_whiskers(han)
+
+    han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
 
     nothing
 end
