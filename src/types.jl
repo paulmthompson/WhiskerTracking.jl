@@ -130,6 +130,10 @@ type Tracker_Handles
     load_button::Gtk.GtkButtonLeaf
     start_frame::Int64
     cov1::Array{Int64,1}
+    sharpen_button::Gtk.GtkCheckButtonLeaf
+    sharpen_mode::Bool
+    draw_button::Gtk.GtkToggleButtonLeaf
+    draw_mode::Bool
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

@@ -84,20 +84,26 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     erase_button=ToggleButton("Erase Mode")
     control_grid[1,6]=erase_button
 
+    draw_button=ToggleButton("Draw Mode")
+    control_grid[1,7]=draw_button
+
     delete_button=Button("Delete Whisker")
-    control_grid[1,7]=delete_button
+    control_grid[1,8]=delete_button
 
     combine_button=ToggleButton("Combine Segments")
-    control_grid[1,8]=combine_button
+    control_grid[1,9]=combine_button
 
     background_button = CheckButton("Subtract Background")
-    control_grid[1,9]=background_button
+    control_grid[1,10]=background_button
+
+    sharpen_button = CheckButton("Sharpen Image")
+    control_grid[1,11]=sharpen_button
 
     save_button = Button("Save")
-    control_grid[1,10]=save_button
+    control_grid[1,12]=save_button
 
     load_button = Button("Load")
-    control_grid[1,11]=load_button
+    control_grid[1,13]=load_button
 
     grid[2,1]=control_grid
 
@@ -109,7 +115,8 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
-    save_button, load_button,start_frame,zeros(Int64,vid_length))
+    save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
+    draw_button,false)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -126,6 +133,8 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
     signal_connect(save_cb, save_button, "clicked",Void,(),false,(handles,))
     signal_connect(load_cb, load_button, "clicked",Void,(),false,(handles,))
+    signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
+    signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -238,6 +247,15 @@ function background_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+function sharpen_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.sharpen_mode = getproperty(han.sharpen_button,:active,Bool)
+
+    nothing
+end
+
 function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -302,6 +320,15 @@ function erase_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.erase_mode = getproperty(han.erase_button,:active,Bool)
+
+    nothing
+end
+
+function draw_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.draw_mode = getproperty(han.draw_button,:active,Bool)
 
     nothing
 end
@@ -373,6 +400,8 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
 
     if han.erase_mode
         erase_start(han,m_x,m_y)
+    elseif han.draw_mode
+        draw_start(han,m_x,m_y)
     elseif han.combine_mode>0
         if han.combine_mode == 1
             combine_start(han,m_x,m_y)
@@ -453,6 +482,65 @@ function combine_end(han,x,y)
     nothing
 end
 
+function draw_start(han,x,y)
+
+    plot_image(han,han.current_frame')
+    r = Gtk.getgc(han.c)
+    Cairo.save(r)
+    ctxcopy = copy(r)
+
+    plot_whiskers(han)
+
+    push!((han.c.mouse, :button1motion),  (c, event) -> draw_move(han, event.x, event.y, ctxcopy))
+    push!((han.c.mouse, :motion), Gtk.default_mouse_cb)
+    push!((han.c.mouse, :button1release), (c, event) -> draw_stop(han, event.x, event.y, ctxcopy))
+
+    nothing
+end
+
+function draw_move(han, x,y,ctxcopy)
+
+    r=Gtk.getgc(han.c)
+
+    han.whiskers[han.woi_id].len+=1
+
+    front_dist = (han.whiskers[han.woi_id].x[1]-x)^2+(han.whiskers[han.woi_id].y[1]-y)^2
+    end_dist = (han.whiskers[han.woi_id].x[end]-x)^2+(han.whiskers[han.woi_id].y[end]-y)^2
+
+    if end_dist<front_dist #drawing closer to end
+
+        push!(han.whiskers[han.woi_id].x,x)
+        push!(han.whiskers[han.woi_id].y,y)
+        push!(han.whiskers[han.woi_id].thick,1.0)
+        push!(han.whiskers[han.woi_id].scores,1.0)
+
+    else
+        unshift!(han.whiskers[han.woi_id].x,x)
+        unshift!(han.whiskers[han.woi_id].y,y)
+        unshift!(han.whiskers[han.woi_id].thick,1.0)
+        unshift!(han.whiskers[han.woi_id].scores,1.0)
+    end
+
+    #redraw whisker
+    set_source(r,ctxcopy)
+    paint(r)
+
+    plot_whiskers(han)
+
+    nothing
+end
+
+function draw_stop(han,x,y,ctxcopy)
+
+    han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
+
+    pop!((han.c.mouse, :button1motion))
+    pop!((han.c.mouse, :motion))
+    pop!((han.c.mouse, :button1release))
+
+    nothing
+end
+
 function erase_start(han,x,y)
 
     plot_image(han,han.current_frame')
@@ -520,6 +608,9 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     if han.background_mode
         subtract_background(han)
+    end
+    if han.sharpen_mode
+        sharpen_image(han)
     end
     han.whiskers = WT_trace(han.frame,han.current_frame')
 
