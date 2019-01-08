@@ -92,18 +92,18 @@ type Tracker_Handles
     meas_path::String
     win::Gtk.GtkWindowLeaf
     c::Gtk.GtkCanvasLeaf
-    vid::Array{UInt8,3}
-    frame::Int64
+    vid::Array{UInt8,3} #Video pixel data (width x height x frame)
+    frame::Int64 #currently displayed frame number
     frame_slider::Gtk.GtkScaleLeaf
     adj_frame::Gtk.GtkAdjustmentLeaf
     trace_button::Gtk.GtkButtonLeaf
-    whiskers::Array{Whisker1,1}
+    whiskers::Array{Whisker1,1} #Properties of whiskers currently displayed
     plot_frame::Array{UInt32,2}
     hist_c::Gtk.GtkCanvasLeaf
     current_frame::Array{UInt8,2}
-    min_length::Int64 #In pixels
-    woi_id::Int64
-    woi::Array{Whisker1,1}
+    min_length::Int64 #Minimum size of traced element from Janleia tracker, in pixels
+    woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
+    woi::Array{Whisker1,1} #Array of properties for whisker of interest for every frame
     woi_x_f::Float64
     woi_y_f::Float64
     auto_button::Gtk.GtkToggleButtonLeaf
@@ -112,7 +112,7 @@ type Tracker_Handles
     erase_mode::Bool
     mask::BitArray{2}
     track_attempt::Int64
-    tracked::BitArray{1}
+    tracked::BitArray{1} #Array of true/false to specify if corresponding frame has been tracked
     pad_pos::Tuple{Float32,Float32}
     delete_button::Gtk.GtkButtonLeaf
     combine_button::Gtk.GtkToggleButtonLeaf

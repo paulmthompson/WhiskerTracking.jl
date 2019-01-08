@@ -306,6 +306,9 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     plot_image(han,han.current_frame')
 
+    #Reset array of displayed whiskers
+    han.whiskers=Array{Whisker1}(0)
+
     #Plot whisker if it has been previously tracked
     if han.tracked[han.frame]
         han.whiskers=[han.woi[han.frame]]
@@ -525,6 +528,22 @@ function draw_start(han,x,y)
     Cairo.save(r)
     ctxcopy = copy(r)
 
+    #
+    if han.tracked[han.frame] == false
+        new_whisker=Whisker1()
+
+        push!(new_whisker.x,han.woi[han.frame-1].x[end])
+        push!(new_whisker.y,han.woi[han.frame-1].y[end])
+        push!(new_whisker.scores,han.woi[han.frame-1].scores[end])
+        push!(new_whisker.thick,han.woi[han.frame-1].thick[end])
+
+        new_whisker.len=1
+
+        han.whiskers=[new_whisker]
+
+        han.woi_id = 1
+    end
+
     plot_whiskers(han)
 
     push!((han.c.mouse, :button1motion),  (c, event) -> draw_move(han, event.x, event.y, ctxcopy))
@@ -569,6 +588,7 @@ end
 function draw_stop(han,x,y,ctxcopy)
 
     han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
+    han.tracked[han.frame]=true
 
     pop!((han.c.mouse, :button1motion))
     pop!((han.c.mouse, :motion))
@@ -738,6 +758,8 @@ end
 
 function apply_mask(han)
 
+    remove_whiskers=Array{Int64}(0)
+
     for i=1:length(han.whiskers)
         save_points=trues(length(han.whiskers[i].x))
         for j=1:length(han.whiskers[i].x)
@@ -766,8 +788,16 @@ function apply_mask(han)
         han.whiskers[i].thick=han.whiskers[i].thick[save_points]
         han.whiskers[i].scores=han.whiskers[i].scores[save_points]
         han.whiskers[i].len = length(han.whiskers[i].x)
+
+        #Sometimes whiskers are detected in mask of reasonable length, so they are completely deleted
+        #In this step and will mess up later processing, so we should delete them after a length check
+        if han.whiskers[i].len < han.min_length
+            push!(remove_whiskers,i)
+        end
+
     end
 
+    deleteat!(han.whiskers,remove_whiskers)
 
     nothing
 end
