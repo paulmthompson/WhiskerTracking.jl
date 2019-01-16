@@ -108,6 +108,12 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     load_button = Button("Load")
     control_grid[1,13]=load_button
 
+    touch_button = ToggleButton("Define Touch")
+    control_grid[2,9] = touch_button
+
+    touch_override = Button("Touch Override")
+    control_grid[2,10] = touch_override
+
     grid[2,1]=control_grid
 
     win = Window(grid, "Whisker Tracker") |> showall
@@ -115,11 +121,12 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     handles = Tracker_Handles(path,name,vid_name,whisk_path,meas_path,win,c,vid,1,
     frame_slider,adj_frame,trace_button,Array{Whisker1}(0),zeros(UInt32,640,480),
     hist_c,vid[:,:,1],50,0,Array{Whisker1}(size(vid,3)),
-    0.0,0.0,auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
+    0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
-    draw_button,false,connect_button)
+    draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,
+    falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)))
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -139,8 +146,129 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
     signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
+    signal_connect(touch_cb,touch_button,"clicked",Void,(),false,(handles,))
+    signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
 
     handles
+end
+
+function touch_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.touch_mode = getproperty(han.touch_button,:active,Bool)
+
+    nothing
+end
+
+function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.touch_frames[han.frame] = !han.touch_frames[han.frame]
+
+    draw_touch(han)
+
+    nothing
+end
+
+function detect_touch(han)
+
+    if han.tracked[han.frame]
+
+        hit=0
+
+        for i=1:han.woi[han.frame].len
+            xx=round(Int64,han.woi[han.frame].x[i])
+            yy=round(Int64,han.woi[han.frame].y[i])
+
+            if han.touch_mask[yy,xx]
+                hit+=1
+            end
+
+        end
+
+        if hit>2
+            han.touch_frames[han.frame]=true
+        end
+
+    end
+    nothing
+end
+
+function draw_touch(han::Tracker_Handles)
+
+    ctx=Gtk.getgc(han.c)
+
+    if han.touch_frames[han.frame]
+        set_source_rgb(ctx,0,1,0)
+    else
+        set_source_rgb(ctx,1,0,0)
+    end
+
+    rectangle(ctx,600,0,20,20)
+    fill(ctx)
+
+    nothing
+end
+
+
+function touch_start(han,x,y)
+
+    plot_image(han,han.current_frame')
+    plot_touch_mask(han)
+    reveal(han.c)
+
+    push!((han.c.mouse, :button1motion),  (c, event) -> touch_move(han, event.x, event.y))
+    push!((han.c.mouse, :motion), Gtk.default_mouse_cb)
+    push!((han.c.mouse, :button1release), (c, event) -> touch_stop(han, event.x, event.y))
+
+    nothing
+end
+
+function touch_move(han, x,y)
+
+    x=round(Int64,x)
+    y=round(Int64,y)
+
+    for i=x-3:x+3
+        for j=y-3:y+3
+            han.touch_mask[j,i]=true
+        end
+    end
+
+    plot_touch_mask(han)
+    reveal(han.c)
+
+    nothing
+end
+
+function plot_touch_mask(han)
+
+    ctx=Gtk.getgc(han.c)
+
+    set_source_rgb(ctx,1.0,0.0,0.0)
+
+    for x=1:639
+        for y=1:479
+            if han.touch_mask[y,x]
+                rectangle(ctx,x,y,1.0,1.0)
+            end
+        end
+    end
+
+    fill(ctx)
+
+    nothing
+end
+
+function touch_stop(han,x,y)
+
+    pop!((han.c.mouse, :button1motion))
+    pop!((han.c.mouse, :motion))
+    pop!((han.c.mouse, :button1release))
+
+    nothing
 end
 
 function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -170,6 +298,9 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         write(file,"Whiskers",mywhiskers)
         write(file,"Frames_Tracked",han.tracked)
         write(file,"Start_Frame", han.start_frame)
+        write(file,"Touch",han.touch_frames)
+        write(file,"Angles",han.woi_angle)
+        write(file,"Curvature",han.woi_curv)
 
         close(file)
 
@@ -190,6 +321,15 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         mywhiskers = read(file,"Whiskers")
         mytracked = read(file, "Frames_Tracked")
         start_frame = read(file,"Start_Frame")
+        if JLD.exists(file,"Touch")
+            han.touch_frames=read(file,"Touch")
+        end
+        if JLD.exists(file,"Angles")
+            han.woi_angle=read(file,"Angles")
+        end
+        if JLD.exists(file,"Curvature",han.woi_curv)
+            han.woi_curv=read(file,"Curvature")
+        end
 
         close(file)
 
@@ -287,7 +427,7 @@ function connect_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     plot_whiskers(han)
 
-    han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
+    assign_woi(han)
 
     nothing
 end
@@ -409,6 +549,8 @@ function plot_image(han,img)
         fill(ctx)
     end
 
+    draw_touch(han)
+
     reveal(han.c)
 end
 
@@ -430,7 +572,7 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
                     #han.woi_x_f = han.whiskers[han.woi_id].x[end]
                     #han.woi_y_f = han.whiskers[han.woi_id].y[end]
                     han.tracked[han.frame]=true
-                    han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
+                    assign_woi(han)
                     break
                 end
             end
@@ -447,6 +589,8 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
         else
             combine_end(han,m_x,m_y)
         end
+    elseif han.touch_mode
+        touch_start(han,m_x,m_y)
     else
         plot_whiskers(han)
     end
@@ -587,7 +731,7 @@ end
 
 function draw_stop(han,x,y,ctxcopy)
 
-    han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
+    assign_woi(han)
     han.tracked[han.frame]=true
 
     pop!((han.c.mouse, :button1motion))
@@ -649,7 +793,7 @@ end
 
 function erase_stop(han,x,y,ctxcopy)
 
-    han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
+    assign_woi(han)
 
     pop!((han.c.mouse, :button1motion))
     pop!((han.c.mouse, :motion))
@@ -705,16 +849,42 @@ function WT_constraints(han)
     #Apply mask
     apply_mask(han)
 
+
+    #get_follicle
+    (fx,fy)=get_follicle(han)
     #Find most similar whisker follicle position
+    #=
     if length(han.whiskers)>0
-        min_dist = sqrt((han.whiskers[1].x[end]-han.woi_x_f)^2+(han.whiskers[1].y[end]-han.woi_y_f)^2)
+        min_dist = sqrt((han.whiskers[1].x[end]-fx)^2+(han.whiskers[1].y[end]-fy)^2)
         han.woi_id = 1
         for i=2:length(han.whiskers)
-            mydist = sqrt((han.whiskers[i].x[end]-han.woi_x_f)^2+(han.whiskers[i].y[end]-han.woi_y_f)^2)
+            mydist = sqrt((han.whiskers[i].x[end]-fx)^2+(han.whiskers[i].y[end]-fy)^2)
             if mydist<min_dist
                 min_dist = mydist
                 han.woi_id = i
             end
+        end
+    else
+        min_dist=100.0
+    end
+    =#
+    use_both = false
+    if (length(han.whiskers)>0)&(han.frame>1)
+        #If the previous frame was tracked, compare this frame with the previous
+        if han.tracked[han.frame-1]
+            (mincor, w_id) = whisker_similarity(han,1)
+            use_both = true
+        elseif han.tracked[han.frame-2] #if the previous frame wasn't tracked, go back two frames
+            (mincor, w_id) = whisker_similarity(han,2)
+            use_both = true
+        else
+            w_id =0
+        end
+        if w_id !=0
+            han.woi_id = w_id
+            min_dist = sqrt((han.whiskers[w_id].x[end]-fx)^2+(han.whiskers[w_id].y[end]-fy)^2)
+        else
+            min_dist=100.0
         end
     else
         min_dist=100.0
@@ -725,30 +895,46 @@ function WT_constraints(han)
     #If we don't have a whisker with this criteria met, adjust paramters
     #and try again
     if !han.tracked[han.frame]
-        if min_dist <5.0
-            han.tracked[han.frame]=true
-            han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
-        else
-            han.track_attempt+=1
-            if han.track_attempt==1
-                subtract_background(han)
-                han.whiskers = WT_trace(han.frame,han.current_frame')
-                WT_constraints(han)
-            elseif han.track_attempt==2
-                sharpen_image(han)
-                han.whiskers = WT_trace(han.frame,han.current_frame')
-                WT_constraints(han)
-            else
-                if min_dist <20.0
-                    han.tracked[han.frame]=true
-                    han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
-                end
+        if (use_both)
+            if (mincor<15.0)&(min_dist < 20.0)
+                han.tracked[han.frame]=true
+                assign_woi(han)
             end
+        else
+            if (min_dist <10.0)
+                han.tracked[han.frame]=true
+                assign_woi(han)
+            end
+        end
+    end
+
+    if !han.tracked[han.frame]
+        han.track_attempt+=1
+        if han.track_attempt==1
+            subtract_background(han)
+            han.whiskers = WT_trace(han.frame,han.current_frame')
+            WT_constraints(han)
+        elseif han.track_attempt==2
+            sharpen_image(han)
+            han.whiskers = WT_trace(han.frame,han.current_frame')
+            WT_constraints(han)
+        else #tried lots of tricks, and still didn't work
+            #if min_dist <20.0
+                #han.tracked[han.frame]=true
+                #han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
+            #end
+        end
 
             #Tracking Statistics
             println("Frame number: ", han.frame, " Distance: ", min_dist)
             println("Track attempt: ", han.track_attempt)
-        end
+    end
+
+    #Check for overlapped whiskers
+
+
+    if han.tracked[han.frame]
+        detect_touch(han)
     end
 
     #Find

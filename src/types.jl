@@ -104,8 +104,9 @@ type Tracker_Handles
     min_length::Int64 #Minimum size of traced element from Janleia tracker, in pixels
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
     woi::Array{Whisker1,1} #Array of properties for whisker of interest for every frame
-    woi_x_f::Float64
-    woi_y_f::Float64
+    woi_x_f::Float64 #last frame whisker follicle position
+    woi_y_f::Float64 #last frame whisker follicle position
+    woi_follicle::Array{Float64,2} #Array that stores manually curated points of follicle position
     auto_button::Gtk.GtkToggleButtonLeaf
     auto_mode::Bool
     erase_button::Gtk.GtkToggleButtonLeaf
@@ -135,6 +136,13 @@ type Tracker_Handles
     draw_button::Gtk.GtkToggleButtonLeaf
     draw_mode::Bool
     connect_button::Gtk.GtkButtonLeaf
+    touch_button::Gtk.GtkToggleButtonLeaf
+    touch_mode::Bool
+    touch_mask::BitArray{2}
+    touch_override::Gtk.GtkButtonLeaf
+    touch_frames::BitArray{1}
+    woi_angle::Array{Float64,1}
+    woi_curv::Array{Float64,1}
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

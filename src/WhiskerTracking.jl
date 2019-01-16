@@ -1,7 +1,7 @@
 
 module WhiskerTracking
 
-using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations
+using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP
 
 include("types.jl")
 include("gui.jl")
