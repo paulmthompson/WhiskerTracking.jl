@@ -121,7 +121,7 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     handles = Tracker_Handles(path,name,vid_name,whisk_path,meas_path,win,c,vid,1,
     frame_slider,adj_frame,trace_button,Array{Whisker1}(0),zeros(UInt32,640,480),
     hist_c,vid[:,:,1],50,0,Array{Whisker1}(size(vid,3)),
-    0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,falses(640,480),0,falses(size(vid,3)),
+    0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,falses(480,640),0,falses(size(vid,3)),
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
