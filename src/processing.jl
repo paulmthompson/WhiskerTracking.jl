@@ -30,7 +30,7 @@ end
 
 function upload_mask(han,mask_file)
 
-    han.mask=reinterpret(UInt8,load(string(han.data_path,"mask.tif")))[1,:,:].==0
+    han.mask=reinterpret(UInt8,load(string(han.data_path,mask_file)))[1,:,:].==0
 
     nothing
 end
