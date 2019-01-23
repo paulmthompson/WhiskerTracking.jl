@@ -143,6 +143,8 @@ type Tracker_Handles
     touch_frames::BitArray{1}
     woi_angle::Array{Float64,1}
     woi_curv::Array{Float64,1}
+    jt_seed_thres_button::Gtk.GtkSpinButtonLeaf
+    jt_seed_iterations_button::Gtk.GtkSpinButtonLeaf
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

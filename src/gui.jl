@@ -114,6 +114,20 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     touch_override = Button("Touch Override")
     control_grid[2,10] = touch_override
 
+    janelia_label=Label("Janelia Parameters")
+    control_grid[3,4]=janelia_label
+
+    janelia_seed_thres=SpinButton(0.01:.01:1.0)
+    setproperty!(janelia_seed_thres,:value,0.99)
+    control_grid[3,5]=janelia_seed_thres
+    control_grid[4,5]=Label("Seed Threshold")
+
+    janelia_seed_iterations=SpinButton(1:1:10)
+    setproperty!(janelia_seed_iterations,:value,1)
+    control_grid[3,6]=janelia_seed_iterations
+    control_grid[4,6]=Label("Seed Iterations")
+
+
     grid[2,1]=control_grid
 
     win = Window(grid, "Whisker Tracker") |> showall
@@ -126,7 +140,8 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,
-    falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)))
+    falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
+    janelia_seed_iterations)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -149,7 +164,32 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     signal_connect(touch_cb,touch_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
 
+    signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
+    signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
+
     handles
+end
+
+function jt_seed_thres_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    thres=getproperty(han.jt_seed_thres_button,:value,Float64)
+
+    change_JT_param(:paramSEED_THRESH,convert(Float32,thres))
+
+    nothing
+end
+
+function jt_seed_iterations_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    iterations=getproperty(han.jt_seed_iterations_button,:value,Int64)
+
+    change_JT_param(:paramSEED_ITERATIONS,convert(Int32,iterations))
+
+    nothing
 end
 
 function touch_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -869,7 +909,7 @@ function WT_constraints(han)
     end
     =#
     use_both = false
-    if (length(han.whiskers)>0)&(han.frame>1)
+    if (length(han.whiskers)>0)&(han.frame>2)
         #If the previous frame was tracked, compare this frame with the previous
         if han.tracked[han.frame-1]
             (mincor, w_id) = whisker_similarity(han,1)

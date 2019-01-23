@@ -19,3 +19,14 @@ end
 function get_JT_params()
     ccall((Libdl.dlsym(libwhisk,:Params)),Ptr{JT_Params},())
 end
+
+function change_JT_param(f_name,value)
+    xx=get_JT_params()
+    jt=unsafe_load(xx,1)
+
+    setfield!(jt,f_name,value)
+
+    unsafe_store!(xx,jt,1)
+
+    nothing
+end
