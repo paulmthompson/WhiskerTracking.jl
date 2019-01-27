@@ -328,11 +328,14 @@ function offline_tracking(wt)
         #reset whiskers for active frame
         wt.whiskers=Array{Whisker1}(0)
 
-        WT_trace(wt,i,wt.vid[:,:,i])
+        #Need to transpose becuase row major in C vs column major in julia
+        WT_trace(wt,i,wt.vid[:,:,i]')
 
         wt.all_whiskers[i]=deepcopy(wt.whiskers)
         println(string(i,"/",size(wt.vid,3)))
     end
+
+
 
     nothing
 end

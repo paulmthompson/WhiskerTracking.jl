@@ -327,6 +327,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         write(file,"Touch",han.touch_frames)
         write(file,"Angles",han.woi_angle)
         write(file,"Curvature",han.woi_curv)
+        write(file,"all_whiskers",han.wt.all_whiskers)
 
         close(file)
 
@@ -335,11 +336,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    filepath = open_dialog("Load Whisker Tracking",han.win)
+function load_whisker_data(han,filepath)
 
     if filepath != ""
 
@@ -353,10 +350,12 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         if JLD.exists(file,"Angles")
             han.woi_angle=read(file,"Angles")
         end
-        if JLD.exists(file,"Curvature",han.woi_curv)
+        if JLD.exists(file,"Curvature")
             han.woi_curv=read(file,"Curvature")
         end
-
+        if JLD.exists(file,"all_whiskers")
+            han.all_whiskers=read(file,"all_whiskers")
+        end
         close(file)
 
         if size(han.wt.vid,3) != length(mytracked)
@@ -373,8 +372,17 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         if han.start_frame != start_frame
             println("Error: This data was not tracked starting at the same point in the video")
         end
-
     end
+    nothing
+end
+
+function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = open_dialog("Load Whisker Tracking",han.win)
+
+    load_whisker_data(han,filepath)
 
     nothing
 end
@@ -474,6 +482,11 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     #Reset array of displayed whiskers
     han.wt.whiskers=Array{Whisker1}(0)
+
+    #If whiskers were found previously, load them
+    if length(han.wt.all_whiskers[han.frame])>0
+        han.wt.whiskers=han.wt.all_whiskers[han.frame]
+    end
 
     #Plot whisker if it has been previously tracked
     if han.tracked[han.frame]
@@ -945,10 +958,14 @@ end
 function start_auto(han::Tracker_Handles)
 
     if han.frame+1 <= size(han.wt.vid,3)
+        #advance one frame
         setproperty!(han.adj_frame,:value,han.frame+1)
 
-        WT_trace(han.wt,han.frame,han.current_frame')
+        if length(han.wt.all_whiskers[han.frame])==0
+            WT_trace(han.wt,han.frame,han.current_frame')
+        end
 
+        #Link whiskers
         WT_constraints(han)
 
         plot_whiskers(han)
