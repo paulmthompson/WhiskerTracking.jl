@@ -30,7 +30,7 @@ end
 
 function upload_mask(han,mask_file)
 
-    han.mask=reinterpret(UInt8,load(string(han.data_path,mask_file)))[1,:,:].==0
+    han.wt.mask=reinterpret(UInt8,load(string(han.wt.data_path,mask_file)))[1,:,:].==0
 
     nothing
 end
@@ -42,7 +42,7 @@ function generate_mask(han,min_val,max_val,frame_id)
     myimg[myimg.>max_val]=255
     myimg[myimg.<min_val]=0
 
-    han.mask=myimg.==0
+    han.wt.mask=myimg.==0
 
     nothing
 end
@@ -91,8 +91,8 @@ function whisker_similarity(han,prev)
     w2=[han.woi[han.frame-prev].x[(end-9):end] han.woi[han.frame-prev].y[(end-9):end]]
     mincor=10000.0
     w_id = 0;
-    for i=1:length(han.whiskers)
-        w1=[han.whiskers[i].x[(end-9):end] han.whiskers[i].y[(end-9):end]]
+    for i=1:length(han.wt.whiskers)
+        w1=[han.wt.whiskers[i].x[(end-9):end] han.wt.whiskers[i].y[(end-9):end]]
         mycor=euclidean(w1,w2)
         if mycor < mincor
             mincor=mycor
@@ -154,7 +154,7 @@ end
 
 function assign_woi(han)
 
-    han.woi[han.frame] = deepcopy(han.whiskers[han.woi_id])
+    han.woi[han.frame] = deepcopy(han.wt.whiskers[han.woi_id])
 
     x=smooth(han.woi[han.frame].x)
     y=smooth(han.woi[han.frame].y)
@@ -206,4 +206,67 @@ function load_video(vid_name,frame_range = (false,(0,0,0),(0,0,0)))
     end
 
     (vid,start_frame)
+end
+
+function WT_length_constraint(wt)
+
+    pass = trues(length(wt.whiskers))
+
+    #length constraint
+    for i=1:length(wt.whiskers)
+        if wt.whiskers[i].len<wt.min_length
+            pass[i]=false
+        end
+    end
+
+    wt.whiskers=wt.whiskers[pass]
+
+    nothing
+end
+
+
+function apply_mask(wt)
+
+    remove_whiskers=Array{Int64}(0)
+
+    for i=1:length(wt.whiskers)
+        save_points=trues(length(wt.whiskers[i].x))
+        for j=1:length(wt.whiskers[i].x)
+            x_ind = round(Int64,wt.whiskers[i].y[j])
+            y_ind = round(Int64,wt.whiskers[i].x[j])
+
+            if x_ind<1
+                x_ind=1
+            elseif x_ind>480
+                x_ind=480
+            end
+
+            if y_ind<1
+                y_ind=1
+            elseif y_ind>640
+                y_ind=540
+            end
+
+            if wt.mask[x_ind,y_ind]
+                save_points[j]=false
+            end
+        end
+
+        wt.whiskers[i].x=wt.whiskers[i].x[save_points]
+        wt.whiskers[i].y=wt.whiskers[i].y[save_points]
+        wt.whiskers[i].thick=wt.whiskers[i].thick[save_points]
+        wt.whiskers[i].scores=wt.whiskers[i].scores[save_points]
+        wt.whiskers[i].len = length(wt.whiskers[i].x)
+
+        #Sometimes whiskers are detected in mask of reasonable length, so they are completely deleted
+        #In this step and will mess up later processing, so we should delete them after a length check
+        if wt.whiskers[i].len < wt.min_length
+            push!(remove_whiskers,i)
+        end
+
+    end
+
+    deleteat!(wt.whiskers,remove_whiskers)
+
+    nothing
 end

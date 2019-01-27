@@ -98,12 +98,11 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     win = Window(grid, "Whisker Tracker") |> showall
 
 
-    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path)
+    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,50,falses(480,640),Array{Whisker1}(0))
 
-    handles = Tracker_Handles(1,win,c,
-    frame_slider,adj_frame,trace_button,Array{Whisker1}(0),zeros(UInt32,640,480),
-    hist_c,vid[:,:,1],50,0,Array{Whisker1}(size(vid,3)),
-    0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,falses(480,640),0,falses(size(vid,3)),
+    handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
+    hist_c,vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
+    0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
     (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
@@ -436,19 +435,19 @@ function connect_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         scores_1=han.woi[han.frame-1].scores[end]
     end
 
-    dist=round(Int64,sqrt((han.whiskers[han.woi_id].x[end]-x_1)^2+(han.whiskers[han.woi_id].y[end]-y_1)^2))
+    dist=round(Int64,sqrt((han.wt.whiskers[han.woi_id].x[end]-x_1)^2+(han.wt.whiskers[han.woi_id].y[end]-y_1)^2))
 
-    xs=linspace(han.whiskers[han.woi_id].x[end],x_1,dist)
-    ys=linspace(han.whiskers[han.woi_id].y[end],y_1,dist)
+    xs=linspace(han.wt.whiskers[han.woi_id].x[end],x_1,dist)
+    ys=linspace(han.wt.whiskers[han.woi_id].y[end],y_1,dist)
 
     for i=2:length(xs)
-        push!(han.whiskers[han.woi_id].x,xs[i])
-        push!(han.whiskers[han.woi_id].y,ys[i])
-        push!(han.whiskers[han.woi_id].thick,thick_1)
-        push!(han.whiskers[han.woi_id].scores,scores_1)
+        push!(han.wt.whiskers[han.woi_id].x,xs[i])
+        push!(han.wt.whiskers[han.woi_id].y,ys[i])
+        push!(han.wt.whiskers[han.woi_id].thick,thick_1)
+        push!(han.wt.whiskers[han.woi_id].scores,scores_1)
     end
 
-    han.whiskers[han.woi_id].len=length(han.whiskers[han.woi_id].x)
+    han.wt.whiskers[han.woi_id].len=length(han.wt.whiskers[han.woi_id].x)
 
     plot_whiskers(han)
 
@@ -472,11 +471,11 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     plot_image(han,han.current_frame')
 
     #Reset array of displayed whiskers
-    han.whiskers=Array{Whisker1}(0)
+    han.wt.whiskers=Array{Whisker1}(0)
 
     #Plot whisker if it has been previously tracked
     if han.tracked[han.frame]
-        han.whiskers=[han.woi[han.frame]]
+        han.wt.whiskers=[han.woi[han.frame]]
         han.woi_id = 1
         plot_whiskers(han)
     end
@@ -589,10 +588,10 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     m_y = event.y
 
     #Find whisker of interest
-    for i=1:length(han.whiskers)
-        for j=1:han.whiskers[i].len
-            if (m_x>han.whiskers[i].x[j]-5.0)&(m_x<han.whiskers[i].x[j]+5.0)
-                if (m_y>han.whiskers[i].y[j]-5.0)&(m_y<han.whiskers[i].y[j]+5.0)
+    for i=1:length(han.wt.whiskers)
+        for j=1:han.wt.whiskers[i].len
+            if (m_x>han.wt.whiskers[i].x[j]-5.0)&(m_x<han.wt.whiskers[i].x[j]+5.0)
+                if (m_y>han.wt.whiskers[i].y[j]-5.0)&(m_y<han.wt.whiskers[i].y[j]+5.0)
                     han.woi_id = i
                     #han.woi_x_f = han.whiskers[han.woi_id].x[end]
                     #han.woi_y_f = han.whiskers[han.woi_id].y[end]
@@ -626,7 +625,7 @@ end
 function combine_start(han,x,y)
 
     println("start")
-    han.partial = deepcopy(han.whiskers[han.woi_id])
+    han.partial = deepcopy(han.wt.whiskers[han.woi_id])
     han.combine_mode = 2
 
     nothing
@@ -644,10 +643,10 @@ function combine_end(han,x,y)
     out2=1
 
     for i=2:han.partial.len
-        for j=2:han.whiskers[han.woi_id].len
-            if intersect(han.partial.x[i-1],han.partial.x[i],han.whiskers[han.woi_id].x[j-1],
-            han.whiskers[han.woi_id].x[j],han.partial.y[i-1],han.partial.y[i],
-            han.whiskers[han.woi_id].y[j-1],han.whiskers[han.woi_id].y[j])
+        for j=2:han.wt.whiskers[han.woi_id].len
+            if intersect(han.partial.x[i-1],han.partial.x[i],han.wt.whiskers[han.woi_id].x[j-1],
+            han.wt.whiskers[han.woi_id].x[j],han.partial.y[i-1],han.partial.y[i],
+            han.wt.whiskers[han.woi_id].y[j-1],han.wt.whiskers[han.woi_id].y[j])
                 out1=i
                 out2=j
                 break
@@ -659,8 +658,8 @@ function combine_end(han,x,y)
         println("No intersection found, looking for closest match")
 
         for i=2:han.partial.len
-            for j=2:han.whiskers[han.woi_id].len
-                if sqrt((han.partial.x[i]-han.whiskers[han.woi_id].x[j]).^2+(han.partial.y[i]-han.whiskers[han.woi_id].y[j]).^2)<2.0
+            for j=2:han.wt.whiskers[han.woi_id].len
+                if sqrt((han.partial.x[i]-han.wt.whiskers[han.woi_id].x[j]).^2+(han.partial.y[i]-han.wt.whiskers[han.woi_id].y[j]).^2)<2.0
                     out1=i
                     out2=j
                     break
@@ -671,10 +670,10 @@ function combine_end(han,x,y)
 
     if out1>1
         println("Segments combined")
-        new_x = [han.whiskers[han.woi_id].x[1:out2]; han.partial.x[out1:end]]
-        new_y = [han.whiskers[han.woi_id].y[1:out2]; han.partial.y[out1:end]]
-        new_scores = [han.whiskers[han.woi_id].scores[1:out2]; han.partial.scores[out1:end]]
-        new_thick = [han.whiskers[han.woi_id].thick[1:out2]; han.partial.thick[out1:end]]
+        new_x = [han.wt.whiskers[han.woi_id].x[1:out2]; han.partial.x[out1:end]]
+        new_y = [han.wt.whiskers[han.woi_id].y[1:out2]; han.partial.y[out1:end]]
+        new_scores = [han.wt.whiskers[han.woi_id].scores[1:out2]; han.partial.scores[out1:end]]
+        new_thick = [han.wt.whiskers[han.woi_id].thick[1:out2]; han.partial.thick[out1:end]]
         han.woi[han.frame].x=new_x
         han.woi[han.frame].y=new_y
         han.woi[han.frame].thick=new_thick
@@ -708,7 +707,7 @@ function draw_start(han,x,y)
 
         new_whisker.len=1
 
-        han.whiskers=[new_whisker]
+        han.wt.whiskers=[new_whisker]
 
         han.woi_id = 1
     end
@@ -726,23 +725,23 @@ function draw_move(han, x,y,ctxcopy)
 
     r=Gtk.getgc(han.c)
 
-    han.whiskers[han.woi_id].len+=1
+    han.wt.whiskers[han.woi_id].len+=1
 
-    front_dist = (han.whiskers[han.woi_id].x[1]-x)^2+(han.whiskers[han.woi_id].y[1]-y)^2
-    end_dist = (han.whiskers[han.woi_id].x[end]-x)^2+(han.whiskers[han.woi_id].y[end]-y)^2
+    front_dist = (han.wt.whiskers[han.woi_id].x[1]-x)^2+(han.wt.whiskers[han.woi_id].y[1]-y)^2
+    end_dist = (han.wt.whiskers[han.woi_id].x[end]-x)^2+(han.wt.whiskers[han.woi_id].y[end]-y)^2
 
     if end_dist<front_dist #drawing closer to end
 
-        push!(han.whiskers[han.woi_id].x,x)
-        push!(han.whiskers[han.woi_id].y,y)
-        push!(han.whiskers[han.woi_id].thick,1.0)
-        push!(han.whiskers[han.woi_id].scores,1.0)
+        push!(han.wt.whiskers[han.woi_id].x,x)
+        push!(han.wt.whiskers[han.woi_id].y,y)
+        push!(han.wt.whiskers[han.woi_id].thick,1.0)
+        push!(han.wt.whiskers[han.woi_id].scores,1.0)
 
     else
-        unshift!(han.whiskers[han.woi_id].x,x)
-        unshift!(han.whiskers[han.woi_id].y,y)
-        unshift!(han.whiskers[han.woi_id].thick,1.0)
-        unshift!(han.whiskers[han.woi_id].scores,1.0)
+        unshift!(han.wt.whiskers[han.woi_id].x,x)
+        unshift!(han.wt.whiskers[han.woi_id].y,y)
+        unshift!(han.wt.whiskers[han.woi_id].thick,1.0)
+        unshift!(han.wt.whiskers[han.woi_id].scores,1.0)
     end
 
     #redraw whisker
@@ -787,10 +786,10 @@ function erase_move(han, x,y,ctxcopy)
     r=Gtk.getgc(han.c)
 
     #check for whisker overlap and erase points that are overlapping
-    keep=trues(han.whiskers[han.woi_id].len)
-    for i=1:han.whiskers[han.woi_id].len
-        if (x+5.0>han.whiskers[han.woi_id].x[i])&(x-5.0<han.whiskers[han.woi_id].x[i])
-            if (y+5.0>han.whiskers[han.woi_id].y[i])&(y-5.0<han.whiskers[han.woi_id].y[i])
+    keep=trues(han.wt.whiskers[han.woi_id].len)
+    for i=1:han.wt.whiskers[han.woi_id].len
+        if (x+5.0>han.wt.whiskers[han.woi_id].x[i])&(x-5.0<han.wt.whiskers[han.woi_id].x[i])
+            if (y+5.0>han.wt.whiskers[han.woi_id].y[i])&(y-5.0<han.wt.whiskers[han.woi_id].y[i])
                 keep[i]=false
             end
         end
@@ -800,12 +799,12 @@ function erase_move(han, x,y,ctxcopy)
         keep[1:findfirst(keep.==false)]=false
     end
 
-    han.whiskers[han.woi_id].x=han.whiskers[han.woi_id].x[keep]
-    han.whiskers[han.woi_id].y=han.whiskers[han.woi_id].y[keep]
-    han.whiskers[han.woi_id].thick=han.whiskers[han.woi_id].thick[keep]
-    han.whiskers[han.woi_id].scores=han.whiskers[han.woi_id].scores[keep]
+    han.wt.whiskers[han.woi_id].x=han.wt.whiskers[han.woi_id].x[keep]
+    han.wt.whiskers[han.woi_id].y=han.wt.whiskers[han.woi_id].y[keep]
+    han.wt.whiskers[han.woi_id].thick=han.wt.whiskers[han.woi_id].thick[keep]
+    han.wt.whiskers[han.woi_id].scores=han.wt.whiskers[han.woi_id].scores[keep]
 
-    han.whiskers[han.woi_id].len=length(han.whiskers[han.woi_id].x)
+    han.wt.whiskers[han.woi_id].len=length(han.wt.whiskers[han.woi_id].x)
 
     #redraw whisker
     set_source(r,ctxcopy)
@@ -837,7 +836,7 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if han.sharpen_mode
         sharpen_image(han)
     end
-    han.whiskers = WT_trace(han.frame,han.current_frame')
+    han.wt.whiskers = WT_trace(han.frame,han.current_frame')
 
     WT_constraints(han)
 
@@ -848,42 +847,33 @@ end
 
 function WT_constraints(han)
 
-    pass = trues(length(han.whiskers))
-
-    for i=1:length(han.whiskers)
-        if han.whiskers[i].len<han.min_length
-            pass[i]=false
-        end
-    end
-
-    han.whiskers=han.whiskers[pass]
+    WT_length_constraint(han.wt)
 
     #order whiskers so that the last index is closest to the whisker pad
-    for i=1:length(han.whiskers)
-        front_dist = (han.whiskers[i].x[1]-han.pad_pos[1])^2+(han.whiskers[i].y[1]-han.pad_pos[2])^2
-        end_dist = (han.whiskers[i].x[end]-han.pad_pos[1])^2+(han.whiskers[i].y[end]-han.pad_pos[2])^2
+    for i=1:length(han.wt.whiskers)
+        front_dist = (han.wt.whiskers[i].x[1]-han.pad_pos[1])^2+(han.wt.whiskers[i].y[1]-han.pad_pos[2])^2
+        end_dist = (han.wt.whiskers[i].x[end]-han.pad_pos[1])^2+(han.wt.whiskers[i].y[end]-han.pad_pos[2])^2
 
         if front_dist < end_dist #
-            han.whiskers[i].x = flipdim(han.whiskers[i].x,1)
-            han.whiskers[i].y = flipdim(han.whiskers[i].y,1)
-            han.whiskers[i].scores = flipdim(han.whiskers[i].scores,1)
-            han.whiskers[i].thick = flipdim(han.whiskers[i].thick,1)
+            han.wt.whiskers[i].x = flipdim(han.wt.whiskers[i].x,1)
+            han.wt.whiskers[i].y = flipdim(han.wt.whiskers[i].y,1)
+            han.wt.whiskers[i].scores = flipdim(han.wt.whiskers[i].scores,1)
+            han.wt.whiskers[i].thick = flipdim(han.wt.whiskers[i].thick,1)
         end
     end
 
     #Apply mask
-    apply_mask(han)
-
+    apply_mask(han.wt)
 
     #get_follicle
     (fx,fy)=get_follicle(han)
     #Find most similar whisker follicle position
     #=
-    if length(han.whiskers)>0
-        min_dist = sqrt((han.whiskers[1].x[end]-fx)^2+(han.whiskers[1].y[end]-fy)^2)
+    if length(han.wt.whiskers)>0
+        min_dist = sqrt((han.wt.whiskers[1].x[end]-fx)^2+(han.wt.whiskers[1].y[end]-fy)^2)
         han.woi_id = 1
-        for i=2:length(han.whiskers)
-            mydist = sqrt((han.whiskers[i].x[end]-fx)^2+(han.whiskers[i].y[end]-fy)^2)
+        for i=2:length(han.wt.whiskers)
+            mydist = sqrt((han.wt.whiskers[i].x[end]-fx)^2+(han.wt.whiskers[i].y[end]-fy)^2)
             if mydist<min_dist
                 min_dist = mydist
                 han.woi_id = i
@@ -894,7 +884,7 @@ function WT_constraints(han)
     end
     =#
     use_both = false
-    if (length(han.whiskers)>0)&(han.frame>2)
+    if (length(han.wt.whiskers)>0)&(han.frame>2)
         #If the previous frame was tracked, compare this frame with the previous
         if han.tracked[han.frame-1]
             (mincor, w_id) = whisker_similarity(han,1)
@@ -907,7 +897,7 @@ function WT_constraints(han)
         end
         if w_id !=0
             han.woi_id = w_id
-            min_dist = sqrt((han.whiskers[w_id].x[end]-fx)^2+(han.whiskers[w_id].y[end]-fy)^2)
+            min_dist = sqrt((han.wt.whiskers[w_id].x[end]-fx)^2+(han.wt.whiskers[w_id].y[end]-fy)^2)
         else
             min_dist=100.0
         end
@@ -937,16 +927,16 @@ function WT_constraints(han)
         han.track_attempt+=1
         if han.track_attempt==1
             subtract_background(han)
-            han.whiskers = WT_trace(han.frame,han.current_frame')
+            han.wt.whiskers = WT_trace(han.frame,han.current_frame')
             WT_constraints(han)
         elseif han.track_attempt==2
             sharpen_image(han)
-            han.whiskers = WT_trace(han.frame,han.current_frame')
+            han.wt.whiskers = WT_trace(han.frame,han.current_frame')
             WT_constraints(han)
         else #tried lots of tricks, and still didn't work
             #if min_dist <20.0
                 #han.tracked[han.frame]=true
-                #han.woi[han.frame]=deepcopy(han.whiskers[han.woi_id])
+                #han.woi[han.frame]=deepcopy(han.wt.whiskers[han.woi_id])
             #end
         end
 
@@ -967,58 +957,12 @@ function WT_constraints(han)
     nothing
 end
 
-function apply_mask(han)
-
-    remove_whiskers=Array{Int64}(0)
-
-    for i=1:length(han.whiskers)
-        save_points=trues(length(han.whiskers[i].x))
-        for j=1:length(han.whiskers[i].x)
-            x_ind = round(Int64,han.whiskers[i].y[j])
-            y_ind = round(Int64,han.whiskers[i].x[j])
-
-            if x_ind<1
-                x_ind=1
-            elseif x_ind>480
-                x_ind=480
-            end
-
-            if y_ind<1
-                y_ind=1
-            elseif y_ind>640
-                y_ind=540
-            end
-
-            if han.mask[x_ind,y_ind]
-                save_points[j]=false
-            end
-        end
-
-        han.whiskers[i].x=han.whiskers[i].x[save_points]
-        han.whiskers[i].y=han.whiskers[i].y[save_points]
-        han.whiskers[i].thick=han.whiskers[i].thick[save_points]
-        han.whiskers[i].scores=han.whiskers[i].scores[save_points]
-        han.whiskers[i].len = length(han.whiskers[i].x)
-
-        #Sometimes whiskers are detected in mask of reasonable length, so they are completely deleted
-        #In this step and will mess up later processing, so we should delete them after a length check
-        if han.whiskers[i].len < han.min_length
-            push!(remove_whiskers,i)
-        end
-
-    end
-
-    deleteat!(han.whiskers,remove_whiskers)
-
-    nothing
-end
-
 function start_auto(han::Tracker_Handles)
 
     if han.frame+1 <= size(han.wt.vid,3)
         setproperty!(han.adj_frame,:value,han.frame+1)
 
-        han.whiskers = WT_trace(han.frame,han.current_frame')
+        han.wt.whiskers = WT_trace(han.frame,han.current_frame')
 
         WT_constraints(han)
 
@@ -1035,13 +979,13 @@ function plot_whiskers(han::Tracker_Handles)
 
     ctx=Gtk.getgc(han.c)
 
-    for w=1:length(han.whiskers)
+    for w=1:length(han.wt.whiskers)
 
         set_source_rgb(ctx,0.0,0.0,1.0)
 
-        move_to(ctx,han.whiskers[w].x[1],han.whiskers[w].y[1])
-        for i=2:han.whiskers[w].len
-            line_to(ctx,han.whiskers[w].x[i],han.whiskers[w].y[i])
+        move_to(ctx,han.wt.whiskers[w].x[1],han.wt.whiskers[w].y[1])
+        for i=2:han.wt.whiskers[w].len
+            line_to(ctx,han.wt.whiskers[w].x[i],han.wt.whiskers[w].y[i])
         end
         stroke(ctx)
     end
