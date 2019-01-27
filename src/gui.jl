@@ -97,9 +97,10 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
 
     win = Window(grid, "Whisker Tracker") |> showall
 
+    all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
 
     wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,50,falses(480,640),Array{Whisker1}(0),
-    (0.0,0.0),255,0)
+    (0.0,0.0),255,0,all_whiskers)
 
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     hist_c,vid[:,:,1],0,Array{Whisker1}(size(vid,3)),

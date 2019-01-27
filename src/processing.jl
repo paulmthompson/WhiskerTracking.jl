@@ -1,4 +1,6 @@
 
+export make_tracking, offline_tracking
+
 function mean_image_uint8(han)
     round.(UInt8,squeeze(mean(han.wt.vid,3),3))
 end
@@ -35,14 +37,14 @@ function upload_mask(han,mask_file)
     nothing
 end
 
-function generate_mask(han,min_val,max_val,frame_id)
+function generate_mask(wt,min_val,max_val,frame_id)
 
-    myimg = han.wt.vid[:,:,frame_id]
+    myimg = wt.vid[:,:,frame_id]
 
     myimg[myimg.>max_val]=255
     myimg[myimg.<min_val]=0
 
-    han.wt.mask=myimg.==0
+    wt.mask=myimg.==0
 
     nothing
 end
@@ -289,6 +291,47 @@ function WT_reorder_whisker(wt)
             wt.whiskers[i].scores = flipdim(wt.whiskers[i].scores,1)
             wt.whiskers[i].thick = flipdim(wt.whiskers[i].thick,1)
         end
+    end
+
+    nothing
+end
+
+function make_tracking(path,name; frame_range = (false,(0,0,0),(0,0,0)))
+
+    vid_name = string(path,name)
+    whisk_path = string(path,name,".whiskers")
+    meas_path = string(path,name,".measurements")
+
+    (vid,start_frame)=load_video(vid_name,frame_range)
+    vid_length=size(vid,3)
+
+    all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
+
+    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,50,falses(480,640),Array{Whisker1}(0),
+    (0.0,0.0),255,0,all_whiskers)
+end
+
+function offline_tracking(wt)
+
+    #Calculate background
+
+
+    for i=1:size(wt.vid,3)
+
+        #Adjust contrast
+        wt.vid[:,:,i]=adjust_contrast(wt,i)
+
+        #Sharpen
+
+        #Background subtraction
+
+        #reset whiskers for active frame
+        wt.whiskers=Array{Whisker1}(0)
+
+        WT_trace(wt,i,wt.vid[:,:,i])
+
+        wt.all_whiskers[i]=deepcopy(wt.whiskers)
+        println(string(i,"/",size(wt.vid,3)))
     end
 
     nothing

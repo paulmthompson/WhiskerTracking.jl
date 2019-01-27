@@ -97,6 +97,7 @@ type Tracker
     pad_pos::Tuple{Float32,Float32}
     contrast_max::Int64
     contrast_min::Int64
+    all_whiskers::Array{Array{Whisker1,1},1} #Whiskers on every frame
 end
 
 type Tracker_Handles
