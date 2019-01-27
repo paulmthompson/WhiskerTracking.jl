@@ -1,5 +1,5 @@
 
-function WT_trace(iFrame,image_data::Array{UInt8,2})
+function JT_trace(iFrame,image_data::Array{UInt8,2})
 
     image=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(image_data)))
     background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(zeros(UInt8,640*480))))
@@ -14,6 +14,21 @@ function WT_trace(iFrame,image_data::Array{UInt8,2})
     end
 
     wts
+end
+
+function WT_trace(wt,iFrame,image_data)
+
+    wt.whiskers=JT_trace(iFrame,image_data)
+
+    WT_length_constraint(wt)
+
+    WT_reorder_whisker(wt)
+
+    #Apply mask
+    apply_mask(wt)
+
+
+    nothing
 end
 
 function get_JT_params()

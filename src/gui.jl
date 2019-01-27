@@ -98,13 +98,14 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     win = Window(grid, "Whisker Tracker") |> showall
 
 
-    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,50,falses(480,640),Array{Whisker1}(0))
+    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,50,falses(480,640),Array{Whisker1}(0),
+    (0.0,0.0),255,0)
 
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     hist_c,vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
-    (0.0,0.0),delete_button,combine_button,0,Whisker1(),background_button,false,
-    contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,255,0,
+    delete_button,combine_button,0,Whisker1(),background_button,false,
+    contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
@@ -396,10 +397,10 @@ function adjust_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.contrast_min = getproperty(han.adj_contrast_min,:value,Int64)
-    han.contrast_max = getproperty(han.adj_contrast_max,:value,Int64)
+    han.wt.contrast_min = getproperty(han.adj_contrast_min,:value,Int64)
+    han.wt.contrast_max = getproperty(han.adj_contrast_max,:value,Int64)
 
-    adjust_contrast(han)
+    adjust_contrast_gui(han)
 
     plot_image(han,han.current_frame')
 
@@ -464,7 +465,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han.current_frame = han.wt.vid[:,:,han.frame]
 
-    adjust_contrast(han)
+    adjust_contrast_gui(han)
 
     han.track_attempt=0 #Reset
 
@@ -836,7 +837,7 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if han.sharpen_mode
         sharpen_image(han)
     end
-    han.wt.whiskers = WT_trace(han.frame,han.current_frame')
+    WT_trace(han.wt,han.frame,han.current_frame')
 
     WT_constraints(han)
 
@@ -845,25 +846,8 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+
 function WT_constraints(han)
-
-    WT_length_constraint(han.wt)
-
-    #order whiskers so that the last index is closest to the whisker pad
-    for i=1:length(han.wt.whiskers)
-        front_dist = (han.wt.whiskers[i].x[1]-han.pad_pos[1])^2+(han.wt.whiskers[i].y[1]-han.pad_pos[2])^2
-        end_dist = (han.wt.whiskers[i].x[end]-han.pad_pos[1])^2+(han.wt.whiskers[i].y[end]-han.pad_pos[2])^2
-
-        if front_dist < end_dist #
-            han.wt.whiskers[i].x = flipdim(han.wt.whiskers[i].x,1)
-            han.wt.whiskers[i].y = flipdim(han.wt.whiskers[i].y,1)
-            han.wt.whiskers[i].scores = flipdim(han.wt.whiskers[i].scores,1)
-            han.wt.whiskers[i].thick = flipdim(han.wt.whiskers[i].thick,1)
-        end
-    end
-
-    #Apply mask
-    apply_mask(han.wt)
 
     #get_follicle
     (fx,fy)=get_follicle(han)
@@ -927,11 +911,11 @@ function WT_constraints(han)
         han.track_attempt+=1
         if han.track_attempt==1
             subtract_background(han)
-            han.wt.whiskers = WT_trace(han.frame,han.current_frame')
+            WT_trace(han.wt,han.frame,han.current_frame')
             WT_constraints(han)
         elseif han.track_attempt==2
             sharpen_image(han)
-            han.wt.whiskers = WT_trace(han.frame,han.current_frame')
+            WT_trace(han.wt,han.frame,han.current_frame')
             WT_constraints(han)
         else #tried lots of tricks, and still didn't work
             #if min_dist <20.0
@@ -962,7 +946,7 @@ function start_auto(han::Tracker_Handles)
     if han.frame+1 <= size(han.wt.vid,3)
         setproperty!(han.adj_frame,:value,han.frame+1)
 
-        han.wt.whiskers = WT_trace(han.frame,han.current_frame')
+        WT_trace(han.wt,han.frame,han.current_frame')
 
         WT_constraints(han)
 

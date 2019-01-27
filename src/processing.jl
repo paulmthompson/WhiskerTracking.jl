@@ -47,16 +47,21 @@ function generate_mask(han,min_val,max_val,frame_id)
     nothing
 end
 
-function adjust_contrast(han)
+function adjust_contrast_gui(han)
 
-    myimg = han.wt.vid[:,:,han.frame]
-
-    myimg[myimg.>han.contrast_max]=255
-    myimg[myimg.<han.contrast_min]=0
-
-    han.current_frame = myimg
+    han.current_frame=adjust_contrast(han.wt,han.frame)
 
     nothing
+end
+
+function adjust_contrast(wt,iFrame)
+
+    myimg = wt.vid[:,:,iFrame]
+
+    myimg[myimg.>wt.contrast_max]=255
+    myimg[myimg.<wt.contrast_min]=0
+
+    myimg
 end
 
 function total_frames(tt,fps)
@@ -267,6 +272,24 @@ function apply_mask(wt)
     end
 
     deleteat!(wt.whiskers,remove_whiskers)
+
+    nothing
+end
+
+function WT_reorder_whisker(wt)
+
+    #order whiskers so that the last index is closest to the whisker pad
+    for i=1:length(wt.whiskers)
+        front_dist = (wt.whiskers[i].x[1]-wt.pad_pos[1])^2+(wt.whiskers[i].y[1]-wt.pad_pos[2])^2
+        end_dist = (wt.whiskers[i].x[end]-wt.pad_pos[1])^2+(wt.whiskers[i].y[end]-wt.pad_pos[2])^2
+
+        if front_dist < end_dist #
+            wt.whiskers[i].x = flipdim(wt.whiskers[i].x,1)
+            wt.whiskers[i].y = flipdim(wt.whiskers[i].y,1)
+            wt.whiskers[i].scores = flipdim(wt.whiskers[i].scores,1)
+            wt.whiskers[i].thick = flipdim(wt.whiskers[i].thick,1)
+        end
+    end
 
     nothing
 end

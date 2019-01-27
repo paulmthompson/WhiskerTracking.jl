@@ -94,6 +94,9 @@ type Tracker
     min_length::Int64 #Minimum size of traced element from Janleia tracker, in pixels
     mask::BitArray{2}
     whiskers::Array{Whisker1,1} #Properties of whiskers in active frame
+    pad_pos::Tuple{Float32,Float32}
+    contrast_max::Int64
+    contrast_min::Int64
 end
 
 type Tracker_Handles
@@ -120,7 +123,7 @@ type Tracker_Handles
 
     track_attempt::Int64
     tracked::BitArray{1} #Array of true/false to specify if corresponding frame has been tracked
-    pad_pos::Tuple{Float32,Float32}
+
     delete_button::Gtk.GtkButtonLeaf
     combine_button::Gtk.GtkToggleButtonLeaf
     combine_mode::Int64
@@ -131,8 +134,7 @@ type Tracker_Handles
     adj_contrast_min::Gtk.GtkAdjustmentLeaf
     contrast_max_slider::Gtk.GtkScaleLeaf
     adj_contrast_max::Gtk.GtkAdjustmentLeaf
-    contrast_max::Int64
-    contrast_min::Int64
+
     save_button::Gtk.GtkButtonLeaf
     load_button::Gtk.GtkButtonLeaf
     start_frame::Int64
