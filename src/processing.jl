@@ -1,15 +1,15 @@
 
 function mean_image_uint8(han)
-    round.(UInt8,squeeze(mean(han.vid,3),3))
+    round.(UInt8,squeeze(mean(han.wt.vid,3),3))
 end
 
 function mean_image(han)
-    squeeze(mean(han.vid,3),3)
+    squeeze(mean(han.wt.vid,3),3)
 end
 
 function subtract_background(han)
 
-    mydiff = han.vid[:,:,han.frame] .- mean_image(han)
+    mydiff = han.wt.vid[:,:,han.frame] .- mean_image(han)
     new_diff = (mydiff - minimum(mydiff))
     new_diff = new_diff ./ maximum(new_diff)
 
@@ -37,7 +37,7 @@ end
 
 function generate_mask(han,min_val,max_val,frame_id)
 
-    myimg = han.vid[:,:,frame_id]
+    myimg = han.wt.vid[:,:,frame_id]
 
     myimg[myimg.>max_val]=255
     myimg[myimg.<min_val]=0
@@ -49,7 +49,7 @@ end
 
 function adjust_contrast(han)
 
-    myimg = han.vid[:,:,han.frame]
+    myimg = han.wt.vid[:,:,han.frame]
 
     myimg[myimg.>han.contrast_max]=255
     myimg[myimg.<han.contrast_min]=0
@@ -163,4 +163,47 @@ function assign_woi(han)
     calc_woi_curv(han,x,y)
 
     nothing
+end
+
+function load_video(vid_name,frame_range = (false,(0,0,0),(0,0,0)))
+
+    if !frame_range[1]
+
+        xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+
+        vid=zeros(UInt8,0)
+
+        temp=zeros(UInt8,640,480)
+        yy=read(`mediainfo --Output="Video;%FrameCount%" $(vid_name)`)
+        vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
+
+        vid=zeros(480,640,vid_length)
+        for i=1:vid_length
+            read!(xx[1],temp)
+            vid[:,:,i]=temp'
+        end
+        start_frame = 1
+        #Specific range to track
+    else
+        start_time=string(frame_range[2][1],":",frame_range[2][2],":",frame_range[2][3])
+        xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+
+        tt1=Base.Dates.Time(frame_range[2]...)
+        tt2=Base.Dates.Time(frame_range[3]...)
+        vid_length = frames_between(tt1,tt2,25)
+
+        vid=zeros(UInt8,0)
+        temp=zeros(UInt8,640,480)
+
+        for i=1:vid_length
+            read!(xx[1],temp)
+            append!(vid,temp'[:])
+        end
+        close(xx[1])
+
+        start_frame = total_frames(tt1,25)
+        vid = reshape(vid,480,640,vid_length)
+    end
+
+    (vid,start_frame)
 end

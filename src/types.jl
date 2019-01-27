@@ -84,16 +84,20 @@ type JT_Params
     paramSHOW_DEBUG_MESSAGES::Cchar
 end
 
-type Tracker_Handles
+type Tracker
+    vid::Array{UInt8,3} #Video pixel data (width x height x frame)
     data_path::String
     file_name::String
     vid_name::String
     whisk_path::String
     meas_path::String
+end
+
+type Tracker_Handles
+    frame::Int64 #currently active frame number
+
     win::Gtk.GtkWindowLeaf
     c::Gtk.GtkCanvasLeaf
-    vid::Array{UInt8,3} #Video pixel data (width x height x frame)
-    frame::Int64 #currently displayed frame number
     frame_slider::Gtk.GtkScaleLeaf
     adj_frame::Gtk.GtkAdjustmentLeaf
     trace_button::Gtk.GtkButtonLeaf
@@ -145,6 +149,7 @@ type Tracker_Handles
     woi_curv::Array{Float64,1}
     jt_seed_thres_button::Gtk.GtkSpinButtonLeaf
     jt_seed_iterations_button::Gtk.GtkSpinButtonLeaf
+    wt::Tracker
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

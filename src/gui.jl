@@ -7,45 +7,8 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
 
-    if !frame_range[1]
-
-        xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
-
-        vid=zeros(UInt8,0)
-
-        temp=zeros(UInt8,640,480)
-        yy=read(`mediainfo --Output="Video;%FrameCount%" $(vid_name)`)
-        vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
-
-        vid=zeros(480,640,vid_length)
-        for i=1:vid_length
-            read!(xx[1],temp)
-            vid[:,:,i]=temp'
-        end
-        start_frame = 1
-        #Specific range to track
-    else
-        start_time=string(frame_range[2][1],":",frame_range[2][2],":",frame_range[2][3])
-        xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
-
-        tt1=Base.Dates.Time(frame_range[2]...)
-        tt2=Base.Dates.Time(frame_range[3]...)
-        vid_length = frames_between(tt1,tt2,25)
-
-        vid=zeros(UInt8,0)
-        temp=zeros(UInt8,640,480)
-
-        for i=1:vid_length
-            read!(xx[1],temp)
-            append!(vid,temp'[:])
-        end
-        close(xx[1])
-
-        start_frame = total_frames(tt1,25)
-        vid = reshape(vid,480,640,vid_length)
-    end
-
-
+    (vid,start_frame)=load_video(vid_name,frame_range)
+    vid_length=size(vid,3)
 
     c=Canvas(640,480)
 
@@ -134,7 +97,10 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
 
     win = Window(grid, "Whisker Tracker") |> showall
 
-    handles = Tracker_Handles(path,name,vid_name,whisk_path,meas_path,win,c,vid,1,
+
+    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path)
+
+    handles = Tracker_Handles(1,win,c,
     frame_slider,adj_frame,trace_button,Array{Whisker1}(0),zeros(UInt32,640,480),
     hist_c,vid[:,:,1],50,0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,falses(480,640),0,falses(size(vid,3)),
@@ -143,7 +109,7 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations)
+    janelia_seed_iterations,wt)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -325,8 +291,8 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
        dlgp = Gtk.GtkFileChooser(dlg)
 
        ccall((:gtk_file_chooser_set_do_overwrite_confirmation, Gtk.libgtk), Void, (Ptr{Gtk.GObject}, Cint), dlg, true)
-       Gtk.GAccessor.current_folder(dlgp,string(dirname(dirname(han.vid_name)),"/tracking"))
-       Gtk.GAccessor.current_name(dlgp, basename(han.vid_name)[1:(end-4)])
+       Gtk.GAccessor.current_folder(dlgp,string(dirname(dirname(han.wt.vid_name)),"/tracking"))
+       Gtk.GAccessor.current_name(dlgp, basename(han.wt.vid_name)[1:(end-4)])
        response = run(dlg)
        if response == Gtk.GConstants.GtkResponseType.ACCEPT
            selection = Gtk.bytestring(Gtk.GAccessor.filename(dlgp))
@@ -392,7 +358,7 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         close(file)
 
-        if size(han.vid,3) != length(mytracked)
+        if size(han.wt.vid,3) != length(mytracked)
             println("Error: Number of loaded whisker frames does not match number of video frames")
         else
 
@@ -497,7 +463,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han.frame = getproperty(han.adj_frame,:value,Int64)
 
-    han.current_frame = han.vid[:,:,han.frame]
+    han.current_frame = han.wt.vid[:,:,han.frame]
 
     adjust_contrast(han)
 
@@ -547,7 +513,7 @@ function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.tracked[han.frame]=false
-    han.current_frame = han.vid[:,:,han.frame]
+    han.current_frame = han.wt.vid[:,:,han.frame]
     plot_image(han,han.current_frame')
 
     nothing
@@ -1049,7 +1015,7 @@ end
 
 function start_auto(han::Tracker_Handles)
 
-    if han.frame+1 <= size(han.vid,3)
+    if han.frame+1 <= size(han.wt.vid,3)
         setproperty!(han.adj_frame,:value,han.frame+1)
 
         han.whiskers = WT_trace(han.frame,han.current_frame')
