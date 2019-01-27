@@ -14,11 +14,13 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
         vid=zeros(UInt8,0)
 
         temp=zeros(UInt8,640,480)
-        vid_length=0;
-        while !eof(xx[1])
+        yy=read(`mediainfo --Output="Video;%FrameCount%" $(vid_name)`)
+        vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
+
+        vid=zeros(480,640,vid_length)
+        for i=1:vid_length
             read!(xx[1],temp)
-            append!(vid,temp'[:])
-            vid_length+=1
+            vid[:,:,i]=temp'
         end
         start_frame = 1
         #Specific range to track
@@ -40,10 +42,10 @@ function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
         close(xx[1])
 
         start_frame = total_frames(tt1,25)
-
+        vid = reshape(vid,480,640,vid_length)
     end
 
-    vid = reshape(vid,480,640,vid_length)
+
 
     c=Canvas(640,480)
 
@@ -315,7 +317,24 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    filepath = save_dialog("Save Whisker Tracking",han.win)
+    #filepath = save_dialog("Save Whisker Tracking",han.win)
+
+    dlg = Gtk.GtkFileChooserDialog("Save WhiskerTracking", han.win, Gtk.GConstants.GtkFileChooserAction.SAVE,
+                                   (("_Cancel", Gtk.GConstants.GtkResponseType.CANCEL),
+                                    ("_Save",   Gtk.GConstants.GtkResponseType.ACCEPT));)
+       dlgp = Gtk.GtkFileChooser(dlg)
+
+       ccall((:gtk_file_chooser_set_do_overwrite_confirmation, Gtk.libgtk), Void, (Ptr{Gtk.GObject}, Cint), dlg, true)
+       Gtk.GAccessor.current_folder(dlgp,string(dirname(dirname(han.vid_name)),"/tracking"))
+       Gtk.GAccessor.current_name(dlgp, basename(han.vid_name)[1:(end-4)])
+       response = run(dlg)
+       if response == Gtk.GConstants.GtkResponseType.ACCEPT
+           selection = Gtk.bytestring(Gtk.GAccessor.filename(dlgp))
+       else
+           selection = ""
+       end
+       destroy(dlg)
+       filepath=selection
 
     if filepath != ""
 
