@@ -178,13 +178,11 @@ function load_video(vid_name,frame_range = (false,(0,0,0),(0,0,0)))
 
         xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
 
-        vid=zeros(UInt8,0)
-
         temp=zeros(UInt8,640,480)
         yy=read(`mediainfo --Output="Video;%FrameCount%" $(vid_name)`)
         vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
 
-        vid=zeros(480,640,vid_length)
+        vid=zeros(UInt8,480,640,vid_length)
         for i=1:vid_length
             read!(xx[1],temp)
             vid[:,:,i]=temp'
@@ -335,7 +333,12 @@ function offline_tracking(wt)
         println(string(i,"/",size(wt.vid,3)))
     end
 
-
-
     nothing
+end
+
+function offline_tracking_multiple()
+
+
+
+
 end

@@ -341,9 +341,27 @@ function load_whisker_data(han,filepath)
     if filepath != ""
 
         file = jldopen(filepath,"r")
-        mywhiskers = read(file,"Whiskers")
-        mytracked = read(file, "Frames_Tracked")
-        start_frame = read(file,"Start_Frame")
+        if JLD.exists(file,"Whiskers")
+            mywhiskers = read(file,"Whiskers")
+        end
+        if JLD.exists(file,"Whiskers")
+            mytracked = read(file, "Frames_Tracked")
+            if size(han.wt.vid,3) != length(mytracked)
+                println("Error: Number of loaded whisker frames does not match number of video frames")
+            else
+
+                for i=1:length(mywhiskers)
+                    han.woi[mywhiskers[i].time] = deepcopy(mywhiskers[i])
+                end
+                han.tracked = mytracked
+            end
+        end
+        if JLD.exists(file,"Start_Frame")
+            start_frame = read(file,"Start_Frame")
+            if han.start_frame != start_frame
+                println("Error: This data was not tracked starting at the same point in the video")
+            end
+        end
         if JLD.exists(file,"Touch")
             han.touch_frames=read(file,"Touch")
         end
@@ -354,24 +372,10 @@ function load_whisker_data(han,filepath)
             han.woi_curv=read(file,"Curvature")
         end
         if JLD.exists(file,"all_whiskers")
-            han.all_whiskers=read(file,"all_whiskers")
+            han.wt.all_whiskers=read(file,"all_whiskers")
         end
         close(file)
 
-        if size(han.wt.vid,3) != length(mytracked)
-            println("Error: Number of loaded whisker frames does not match number of video frames")
-        else
-
-            for i=1:length(mywhiskers)
-                han.woi[mywhiskers[i].time] = deepcopy(mywhiskers[i])
-            end
-            han.tracked = mytracked
-
-        end
-
-        if han.start_frame != start_frame
-            println("Error: This data was not tracked starting at the same point in the video")
-        end
     end
     nothing
 end
@@ -486,6 +490,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     #If whiskers were found previously, load them
     if length(han.wt.all_whiskers[han.frame])>0
         han.wt.whiskers=han.wt.all_whiskers[han.frame]
+        WT_reorder_whisker(han.wt) #If you change pad position, from when you first tracked
     end
 
     #Plot whisker if it has been previously tracked
