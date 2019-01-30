@@ -30,9 +30,9 @@ function sharpen_image(han)
     nothing
 end
 
-function upload_mask(han,mask_file)
+function upload_mask(wt,mask_file)
 
-    han.wt.mask=reinterpret(UInt8,load(string(han.wt.data_path,mask_file)))[1,:,:].==0
+    wt.mask=reinterpret(UInt8,load(string(wt.data_path,mask_file)))[1,:,:].==0
 
     nothing
 end
@@ -110,6 +110,7 @@ function get_follicle(han)
     (x,y)
 end
 
+#I should interpolate or something here to compare similiar sections of each whisker
 function whisker_similarity(han,prev)
     w2=[han.woi[han.frame-prev].x[(end-9):end] han.woi[han.frame-prev].y[(end-9):end]]
     mincor=10000.0
@@ -263,7 +264,7 @@ function apply_mask(wt)
             if y_ind<1
                 y_ind=1
             elseif y_ind>640
-                y_ind=540
+                y_ind=640
             end
 
             if wt.mask[x_ind,y_ind]
