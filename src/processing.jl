@@ -211,13 +211,13 @@ function load_video(vid_name,frame_range = (false,0.0,0))
         xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
 
         vid_length = frame_range[3]
+        vid=zeros(UInt8,480,640,vid_length)
 
-        vid=zeros(UInt8,0)
         temp=zeros(UInt8,640,480)
 
         for i=1:vid_length
             read!(xx[1],temp)
-            append!(vid,temp'[:])
+            vid[:,:,i]=temp'
         end
         close(xx[1])
 

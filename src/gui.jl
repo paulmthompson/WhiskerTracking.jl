@@ -868,7 +868,7 @@ end
 
 function WT_constraints(han)
 
-    #get_follicle
+    #get_follicle average
     (fx,fy)=get_follicle(han)
     #Find most similar whisker follicle position
     #=
@@ -914,7 +914,7 @@ function WT_constraints(han)
     #and try again
     if !han.tracked[han.frame]
         if (use_both)
-            if (mincor<15.0)&(min_dist < 20.0)
+            if ((mincor<15.0)&(min_dist < 20.0))|(mincor<5.0)
                 han.tracked[han.frame]=true
                 assign_woi(han)
             end
