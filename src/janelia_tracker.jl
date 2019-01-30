@@ -27,6 +27,8 @@ function WT_trace(wt,iFrame,image_data)
     #Apply mask
     apply_mask(wt)
 
+    apply_roi(wt)
+
 
     nothing
 end

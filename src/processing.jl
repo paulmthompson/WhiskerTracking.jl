@@ -56,6 +56,22 @@ function adjust_contrast_gui(han)
     nothing
 end
 
+function apply_roi(wt)
+
+    keep=trues(length(wt.whiskers))
+
+    for i=1:length(wt.whiskers)
+
+        if sqrt((wt.pad_pos[1]-wt.whiskers[i].x[end])^2+(wt.pad_pos[2]-wt.whiskers[i].y[end])^2)>100.0
+            keep[i]=false
+        end
+    end
+
+    wt.whiskers=wt.whiskers[keep]
+
+    nothing
+end
+
 function adjust_contrast(wt,iFrame)
 
     myimg = wt.vid[:,:,iFrame]
@@ -172,7 +188,7 @@ function assign_woi(han)
     nothing
 end
 
-function load_video(vid_name,frame_range = (false,(0,0,0),(0,0,0)))
+function load_video(vid_name,frame_range = (false,0.0,0))
 
     if !frame_range[1]
 
@@ -190,12 +206,10 @@ function load_video(vid_name,frame_range = (false,(0,0,0),(0,0,0)))
         start_frame = 1
         #Specific range to track
     else
-        start_time=string(frame_range[2][1],":",frame_range[2][2],":",frame_range[2][3])
+        start_time=frame_range[2]
         xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
 
-        tt1=Base.Dates.Time(frame_range[2]...)
-        tt2=Base.Dates.Time(frame_range[3]...)
-        vid_length = frames_between(tt1,tt2,25)
+        vid_length = frame_range[3]
 
         vid=zeros(UInt8,0)
         temp=zeros(UInt8,640,480)
@@ -206,7 +220,7 @@ function load_video(vid_name,frame_range = (false,(0,0,0),(0,0,0)))
         end
         close(xx[1])
 
-        start_frame = total_frames(tt1,25)
+        start_frame = frame_range[2] * 25
         vid = reshape(vid,480,640,vid_length)
     end
 
@@ -294,7 +308,7 @@ function WT_reorder_whisker(wt)
     nothing
 end
 
-function make_tracking(path,name; frame_range = (false,(0,0,0),(0,0,0)))
+function make_tracking(path,name; frame_range = (false,0.0,0))
 
     vid_name = string(path,name)
     whisk_path = string(path,name,".whiskers")

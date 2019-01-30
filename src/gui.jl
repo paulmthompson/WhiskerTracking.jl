@@ -1,7 +1,7 @@
 
 export make_gui
 
-function make_gui(path,name; frame_range = (false,(0,0,0),(0,0,0)))
+function make_gui(path,name; frame_range = (false,0.0,0))
 
     vid_name = string(path,name)
     whisk_path = string(path,name,".whiskers")
