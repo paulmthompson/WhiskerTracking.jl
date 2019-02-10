@@ -32,7 +32,15 @@ end
 
 function upload_mask(wt,mask_file)
 
-    wt.mask=reinterpret(UInt8,load(string(wt.data_path,mask_file)))[1,:,:].==0
+    #Load mask
+    myimg = reinterpret(UInt8,load(string(wt.data_path,mask_file)))
+
+
+    if size(myimg,3) == 1
+        wt.mask = myimg.==0
+    else
+        wt.mask=myimg[1,:,:].==0
+    end
 
     nothing
 end

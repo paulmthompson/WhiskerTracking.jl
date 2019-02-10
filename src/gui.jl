@@ -110,7 +110,7 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt)
+    janelia_seed_iterations,wt,5.0)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -914,7 +914,7 @@ function WT_constraints(han)
     #and try again
     if !han.tracked[han.frame]
         if (use_both)
-            if ((mincor<15.0)&(min_dist < 20.0))|(mincor<5.0)
+            if ((mincor<15.0)&(min_dist < 20.0))|(mincor<han.cor_thres)
                 han.tracked[han.frame]=true
                 assign_woi(han)
             end

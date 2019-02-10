@@ -155,6 +155,7 @@ type Tracker_Handles
     jt_seed_thres_button::Gtk.GtkSpinButtonLeaf
     jt_seed_iterations_button::Gtk.GtkSpinButtonLeaf
     wt::Tracker
+    cor_thres::Float64
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)
