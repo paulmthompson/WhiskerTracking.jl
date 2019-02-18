@@ -340,11 +340,14 @@ function offline_tracking(wt,max_whiskers=10)
     for i=1:size(wt.vid,3)
 
         #Adjust contrast
-        wt.vid[:,:,i]=adjust_contrast(wt,i)
+        #wt.vid[:,:,i]=adjust_contrast(wt,i)
+        temp_img = local_contrast_enhance(img)
 
-        #Sharpen
+        #anisotropic diffusion to smooth while perserving edges
+        temp_img=WhiskerTracking.anisodiff(temp_img,20,20,0.05,1)
 
-        #Background subtraction
+        wt.vid[:,:,i] = round(UInt8,temp_img)
+
 
         #reset whiskers for active frame
         wt.whiskers=Array{Whisker1}(0)
@@ -362,6 +365,8 @@ function offline_tracking(wt,max_whiskers=10)
         wt.all_whiskers[i]=deepcopy(wt.whiskers)
         println(string(i,"/",size(wt.vid,3)))
     end
+
+    reorder_whiskers(wt)
 
     nothing
 end
@@ -554,6 +559,15 @@ function anisodiff(im, niter, kappa, lambda, option)
     end
 
     diff
+end
+
+function local_contrast_enhance(img)
+
+    img2 = img./255
+
+    img2 = Images.clahe(img2,256,xblocks=30,yblocks=30,clip=15)*255
+
+    img2
 end
 
 function offline_tracking_multiple()
