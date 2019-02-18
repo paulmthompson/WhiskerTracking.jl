@@ -332,7 +332,7 @@ function make_tracking(path,name; frame_range = (false,0.0,0))
     (0.0,0.0),255,0,all_whiskers)
 end
 
-function offline_tracking(wt)
+function offline_tracking(wt,max_whiskers=10)
 
     #Calculate background
 
@@ -352,8 +352,104 @@ function offline_tracking(wt)
         #Need to transpose becuase row major in C vs column major in julia
         WT_trace(wt,i,wt.vid[:,:,i]')
 
+        #Whisker number
+        if length(wt.whiskers)>max_whiskers
+            remove_bad_whiskers(wt,i,max_whiskers)
+        end
+
         wt.all_whiskers[i]=deepcopy(wt.whiskers)
         println(string(i,"/",size(wt.vid,3)))
+    end
+
+    nothing
+end
+
+function remove_bad_whiskers(wt,i,imax_whiskers)
+
+    if i>1
+        whisker_prev_frame(wt,i)
+    else
+        wt.whiskers=wt.whiskers[1:max_whiskers]
+    end
+
+    nothing
+end
+
+function whisker_prev_frame(wt,iFrame,keep_thres=20.0)
+
+    keep=Array{Int64,1}(0)
+
+    for i=1:length(wt.whiskers)
+        w2=[wt.whiskers[i].x[(end-9):end] wt.whiskers[i].y[(end-9):end]]
+        mincor=10000.0
+        w_id = 0;
+        for j=1:length(wt.all_whiskers[iFrame-1])
+            w1=[wt.all_whiskers[iFrame-1][j].x[(end-9):end] wt.all_whiskers[iFrame-1][j].y[(end-9):end]]
+
+            mycor=euclidean(w1,w2)
+            if mycor < mincor
+                mincor=mycor
+                w_id = i
+            end
+        end
+        if mincor<keep_thres
+            push!(keep,i)
+        end
+    end
+
+    wt.whiskers=wt.whiskers[keep]
+
+    nothing
+end
+
+function eliminate_redundant(wt,keep_thres=20.0)
+
+    i=1
+
+    while i<length(wt.whiskers)
+        w2=[wt.whiskers[i].x[(end-19):end] wt.whiskers[i].y[(end-19):end]]
+
+        mincor=10000.0
+        w_id = 0;
+        for j=1:length(wt.whiskers)
+
+            if j != i
+                w1=[wt.whiskers[j].x[(end-19):end] wt.whiskers[j].y[(end-19):end]]
+
+                mycor=euclidean(w1,w2)
+                if mycor < mincor
+                    mincor=mycor
+                    w_id = i
+                end
+            end
+            if mincor<keep_thres
+                w1_score=mean(wt.whiskers[j].scores)
+                w2_score=mean(wt.whiskers[i].scores)
+
+                if w1_score > w2_score
+                    deleteat!(wt.whiskers,i)
+                else
+                    deleteat!(wt.whiskers,j)
+                end
+
+                i=1
+                break
+            end
+        end
+        i+=1
+    end
+
+    nothing
+end
+
+#Order anterior to posterior
+function reorder_whiskers(wt)
+
+    for i=1:length(wt.all_whiskers)
+
+        xpos=[wt.all_whiskers[i][j].x[end] for j=1:length(wt.all_whiskers[i])]
+        wt.all_whiskers[i]=wt.all_whiskers[i][sortperm(xpos)]
+        
     end
 
     nothing
