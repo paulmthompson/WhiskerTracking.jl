@@ -927,6 +927,7 @@ function WT_constraints(han)
         end
     end
 
+    #=
     if !han.tracked[han.frame]
         han.track_attempt+=1
         if han.track_attempt==1
@@ -948,6 +949,7 @@ function WT_constraints(han)
             println("Frame number: ", han.frame, " Distance: ", min_dist)
             println("Track attempt: ", han.track_attempt)
     end
+    =#
 
     #Check for overlapped whiskers
 

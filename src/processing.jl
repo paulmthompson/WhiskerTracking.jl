@@ -354,8 +354,10 @@ function offline_tracking(wt,max_whiskers=10)
 
         #Whisker number
         if length(wt.whiskers)>max_whiskers
-            remove_bad_whiskers(wt,i,max_whiskers)
+            #remove_bad_whiskers(wt,i,max_whiskers)
         end
+
+        eliminate_redundant(wt)
 
         wt.all_whiskers[i]=deepcopy(wt.whiskers)
         println(string(i,"/",size(wt.vid,3)))
@@ -449,10 +451,109 @@ function reorder_whiskers(wt)
 
         xpos=[wt.all_whiskers[i][j].x[end] for j=1:length(wt.all_whiskers[i])]
         wt.all_whiskers[i]=wt.all_whiskers[i][sortperm(xpos)]
-        
+
     end
 
     nothing
+end
+
+function anisodiff(im, niter, kappa, lambda, option)
+#=
+% Arguments:
+%         im     - input image
+%         niter  - number of iterations.
+%         kappa  - conduction coefficient 20-100 ?
+%         lambda - max value of .25 for stability
+%         option - 1 Perona Malik diffusion equation No 1
+%                  2 Perona Malik diffusion equation No 2
+%
+% Returns:
+%         diff   - diffused image.
+%
+% kappa controls conduction as a function of gradient.  If kappa is low
+% small intensity gradients are able to block conduction and hence diffusion
+% across step edges.  A large value reduces the influence of intensity
+% gradients on conduction.
+%
+% lambda controls speed of diffusion (you usually want it at a maximum of
+% 0.25)
+%
+% Diffusion equation 1 favours high contrast edges over low contrast ones.
+% Diffusion equation 2 favours wide regions over smaller ones.
+
+% Reference:
+% P. Perona and J. Malik.
+% Scale-space and edge detection using ansotropic diffusion.
+% IEEE Transactions on Pattern Analysis and Machine Intelligence,
+% 12(7):629-639, July 1990.
+%
+% Peter Kovesi
+% www.peterkovesi.com/matlabfns/
+%
+% June 2000  original version.
+% March 2002 corrected diffusion eqn No 2.
+=#
+
+    (rows,cols) = size(im);
+    diff=zeros(Float64,size(im))
+    diff[:] = im;
+    diffl = zeros(rows+2, cols+2);
+    deltaN=zeros(size(im))
+    deltaS=zeros(size(im))
+    deltaE=zeros(size(im))
+    deltaW=zeros(size(im))
+    cN = zeros(size(deltaN))
+    cS = zeros(size(deltaS))
+    cE = zeros(size(deltaE))
+    cW = zeros(size(deltaW))
+
+    for i = 1:niter
+
+      #Construct diffl which is the same as diff but
+      #has an extra padding of zeros around it.
+        for j=1:rows
+            for k=1:cols
+                diffl[j+1, k+1] = diff[j,k];
+            end
+        end
+
+
+      #North, South, East and West differences
+        for j=1:rows
+            for k=1:cols
+                deltaN[j,k] = diffl[j,k+1] - diff[j,k]
+                deltaS[j,k] = diffl[j+2,k+1] - diff[j,k]
+                deltaE[j,k] = diffl[j+1,k+2] - diff[j,k];
+                deltaW[j,k] = diffl[j+1,k] - diff[j,k];
+            end
+        end
+
+      #Conduction
+      if option == 1
+            for j=1:length(cN)
+                cN[j] = exp(-(deltaN[j]/kappa)^2)
+                cS[j] = exp(-(deltaS[j]/kappa)^2)
+                cE[j] = exp(-(deltaE[j]/kappa)^2)
+                cW[j] = exp(-(deltaW[j]/kappa)^2)
+            end
+      elseif option == 2
+            for j=1:length(cN)
+                cN[j] = 1/(1 + (deltaN[j]/kappa)^2)
+                cS[j] = 1/(1 + (deltaS[j]/kappa)^2)
+                cE[j] = 1/(1 + (deltaE[j]/kappa)^2)
+                cW[j] = 1/(1 + (deltaW[j]/kappa)^2)
+            end
+      end
+
+
+        for j=1:rows
+            for k=1:cols
+                diff[j,k] = diff[j,k] + lambda*(cN[j,k]*deltaN[j,k] + cS[j,k]*deltaS[j,k] + cE[j,k]*deltaE[j,k] + cW[j,k]*deltaW[j,k]);
+            end
+        end
+    end
+
+    diff
 end
 
 function offline_tracking_multiple()

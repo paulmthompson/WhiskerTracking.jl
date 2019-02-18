@@ -29,6 +29,7 @@ function WT_trace(wt,iFrame,image_data)
 
     apply_roi(wt)
 
+    eliminate_redundant(wt)
 
     nothing
 end
