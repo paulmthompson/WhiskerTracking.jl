@@ -491,6 +491,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     if length(han.wt.all_whiskers[han.frame])>0
         han.wt.whiskers=han.wt.all_whiskers[han.frame]
         WT_reorder_whisker(han.wt) #If you change pad position, from when you first tracked
+        plot_whiskers(han)
     end
 
     #Plot whisker if it has been previously tracked
