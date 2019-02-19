@@ -110,7 +110,7 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0)
+    janelia_seed_iterations,wt,5.0,false)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -518,11 +518,13 @@ function auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     @async if getproperty(han.auto_button, :active, Bool)
         han.auto_mode = true
+        han.stop_flag=false
         while getproperty(han.auto_button, :active, Bool)
             start_auto(han)
         end
     else
         han.auto_mode = false
+        han.stop_flag=false
     end
 
     nothing
@@ -927,6 +929,9 @@ function WT_constraints(han)
         end
     end
 
+    if !han.tracked[han.frame]
+        han.stop_flag = true
+    end
     #=
     if !han.tracked[han.frame]
         han.track_attempt+=1
@@ -965,7 +970,7 @@ end
 
 function start_auto(han::Tracker_Handles)
 
-    if han.frame+1 <= size(han.wt.vid,3)
+    if (han.frame+1 <= size(han.wt.vid,3))&(!han.stop_flag)
         #advance one frame
         setproperty!(han.adj_frame,:value,han.frame+1)
 
