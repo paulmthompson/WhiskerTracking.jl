@@ -341,7 +341,7 @@ function offline_tracking(wt,max_whiskers=10)
 
         #Adjust contrast
         #wt.vid[:,:,i]=adjust_contrast(wt,i)
-        temp_img = local_contrast_enhance(img)
+        temp_img = local_contrast_enhance(wt.vid[:,:,i])
 
         #anisotropic diffusion to smooth while perserving edges
         temp_img=WhiskerTracking.anisodiff(temp_img,20,20,0.05,1)
