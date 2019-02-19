@@ -1,4 +1,6 @@
 
+const background_img = zeros(UInt8,640*480)
+
 function JT_trace(iFrame,image_data::Array{UInt8,2})
 
     image=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(image_data)))
@@ -10,8 +12,11 @@ function JT_trace(iFrame,image_data::Array{UInt8,2})
     wts=Array{Whisker1}(0)
 
     for i=1:pnseg[]
-        push!(wts,Whisker1(unsafe_load(data,i)))
+        ww=Whisker1(unsafe_load(data,i))
+        push!(wts,deepcopy(ww))
     end
+
+    ccall(Libdl.dlsym(libwhisk,:Free_Whisker_Seg_Vec),Void,(Ptr{Whisker2}, Int32),data,pnseg[])
 
     wts
 end

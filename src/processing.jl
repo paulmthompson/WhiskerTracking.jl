@@ -336,18 +336,22 @@ function offline_tracking(wt,max_whiskers=10)
 
     #Calculate background
 
+    temp_img = zeros(Float64,size(wt.vid,1),size(wt.vid,2))
 
     for i=1:size(wt.vid,3)
 
         #Adjust contrast
         #wt.vid[:,:,i]=adjust_contrast(wt,i)
-        temp_img = local_contrast_enhance(wt.vid[:,:,i])
+        local_contrast_enhance!(wt.vid[:,:,i],temp_img)
 
         #anisotropic diffusion to smooth while perserving edges
-        temp_img=WhiskerTracking.anisodiff(temp_img,20,20,0.05,1)
+        anisodiff!(temp_img, 20,20,0.05,1,temp_img)
 
-        wt.vid[:,:,i] = round(UInt8,temp_img)
-
+        for j=1:size(wt.vid,1)
+            for k=1:size(wt.vid,2)
+                wt.vid[j,k,i] = round(UInt8,temp_img[j,k])
+            end
+        end
 
         #reset whiskers for active frame
         wt.whiskers=Array{Whisker1}(0)
@@ -462,7 +466,13 @@ function reorder_whiskers(wt)
     nothing
 end
 
-function anisodiff(im, niter, kappa, lambda, option)
+function anisodiff(im,niter,kappa,lambda,option)
+    diff=zeros(Float64,size(im))
+    anisodiff!(im,niter,kappa,lambda,option,diff)
+    diff
+end
+
+function anisodiff!(im, niter, kappa, lambda, option,diff=zeros(Float64,size(im)))
 #=
 % Arguments:
 %         im     - input image
@@ -500,7 +510,6 @@ function anisodiff(im, niter, kappa, lambda, option)
 =#
 
     (rows,cols) = size(im);
-    diff=zeros(Float64,size(im))
     diff[:] = im;
     diffl = zeros(rows+2, cols+2);
     deltaN=zeros(size(im))
@@ -558,7 +567,22 @@ function anisodiff(im, niter, kappa, lambda, option)
         end
     end
 
-    diff
+    nothing
+end
+
+function local_contrast_enhance!(img,out_img)
+
+    for i=1:length(img)
+        out_img[i] = img[i]/255
+    end
+
+    img2 = Images.clahe(out_img,256,xblocks=30,yblocks=30,clip=15)
+
+    for i=1:length(img2)
+        out_img[i] = img2[i]*255
+    end
+
+    nothing
 end
 
 function local_contrast_enhance(img)
