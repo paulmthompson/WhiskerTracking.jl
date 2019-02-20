@@ -85,7 +85,7 @@ type JT_Params
 end
 
 type Tracker
-    vid::Array{UInt8,3} #Video pixel data (width x height x frame)
+    vid::SharedArray{UInt8,3} #Video pixel data (width x height x frame)
     data_path::String
     file_name::String
     vid_name::String

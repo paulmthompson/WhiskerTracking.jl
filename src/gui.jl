@@ -490,7 +490,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     #If whiskers were found previously, load them
     if length(han.wt.all_whiskers[han.frame])>0
         han.wt.whiskers=han.wt.all_whiskers[han.frame]
-        WT_reorder_whisker(han.wt) #If you change pad position, from when you first tracked
+        WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
         plot_whiskers(han)
     end
 
@@ -859,7 +859,7 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if han.sharpen_mode
         sharpen_image(han)
     end
-    WT_trace(han.wt,han.frame,han.current_frame')
+    WT_trace(han.frame,han.current_frame',han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
     WT_constraints(han)
 
@@ -975,7 +975,7 @@ function start_auto(han::Tracker_Handles)
         setproperty!(han.adj_frame,:value,han.frame+1)
 
         if length(han.wt.all_whiskers[han.frame])==0
-            WT_trace(han.wt,han.frame,han.current_frame')
+            WT_trace(han.frame,han.current_frame',han.wt.min_length,han.wt.pad_pos,han.wt.mask)
         end
 
         #Link whiskers

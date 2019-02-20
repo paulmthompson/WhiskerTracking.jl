@@ -64,18 +64,18 @@ function adjust_contrast_gui(han)
     nothing
 end
 
-function apply_roi(wt)
+function apply_roi(whiskers,pad_pos)
 
-    keep=trues(length(wt.whiskers))
+    remove_whiskers=Array{Int64}(0)
 
-    for i=1:length(wt.whiskers)
+    for i=1:length(whiskers)
 
-        if sqrt((wt.pad_pos[1]-wt.whiskers[i].x[end])^2+(wt.pad_pos[2]-wt.whiskers[i].y[end])^2)>100.0
-            keep[i]=false
+        if sqrt((pad_pos[1]-whiskers[i].x[end])^2+(pad_pos[2]-whiskers[i].y[end])^2)>100.0
+            push!(remove_whiskers,i)
         end
     end
 
-    wt.whiskers=wt.whiskers[keep]
+    deleteat!(whiskers,remove_whiskers)
 
     nothing
 end
@@ -233,84 +233,87 @@ function load_video(vid_name,frame_range = (false,0.0,0))
         vid = reshape(vid,480,640,vid_length)
     end
 
+    vid = convert(SharedArray{UInt8,3},vid)
+
     (vid,start_frame)
 end
 
-function WT_length_constraint(wt)
+function WT_length_constraint(whiskers,min_length)
 
-    pass = trues(length(wt.whiskers))
+    remove_whiskers=Array{Int64}(0)
 
     #length constraint
-    for i=1:length(wt.whiskers)
-        if wt.whiskers[i].len<wt.min_length
-            pass[i]=false
+    for i=1:length(whiskers)
+        if whiskers[i].len<min_length
+            push!(remove_whiskers,i)
         end
     end
 
-    wt.whiskers=wt.whiskers[pass]
+    deleteat!(whiskers,remove_whiskers)
 
     nothing
 end
 
 
-function apply_mask(wt)
+function apply_mask(whiskers,mask,min_length)
 
     remove_whiskers=Array{Int64}(0)
 
-    for i=1:length(wt.whiskers)
-        save_points=trues(length(wt.whiskers[i].x))
-        for j=1:length(wt.whiskers[i].x)
-            x_ind = round(Int64,wt.whiskers[i].y[j])
-            y_ind = round(Int64,wt.whiskers[i].x[j])
+    for i=1:length(whiskers)
+        save_points=trues(length(whiskers[i].x))
+        for j=1:length(whiskers[i].x)
+            x_ind = round(Int64,whiskers[i].y[j])
+            y_ind = round(Int64,whiskers[i].x[j])
+
 
             if x_ind<1
                 x_ind=1
-            elseif x_ind>480
-                x_ind=480
+            elseif x_ind>size(mask,1)
+                x_ind=size(mask,1)
             end
 
             if y_ind<1
                 y_ind=1
-            elseif y_ind>640
-                y_ind=640
+            elseif y_ind>size(mask,2)
+                y_ind=size(mask,2)
             end
 
-            if wt.mask[x_ind,y_ind]
+            if mask[x_ind,y_ind]
                 save_points[j]=false
             end
         end
 
-        wt.whiskers[i].x=wt.whiskers[i].x[save_points]
-        wt.whiskers[i].y=wt.whiskers[i].y[save_points]
-        wt.whiskers[i].thick=wt.whiskers[i].thick[save_points]
-        wt.whiskers[i].scores=wt.whiskers[i].scores[save_points]
-        wt.whiskers[i].len = length(wt.whiskers[i].x)
+        whiskers[i].x=whiskers[i].x[save_points]
+        whiskers[i].y=whiskers[i].y[save_points]
+        whiskers[i].thick=whiskers[i].thick[save_points]
+        whiskers[i].scores=whiskers[i].scores[save_points]
+        whiskers[i].len = length(whiskers[i].x)
 
         #Sometimes whiskers are detected in mask of reasonable length, so they are completely deleted
         #In this step and will mess up later processing, so we should delete them after a length check
-        if wt.whiskers[i].len < wt.min_length
+        if whiskers[i].len < min_length
             push!(remove_whiskers,i)
         end
 
     end
 
-    deleteat!(wt.whiskers,remove_whiskers)
+    deleteat!(whiskers,remove_whiskers)
 
     nothing
 end
 
-function WT_reorder_whisker(wt)
+function WT_reorder_whisker(whiskers,pad_pos)
 
     #order whiskers so that the last index is closest to the whisker pad
-    for i=1:length(wt.whiskers)
-        front_dist = (wt.whiskers[i].x[1]-wt.pad_pos[1])^2+(wt.whiskers[i].y[1]-wt.pad_pos[2])^2
-        end_dist = (wt.whiskers[i].x[end]-wt.pad_pos[1])^2+(wt.whiskers[i].y[end]-wt.pad_pos[2])^2
+    for i=1:length(whiskers)
+        front_dist = (whiskers[i].x[1]-pad_pos[1])^2+(whiskers[i].y[1]-pad_pos[2])^2
+        end_dist = (whiskers[i].x[end]-pad_pos[1])^2+(whiskers[i].y[end]-pad_pos[2])^2
 
         if front_dist < end_dist #
-            wt.whiskers[i].x = flipdim(wt.whiskers[i].x,1)
-            wt.whiskers[i].y = flipdim(wt.whiskers[i].y,1)
-            wt.whiskers[i].scores = flipdim(wt.whiskers[i].scores,1)
-            wt.whiskers[i].thick = flipdim(wt.whiskers[i].thick,1)
+            whiskers[i].x = flipdim(whiskers[i].x,1)
+            whiskers[i].y = flipdim(whiskers[i].y,1)
+            whiskers[i].scores = flipdim(whiskers[i].scores,1)
+            whiskers[i].thick = flipdim(whiskers[i].thick,1)
         end
     end
 
@@ -332,43 +335,59 @@ function make_tracking(path,name; frame_range = (false,0.0,0))
     (0.0,0.0),255,0,all_whiskers)
 end
 
+
+function image_preprocessing(vid,i)
+
+    temp_img = zeros(Float64,size(vid,1),size(vid,2))
+
+    #Adjust contrast
+
+    for j=1:size(vid,1)
+        for k=1:size(vid,2)
+            temp_img[j,k] = convert(Float64,vid[j,k,i])
+        end
+    end
+
+    local_contrast_enhance!(temp_img,temp_img)
+
+    #anisotropic diffusion to smooth while perserving edges
+    anisodiff!(temp_img, 20,20,0.05,1,temp_img)
+
+    for j=1:size(vid,1)
+        for k=1:size(vid,2)
+            vid[j,k,i] = round(UInt8,temp_img[j,k])
+        end
+    end
+
+    nothing
+end
+
+
 function offline_tracking(wt,max_whiskers=10)
 
-    #Calculate background
-
-    temp_img = zeros(Float64,size(wt.vid,1),size(wt.vid,2))
+    for i=1:size(wt.vid,3)
+        image_preprocessing(wt.vid,i)
+    end
 
     for i=1:size(wt.vid,3)
-
-        #Adjust contrast
-        #wt.vid[:,:,i]=adjust_contrast(wt,i)
-        local_contrast_enhance!(wt.vid[:,:,i],temp_img)
-
-        #anisotropic diffusion to smooth while perserving edges
-        anisodiff!(temp_img, 20,20,0.05,1,temp_img)
-
-        for j=1:size(wt.vid,1)
-            for k=1:size(wt.vid,2)
-                wt.vid[j,k,i] = round(UInt8,temp_img[j,k])
-            end
-        end
-
-        #reset whiskers for active frame
-        wt.whiskers=Array{Whisker1}(0)
-
         #Need to transpose becuase row major in C vs column major in julia
-        WT_trace(wt,i,wt.vid[:,:,i]')
-
-        #Whisker number
-        if length(wt.whiskers)>max_whiskers
-            #remove_bad_whiskers(wt,i,max_whiskers)
-        end
-
-        eliminate_redundant(wt)
-
-        wt.all_whiskers[i]=deepcopy(wt.whiskers)
+        wt.all_whiskers[i]=WT_trace(i,wt.vid[:,:,i]',wt.min_length,wt.pad_pos,wt.mask)
         println(string(i,"/",size(wt.vid,3)))
     end
+
+    reorder_whiskers(wt)
+
+    nothing
+end
+
+function offline_tracking_parallel(wt,max_whiskers=10)
+
+    pmap(t->image_preprocessing(wt.vid,t),1:size(wt.vid,3))
+    #pmap(t->image_preprocessing(wt.vid,t),1:10)
+    println("Preprocessing complete")
+
+    wt.all_whiskers=pmap(t->WT_trace(t,wt.vid[:,:,t]',wt.min_length,wt.pad_pos,wt.mask),1:size(wt.vid,3))
+    #wt.all_whiskers=pmap(t->WT_trace(t,wt.vid[:,:,t]',wt.min_length,wt.pad_pos,wt.mask),1:10)
 
     reorder_whiskers(wt)
 
@@ -413,19 +432,19 @@ function whisker_prev_frame(wt,iFrame,keep_thres=20.0)
     nothing
 end
 
-function eliminate_redundant(wt,keep_thres=20.0)
+function eliminate_redundant(whiskers,keep_thres=20.0)
 
     i=1
 
-    while i<length(wt.whiskers)
-        w2=[wt.whiskers[i].x[(end-19):end] wt.whiskers[i].y[(end-19):end]]
+    while i<length(whiskers)
+        w2=[whiskers[i].x[(end-19):end] whiskers[i].y[(end-19):end]]
 
         mincor=10000.0
         w_id = 0;
-        for j=1:length(wt.whiskers)
+        for j=1:length(whiskers)
 
             if j != i
-                w1=[wt.whiskers[j].x[(end-19):end] wt.whiskers[j].y[(end-19):end]]
+                w1=[whiskers[j].x[(end-19):end] whiskers[j].y[(end-19):end]]
 
                 mycor=euclidean(w1,w2)
                 if mycor < mincor
@@ -434,13 +453,13 @@ function eliminate_redundant(wt,keep_thres=20.0)
                 end
             end
             if mincor<keep_thres
-                w1_score=mean(wt.whiskers[j].scores)
-                w2_score=mean(wt.whiskers[i].scores)
+                w1_score=mean(whiskers[j].scores)
+                w2_score=mean(whiskers[i].scores)
 
                 if w1_score > w2_score
-                    deleteat!(wt.whiskers,i)
+                    deleteat!(whiskers,i)
                 else
-                    deleteat!(wt.whiskers,j)
+                    deleteat!(whiskers,j)
                 end
 
                 i=1
@@ -570,6 +589,8 @@ function anisodiff!(im, niter, kappa, lambda, option,diff=zeros(Float64,size(im)
     nothing
 end
 
+#The clahe method from Images is not optomized for iterations.
+#Should make a new method that preallocates a temp array to be reused.
 function local_contrast_enhance!(img,out_img)
 
     for i=1:length(img)

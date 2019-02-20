@@ -21,22 +21,22 @@ function JT_trace(iFrame,image_data::Array{UInt8,2})
     wts
 end
 
-function WT_trace(wt,iFrame,image_data)
+function WT_trace(iFrame,image_data,min_length,pad_pos,mask)
 
-    wt.whiskers=JT_trace(iFrame,image_data)
+    whiskers=JT_trace(iFrame,image_data)
 
-    WT_length_constraint(wt)
+    WT_length_constraint(whiskers,min_length)
 
-    WT_reorder_whisker(wt)
+    WT_reorder_whisker(whiskers,pad_pos)
 
     #Apply mask
-    apply_mask(wt)
+    apply_mask(whiskers,mask,min_length)
 
-    apply_roi(wt)
+    apply_roi(whiskers,pad_pos)
 
-    eliminate_redundant(wt)
+    eliminate_redundant(whiskers)
 
-    nothing
+    whiskers
 end
 
 function get_JT_params()
