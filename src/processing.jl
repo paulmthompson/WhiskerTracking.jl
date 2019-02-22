@@ -331,7 +331,9 @@ function make_tracking(path,name; frame_range = (false,0.0,0))
 
     all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
 
-    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,50,falses(480,640),Array{Whisker1}(0),
+    tracker_name=vid_name[1:(end-4)]
+
+    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1}(0),
     (0.0,0.0),255,0,all_whiskers)
 end
 

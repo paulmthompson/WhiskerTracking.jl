@@ -91,7 +91,9 @@ type Tracker
     vid_name::String
     whisk_path::String
     meas_path::String
-    min_length::Int64 #Minimum size of traced element from Janleia tracker, in pixels
+    tracking_path::String
+    tracking_name::String
+    min_length::Int64 #Minimum size of traced element from Janelia tracker, in pixels
     mask::BitArray{2}
     whiskers::Array{Whisker1,1} #Properties of whiskers in active frame
     pad_pos::Tuple{Float32,Float32}
@@ -148,7 +150,8 @@ type Tracker_Handles
     touch_button::Gtk.GtkToggleButtonLeaf
     touch_mode::Bool
     touch_mask::BitArray{2}
-    touch_override::Gtk.GtkButtonLeaf
+    touch_override::Gtk.GtkToggleButtonLeaf
+    touch_override_mode::Bool
     touch_frames::BitArray{1}
     woi_angle::Array{Float64,1}
     woi_curv::Array{Float64,1}

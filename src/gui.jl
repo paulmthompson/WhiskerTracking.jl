@@ -76,7 +76,7 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     touch_button = ToggleButton("Define Touch")
     control_grid[2,9] = touch_button
 
-    touch_override = Button("Touch Override")
+    touch_override = ToggleButton("Touch Override")
     control_grid[2,10] = touch_override
 
     janelia_label=Label("Janelia Parameters")
@@ -99,7 +99,9 @@ function make_gui(path,name; frame_range = (false,0.0,0))
 
     all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
 
-    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,50,falses(480,640),Array{Whisker1}(0),
+    tracker_name = (vid_name)[1:(end-4)]
+
+    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1}(0),
     (0.0,0.0),255,0,all_whiskers)
 
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
@@ -108,7 +110,7 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
-    draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,
+    draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false)
 
@@ -174,7 +176,8 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.touch_frames[han.frame] = !han.touch_frames[han.frame]
+    #han.touch_frames[han.frame] = !han.touch_frames[han.frame]
+    han.touch_override_mode = getproperty(han.touch_override,:active,Bool)
 
     draw_touch(han)
 
@@ -198,6 +201,10 @@ function detect_touch(han)
         end
 
         if hit>2
+            han.touch_frames[han.frame]=true
+        end
+
+        if han.touch_override_mode
             han.touch_frames[han.frame]=true
         end
 
@@ -292,8 +299,8 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
        dlgp = Gtk.GtkFileChooser(dlg)
 
        ccall((:gtk_file_chooser_set_do_overwrite_confirmation, Gtk.libgtk), Void, (Ptr{Gtk.GObject}, Cint), dlg, true)
-       Gtk.GAccessor.current_folder(dlgp,string(dirname(dirname(han.wt.vid_name)),"/tracking"))
-       Gtk.GAccessor.current_name(dlgp, basename(han.wt.vid_name)[1:(end-4)])
+       Gtk.GAccessor.current_folder(dlgp,string(han.wt.tracking_path,"/tracking"))
+       Gtk.GAccessor.current_name(dlgp, han.wt.tracking_name)
        response = run(dlg)
        if response == Gtk.GConstants.GtkResponseType.ACCEPT
            selection = Gtk.bytestring(Gtk.GAccessor.filename(dlgp))
@@ -375,6 +382,9 @@ function load_whisker_data(han,filepath)
             han.wt.all_whiskers=read(file,"all_whiskers")
         end
         close(file)
+
+        #change saving
+
 
     end
     nothing
@@ -499,6 +509,9 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
         han.wt.whiskers=[han.woi[han.frame]]
         han.woi_id = 1
         plot_whiskers(han)
+
+
+        detect_touch(han)
     end
 
     #Load prior position of tracked whisker (if it exists)
