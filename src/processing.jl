@@ -617,6 +617,60 @@ function local_contrast_enhance(img)
     img2
 end
 
+function extend_whisker(whisker,mask)
+
+    extend=true
+
+    v_y=whisker.y[end] - whisker.y[end-1]
+    v_x=whisker.x[end] - whisker.x[end-1]
+
+    new_x=[whisker.x[end]; whisker.x[end]+v_x]
+    new_y=[whisker.y[end]; whisker.y[end]+v_y]
+
+    while (extend)
+        x_ind = round(Int64,new_y[end])
+        y_ind = round(Int64,new_x[end])
+
+        if x_ind<1
+            x_ind=1
+        elseif x_ind>size(mask,1)
+            x_ind=size(mask,1)
+        end
+
+        if y_ind<1
+            y_ind=1
+        elseif y_ind>size(mask,2)
+            y_ind=size(mask,2)
+        end
+
+        if mask[x_ind,y_ind]
+            break
+            extend=false
+        elseif (x_ind<5)|(y_ind<5)|(x_ind>size(mask,1)-5)|(y_ind>size(mask,2)-5)
+            break
+            extend=false
+        else
+            v_y=new_y[end] - new_y[end-1]
+            v_x=new_x[end] - new_x[end-1]
+
+            push!(new_x,new_x[end]+v_x)
+            push!(new_y,new_y[end]+v_y)
+        end
+    end
+
+    if length(new_y)>2
+
+        append!(whisker.x,new_x[3:end])
+        append!(whisker.y,new_y[3:end])
+        whisker.len += (length(new_y)-2)
+        append!(whisker.scores,0.0)
+        append!(whisker.thick,0.0)
+
+    end
+
+    nothing
+end
+
 function offline_tracking_multiple()
 
 
