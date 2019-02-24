@@ -46,6 +46,9 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     auto_button=ToggleButton("Auto")
     control_grid[1,5]=auto_button
 
+    auto_overwrite = CheckButton("Auto Overwrite")
+    control_grid[2,5]=auto_overwrite
+
     erase_button=ToggleButton("Erase Mode")
     control_grid[1,6]=erase_button
 
@@ -112,7 +115,7 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0,false)
+    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -134,6 +137,7 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_cb,touch_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
+    signal_connect(auto_overwrite_cb,auto_overwrite,"clicked",Void,(),false,(handles,))
 
     signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
     signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
@@ -180,6 +184,15 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han.touch_override_mode = getproperty(han.touch_override,:active,Bool)
 
     draw_touch(han)
+
+    nothing
+end
+
+function auto_overwrite_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.overwrite_mode = getproperty(han.overwrite_button,:active,Bool)
 
     nothing
 end
@@ -505,14 +518,14 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     end
 
     #Plot whisker if it has been previously tracked
-    if han.tracked[han.frame]
-        han.wt.whiskers=[han.woi[han.frame]]
-        han.woi_id = 1
-        plot_whiskers(han)
+    #if han.tracked[han.frame]
+        #han.wt.whiskers=[han.woi[han.frame]]
+        #han.woi_id = 1
+        #plot_whiskers(han)
 
 
-        detect_touch(han)
-    end
+        #detect_touch(han)
+    #end
 
     #Load prior position of tracked whisker (if it exists)
     if han.frame-1 != 0
@@ -884,6 +897,10 @@ end
 
 function WT_constraints(han)
 
+    if (han.overwrite_mode)
+        han.tracked[han.frame]=false
+    end
+
     #get_follicle average
     (fx,fy)=get_follicle(han)
     #Find most similar whisker follicle position
@@ -928,7 +945,7 @@ function WT_constraints(han)
     # If about 0.07 mm / pixel or about 20 pixels
     #If we don't have a whisker with this criteria met, adjust paramters
     #and try again
-    if !han.tracked[han.frame]
+    if (!han.tracked[han.frame])
         if (use_both)
             if ((mincor<15.0)&(min_dist < 20.0))|(mincor<han.cor_thres)
                 han.tracked[han.frame]=true

@@ -160,6 +160,8 @@ type Tracker_Handles
     wt::Tracker
     cor_thres::Float64
     stop_flag::Bool
+    overwrite_mode::Bool
+    overwrite_button::Gtk.GtkCheckButtonLeaf
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)
