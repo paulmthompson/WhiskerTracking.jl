@@ -341,6 +341,7 @@ end
 function image_preprocessing(vid,i)
 
     temp_img = zeros(Float64,size(vid,1),size(vid,2))
+    temp_img2=zeros(Float64,size(vid,1),size(vid,2))
 
     #Adjust contrast
 
@@ -353,7 +354,7 @@ function image_preprocessing(vid,i)
     local_contrast_enhance!(temp_img,temp_img)
 
     #anisotropic diffusion to smooth while perserving edges
-    anisodiff!(temp_img, 20,20,0.05,1,temp_img)
+    anisodiff!(temp_img, 20,20,0.05,1,temp_img2)
 
     for j=1:size(vid,1)
         for k=1:size(vid,2)
@@ -493,7 +494,7 @@ function anisodiff(im,niter,kappa,lambda,option)
     diff
 end
 
-function anisodiff!(im, niter, kappa, lambda, option,diff=zeros(Float64,size(im)))
+function anisodiff!(im::Array{Float64,2}, niter::Int64, kappa::Float64, lambda::Float64, option::Int64,dd=zeros(Float64,size(dd)))
 #=
 % Arguments:
 %         im     - input image
@@ -530,60 +531,55 @@ function anisodiff!(im, niter, kappa, lambda, option,diff=zeros(Float64,size(im)
 % March 2002 corrected diffusion eqn No 2.
 =#
 
-    (rows,cols) = size(im);
-    diff[:] = im;
-    diffl = zeros(rows+2, cols+2);
-    deltaN=zeros(size(im))
-    deltaS=zeros(size(im))
-    deltaE=zeros(size(im))
-    deltaW=zeros(size(im))
-    cN = zeros(size(deltaN))
-    cS = zeros(size(deltaS))
-    cE = zeros(size(deltaE))
-    cW = zeros(size(deltaW))
+    (rows,cols) = size(dd);
+    #rows=480
+    #cols=640
 
     for i = 1:niter
-
-      #Construct diffl which is the same as diff but
-      #has an extra padding of zeros around it.
-        for j=1:rows
-            for k=1:cols
-                diffl[j+1, k+1] = diff[j,k];
-            end
+        for j=1:length(im)
+            dd[j]=im[j]
         end
 
+        for k=1:cols
+            for j=1:rows
 
-      #North, South, East and West differences
-        for j=1:rows
-            for k=1:cols
-                deltaN[j,k] = diffl[j,k+1] - diff[j,k]
-                deltaS[j,k] = diffl[j+2,k+1] - diff[j,k]
-                deltaE[j,k] = diffl[j+1,k+2] - diff[j,k];
-                deltaW[j,k] = diffl[j+1,k] - diff[j,k];
-            end
-        end
+                if j==1
+                    deltaN = -1 * dd[j,k]
+                else
+                    @inbounds deltaN = dd[j-1,k] - dd[j,k]
+                end
 
-      #Conduction
-      if option == 1
-            for j=1:length(cN)
-                cN[j] = exp(-(deltaN[j]/kappa)^2)
-                cS[j] = exp(-(deltaS[j]/kappa)^2)
-                cE[j] = exp(-(deltaE[j]/kappa)^2)
-                cW[j] = exp(-(deltaW[j]/kappa)^2)
-            end
-      elseif option == 2
-            for j=1:length(cN)
-                cN[j] = 1/(1 + (deltaN[j]/kappa)^2)
-                cS[j] = 1/(1 + (deltaS[j]/kappa)^2)
-                cE[j] = 1/(1 + (deltaE[j]/kappa)^2)
-                cW[j] = 1/(1 + (deltaW[j]/kappa)^2)
-            end
-      end
+                if j==rows
+                    deltaS = -1 * dd[j,k]
+                else
+                    @inbounds deltaS = dd[j+1,k] - dd[j,k]
+                end
 
+                if k==1
+                    deltaW = -1 * dd[j,k]
+                else
+                    @inbounds deltaW = dd[j,k-1] - dd[j,k];
+                end
 
-        for j=1:rows
-            for k=1:cols
-                diff[j,k] = diff[j,k] + lambda*(cN[j,k]*deltaN[j,k] + cS[j,k]*deltaS[j,k] + cE[j,k]*deltaE[j,k] + cW[j,k]*deltaW[j,k]);
+                if k==cols
+                    deltaE = -1 * dd[j,k]
+                else
+                    @inbounds deltaE = dd[j,k+1] - dd[j,k];
+                end
+
+                #if option == 1
+                    cN = exp(-(deltaN/kappa)*(deltaN/kappa))
+                    cS = exp(-(deltaS/kappa)*(deltaS/kappa))
+                    cE = exp(-(deltaE/kappa)*(deltaE/kappa))
+                    cW = exp(-(deltaW/kappa)*(deltaW/kappa))
+                #else
+                    #cN = 1/(1 + (deltaN/kappa)*(deltaN/kappa))
+                    #cS = 1/(1 + (deltaS/kappa)*(deltaS/kappa))
+                    #cE = 1/(1 + (deltaE/kappa)*(deltaE/kappa))
+                    #cW = 1/(1 + (deltaW/kappa)*(deltaW/kappa))
+                #end
+
+                @inbounds im[j,k] = dd[j,k] + lambda*(cN*deltaN + cS*deltaS + cE*deltaE + cW*deltaW);
             end
         end
     end
