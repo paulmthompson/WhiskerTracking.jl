@@ -7,5 +7,6 @@ include("types.jl")
 include("gui.jl")
 include("janelia_tracker.jl")
 include("processing.jl")
+include("image_processing.jl")
 
 end
