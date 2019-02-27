@@ -168,6 +168,9 @@ function assign_woi(han)
     nothing
 end
 
+#=
+
+=#
 function load_video(vid_name,frame_range = (false,0.0,0))
 
     if !frame_range[1]
@@ -280,10 +283,10 @@ function WT_reorder_whisker(whiskers,pad_pos)
         end_dist = (whiskers[i].x[end]-pad_pos[1])^2+(whiskers[i].y[end]-pad_pos[2])^2
 
         if front_dist < end_dist #
-            whiskers[i].x = flipdim(whiskers[i].x,1)
-            whiskers[i].y = flipdim(whiskers[i].y,1)
-            whiskers[i].scores = flipdim(whiskers[i].scores,1)
-            whiskers[i].thick = flipdim(whiskers[i].thick,1)
+            reverse!(whiskers[i].x,1)
+            reverse!(whiskers[i].y,1)
+            reverse!(whiskers[i].scores,1)
+            reveres!(whiskers[i].thick,1)
         end
     end
 
