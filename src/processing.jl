@@ -107,9 +107,9 @@ end
 
 whisker_similarity(han) = whisker_similarity(han,1)
 
-function smooth(x::Vector, window_len::Int=7, window::Symbol=:lanczos)
-    w = getfield(DSP.Windows, window)(window_len)
-    return DSP.filtfilt(w ./ sum(w), [1.0], x)
+function smooth(x, window_len=7)
+    w = getfield(DSP.Windows, :lanczos)(window_len)
+    DSP.filtfilt(w ./ sum(w), [1.0], x)
 end
 
 function calc_woi_angle(han,x,y)
@@ -159,8 +159,13 @@ function assign_woi(han)
 
     han.woi[han.frame] = deepcopy(han.wt.whiskers[han.woi_id])
 
-    x=smooth(han.woi[han.frame].x)
-    y=smooth(han.woi[han.frame].y)
+    #=
+    These don't work for some reason
+    =#
+    #x=smooth(han.woi[han.frame].x)
+    #y=smooth(han.woi[han.frame].y)
+    x=han.woi[han.frame].x
+    y=han.woi[han.frame].y
 
     calc_woi_angle(han,x,y)
     calc_woi_curv(han,x,y)
