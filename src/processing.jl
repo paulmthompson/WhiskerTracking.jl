@@ -286,7 +286,7 @@ function WT_reorder_whisker(whiskers,pad_pos)
             reverse!(whiskers[i].x,1)
             reverse!(whiskers[i].y,1)
             reverse!(whiskers[i].scores,1)
-            reveres!(whiskers[i].thick,1)
+            reverse!(whiskers[i].thick,1)
         end
     end
 

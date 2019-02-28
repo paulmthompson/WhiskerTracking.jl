@@ -15,7 +15,7 @@ function image_preprocessing(vid,i)
     local_contrast_enhance!(temp_img,temp_img)
 
     #anisotropic diffusion to smooth while perserving edges
-    anisodiff!(temp_img, 20,20,0.05,1,temp_img2)
+    anisodiff!(temp_img, 20,20.0,0.05,1,temp_img2)
 
     for j=1:size(vid,1)
         for k=1:size(vid,2)
