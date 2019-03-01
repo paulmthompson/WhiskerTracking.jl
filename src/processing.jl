@@ -186,7 +186,7 @@ function load_video(vid_name,frame_range = (false,0.0,0))
         yy=read(`mediainfo --Output="Video;%FrameCount%" $(vid_name)`)
         vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
 
-        vid=zeros(UInt8,480,640,vid_length)
+        vid=SharedArray{UInt8}(480,640,vid_length)
         for i=1:vid_length
             read!(xx[1],temp)
             vid[:,:,i]=temp'
@@ -198,7 +198,7 @@ function load_video(vid_name,frame_range = (false,0.0,0))
         xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
 
         vid_length = frame_range[3]
-        vid=zeros(UInt8,480,640,vid_length)
+        vid=SharedArray{UInt8}(480,640,vid_length)
 
         temp=zeros(UInt8,640,480)
 
@@ -211,8 +211,6 @@ function load_video(vid_name,frame_range = (false,0.0,0))
         start_frame = frame_range[2] * 25
         vid = reshape(vid,480,640,vid_length)
     end
-
-    vid = convert(SharedArray{UInt8,3},vid)
 
     (vid,start_frame)
 end
