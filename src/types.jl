@@ -13,6 +13,20 @@ type WT_Image
     array::Ptr{UInt8} #data
 end
 
+type Line_Params
+    offset::Float32
+    angle::Float32
+    width::Float32
+    score::Float32
+end
+
+type Seed
+    xpnt::Int32
+    ypnt::Int32
+    xdir::Int32
+    ydir::Int32
+end
+
 type Whisker1
     id::Int32
     time::Int32
