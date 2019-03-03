@@ -885,7 +885,7 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if han.sharpen_mode
         sharpen_image(han)
     end
-    WT_trace(han.frame,han.current_frame',han.wt.min_length,han.wt.pad_pos,han.wt.mask)
+    han.wt.whiskers=WT_trace(han.frame,han.current_frame',han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
     WT_constraints(han)
 
