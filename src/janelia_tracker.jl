@@ -1,22 +1,26 @@
 
 const background_img = zeros(UInt8,640*480)
 
+const background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(background_img)))
+
 function JT_trace(iFrame,image_data::Array{UInt8,2})
 
-    image=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(image_data)))
-    background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(zeros(UInt8,640*480))))
+    img=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(image_data)))
+    #background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(zeros(UInt8,640*480))))
+
     pnseg=Ref{Int32}(0)
 
-    data=ccall(Libdl.dlsym(libwhisk,:find_segments),Ptr{Whisker2},(Int32,Ref{WT_Image},Ref{WT_Image},Ref{Int32}),iFrame,image,background,pnseg)
+    data=ccall((:find_segments,libwhisk_path),Ptr{Whisker2},(Int32,Ref{WT_Image},Ref{WT_Image},Ref{Int32}),iFrame,img,background,pnseg)
 
     wts=Array{Whisker1}(0)
 
     for i=1:pnseg[]
         ww=Whisker1(unsafe_load(data,i))
         push!(wts,deepcopy(ww))
+        #push!(wts,Whisker1(unsafe_load(data,i)))
     end
 
-    ccall(Libdl.dlsym(libwhisk,:Free_Whisker_Seg_Vec),Void,(Ptr{Whisker2}, Int32),data,pnseg[])
+    ccall((:Free_Whisker_Seg_Vec,libwhisk_path),Void,(Ptr{Whisker2}, Int32),data,pnseg[])
 
     wts
 end
@@ -56,10 +60,10 @@ end
 
 function JT_find_segments(img,h,th,s,facemask)
 
-    ccall(Libdl.dlsym(WhiskerTracking.libwhisk,:compute_seed_from_point_field_on_grid),Void,(Ref{WhiskerTracking.WT_Image},Int32,Int32,Int32,Float32,Float32,Ref{WhiskerTracking.WT_Image},Ref{WhiskerTracking.WT_Image},Ref{WhiskerTracking.WT_Image}),
-    image,50,4,5,0.0f0,0.0f0,h,th,s)
+    ccall(Libdl.dlsym(libwhisk,:compute_seed_from_point_field_on_grid),Void,(Ref{WT_Image},Int32,Int32,Int32,Float32,Float32,Ref{WT_Image},Ref{WT_Image},Ref{WT_Image}),
+    img,50,4,5,0.0f0,0.0f0,h,th,s)
 
-    mystride = image[].height
+    mystride = img[].height
 
     s_j=unsafe_wrap(Array,convert(Ptr{Float32},s[].array),(480*640,))
     h_j=unsafe_wrap(Array,h[].array,(480*640,))
@@ -105,7 +109,7 @@ function JT_find_segments(img,h,th,s,facemask)
 
         myline[].angle=myangle
 
-        scores[j]=ccall(Libdl.dlsym(WhiskerTracking.libwhisk,:eval_line),Float32,(Ref{Line_Params},Ref{WhiskerTracking.WT_Image},Int32),myline,image,convert(Int32,i-1))
+        scores[j]=ccall(Libdl.dlsym(libwhisk,:eval_line),Float32,(Ref{Line_Params},Ref{WT_Image},Int32),myline,img,convert(Int32,i-1))
         j+=1
     end
 
@@ -118,12 +122,12 @@ function JT_find_segments(img,h,th,s,facemask)
         ss[].ypnt=div(inds[i]-1,mystride)
         ss[].xdir=round(Int32,100 * cos(th_j[inds[i]]))
         ss[].ydir=round(Int32,100 * sin(th_j[inds[i]]))
-        w=ccall(Libdl.dlsym(WhiskerTracking.libwhisk,:trace_whisker),Ptr{WhiskerTracking.Whisker2},(Ref{Seed},Ref{WhiskerTracking.WT_Image}),ss,image)
+        w=ccall(Libdl.dlsym(libwhisk,:trace_whisker),Ptr{Whisker2},(Ref{Seed},Ref{WT_Image}),ss,img)
 
         if w == C_NULL
             ss[].ydir=round(Int32,100 * cos(th_j[inds[i]]))
             ss[].xdir=round(Int32,100 * sin(th_j[inds[i]]))
-            w=ccall(Libdl.dlsym(WhiskerTracking.libwhisk,:trace_whisker),Ptr{WhiskerTracking.Whisker2},(Ref{Seed},Ref{WhiskerTracking.WT_Image}),ss,image)
+            w=ccall(Libdl.dlsym(libwhisk,:trace_whisker),Ptr{Whisker2},(Ref{Seed},Ref{WT_Image}),ss,img)
         end
 
         if w != C_NULL
@@ -131,5 +135,5 @@ function JT_find_segments(img,h,th,s,facemask)
         end
     end
 
-    nseeds
+    nsegs
 end

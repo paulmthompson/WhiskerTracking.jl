@@ -971,7 +971,7 @@ function WT_constraints(han)
             WT_constraints(han)
         elseif han.track_attempt==2
             sharpen_image(han)
-            WT_trace(han.wt,han.frame,han.current_frame')
+            plot_(han.wt,han.frame,han.current_frame')
             WT_constraints(han)
         else #tried lots of tricks, and still didn't work
             #if min_dist <20.0
