@@ -49,6 +49,17 @@ type Whisker2
     scores::Ptr{Float32}
 end
 
+function Whisker2(w::Whisker1)
+    id=w.id
+    time=w.time
+    len=w.len
+    x=pointer(w.x)
+    y=pointer(w.y)
+    thick=pointer(w.thick)
+    scores=pointer(w.scores)
+    Whisker2(id,time,len,x,y,thick,scores)
+end
+
 function Whisker1(w::Whisker2)
     id=w.id
     time=w.time
@@ -58,6 +69,22 @@ function Whisker1(w::Whisker2)
     thick=unsafe_wrap(Array,w.thick,len)
     scores=unsafe_wrap(Array,w.scores,len)
     Whisker1(id,time,len,x,y,thick,scores)
+end
+
+immutable JT_Measurements
+    row::Int32
+    fid::Int32
+    wid::Int32
+    state::Int32 #1 if Whisker, 0 if not. Defaults to 0 when measurements are first made
+    face_x::Int32
+    face_y::Int32
+    col_follicle_x::Int32
+    col_follicle_y::Int32
+    valid_velocity::Int32
+    n::Int32
+    face_axis::Cuchar
+    data::Ptr{Float64}
+    velocity::Ptr{Float64}
 end
 
 type JT_Params

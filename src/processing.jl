@@ -174,7 +174,9 @@ function assign_woi(han)
 end
 
 #=
+Put the Loading steps in try/catch blocks in case there is some error calculating frames
 
+Is there a way with ffmpeg to determine the number of frames?
 =#
 function load_video(vid_name,frame_range = (false,0.0,0))
 
