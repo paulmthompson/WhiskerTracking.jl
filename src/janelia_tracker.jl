@@ -74,6 +74,20 @@ function JT_measure(wt,frame_id,whisker_num)
     unsafe_load(mm,1)
 end
 
+function get_JT_measurements(wt)
+
+    mymeas=Array{JT_Measurements,1}(0)
+
+    for i=1:length(wt.all_whiskers)
+        for j=1:length(wt.all_whiskers[i])
+            xx=JT_measure(wt,i,j)
+            push!(mymeas,xx)
+        end
+    end
+
+    mymeas
+end
+
 function JT_find_segments(img,h,th,s,facemask)
 
     ccall(Libdl.dlsym(libwhisk,:compute_seed_from_point_field_on_grid),Void,(Ref{WT_Image},Int32,Int32,Int32,Float32,Float32,Ref{WT_Image},Ref{WT_Image},Ref{WT_Image}),
