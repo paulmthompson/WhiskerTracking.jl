@@ -186,6 +186,8 @@ function load_video(vid_name,frame_range = (false,0.0,0))
 
         temp=zeros(UInt8,640,480)
         yy=read(`mediainfo --Output="Video;%FrameCount%" $(vid_name)`)
+
+        #this isn"t always accurate. need a try catch block here
         vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
 
         vid=SharedArray{UInt8}(480,640,vid_length)
@@ -213,6 +215,8 @@ function load_video(vid_name,frame_range = (false,0.0,0))
         start_frame = frame_range[2] * 25
         vid = reshape(vid,480,640,vid_length)
     end
+
+    println("Video loaded.")
 
     (vid,start_frame)
 end
@@ -334,11 +338,12 @@ end
 
 function offline_tracking_parallel(wt,max_whiskers=10)
 
-    pmap(t->image_preprocessing(wt.vid,t),1:size(wt.vid,3))
+    pmap(t->image_preprocessing(wt.vid,t),1:size(wt.vid,3),batch_size=ceil(Int,size(wt.vid,3)/nworkers()))
     #pmap(t->image_preprocessing(wt.vid,t),1:10)
     println("Preprocessing complete")
 
-    wt.all_whiskers=pmap(t->WT_trace(t,wt.vid[:,:,t]',wt.min_length,wt.pad_pos,wt.mask),1:size(wt.vid,3))
+    wt.all_whiskers=pmap(t->WT_trace(t,wt.vid[:,:,t]',wt.min_length,wt.pad_pos,wt.mask),1:size(wt.vid,3),
+    batch_size=ceil(Int,size(wt.vid,3)/nworkers()))
     #wt.all_whiskers=pmap(t->WT_trace(t,wt.vid[:,:,t]',wt.min_length,wt.pad_pos,wt.mask),1:10)
 
     reorder_whiskers(wt)
