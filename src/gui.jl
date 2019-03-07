@@ -397,6 +397,7 @@ function load_whisker_data(han,filepath)
         close(file)
 
         #change saving
+        han.wt.tracking_name = filepath
 
 
     end

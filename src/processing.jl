@@ -89,20 +89,30 @@ function get_follicle(han)
     (x,y)
 end
 
-#I should interpolate or something here to compare similiar sections of each whisker
+#Need to optimize this significantly
+#Really we want this to be such that the length of each line is equal.
+#Probably can do this by interpolating along each segment or something
+#I also need to reverse these
 function whisker_similarity(han,prev)
-    w2=[han.woi[han.frame-prev].x[(end-9):end] han.woi[han.frame-prev].y[(end-9):end]]
-    mincor=10000.0
+
+    cor_length=20
+
+    w2=[han.woi[han.frame-prev].x han.woi[han.frame-prev].y]
+    mincor=10000.0.*ones(length(han.wt.whiskers))
     w_id = 0;
     for i=1:length(han.wt.whiskers)
-        w1=[han.wt.whiskers[i].x[(end-9):end] han.wt.whiskers[i].y[(end-9):end]]
-        mycor=euclidean(w1,w2)
-        if mycor < mincor
-            mincor=mycor
-            w_id = i
+        w1=[han.wt.whiskers[i].x han.wt.whiskers[i].y]
+
+        for j=1:(size(w1,1)-cor_length)
+            for k=1:(size(w2,1)-cor_length)
+                mycor=Distances.euclidean(w1[j:(j+cor_length),:],w2[k:(k+cor_length),:])
+                if mycor < mincor[i]
+                    mincor[i]=mycor
+                end
+            end
         end
     end
-    (mincor,w_id)
+    findmin(mincor)
 end
 
 whisker_similarity(han) = whisker_similarity(han,1)
