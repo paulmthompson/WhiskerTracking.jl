@@ -263,11 +263,13 @@ function apply_mask(whiskers,mask,min_length)
     remove_whiskers=Array{Int64}(0)
 
     for i=1:length(whiskers)
-        save_points=trues(length(whiskers[i].x))
+        delete_points=Array{Int64}(0)
+
+        #Start at the tip and work our way back to the follicle.
+        #If the mask hits something, we should probably delete all points following
         for j=1:length(whiskers[i].x)
             x_ind = round(Int64,whiskers[i].y[j])
             y_ind = round(Int64,whiskers[i].x[j])
-
 
             if x_ind<1
                 x_ind=1
@@ -282,14 +284,17 @@ function apply_mask(whiskers,mask,min_length)
             end
 
             if mask[x_ind,y_ind]
-                save_points[j]=false
+                for k=j:length(whiskers[i].x)
+                    push!(delete_points,k)
+                end
+                break
             end
         end
 
-        whiskers[i].x=whiskers[i].x[save_points]
-        whiskers[i].y=whiskers[i].y[save_points]
-        whiskers[i].thick=whiskers[i].thick[save_points]
-        whiskers[i].scores=whiskers[i].scores[save_points]
+        deleteat!(whiskers[i].x,delete_points)
+        deleteat!(whiskers[i].y,delete_points)
+        deleteat!(whiskers[i].thick,delete_points)
+        deleteat!(whiskers[i].scores,delete_points)
         whiskers[i].len = length(whiskers[i].x)
 
         #Sometimes whiskers are detected in mask of reasonable length, so they are completely deleted
