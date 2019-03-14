@@ -97,15 +97,17 @@ function whisker_similarity(han,prev)
 
     cor_length=20
 
-    w2=[han.woi[han.frame-prev].x han.woi[han.frame-prev].y]
+    w2_x=han.woi[han.frame-prev].x
+    w2_y=han.woi[han.frame-prev].y
     mincor=10000.0.*ones(length(han.wt.whiskers))
     w_id = 0;
     for i=1:length(han.wt.whiskers)
-        w1=[han.wt.whiskers[i].x han.wt.whiskers[i].y]
+        w1_x=han.wt.whiskers[i].x
+        w1_y=han.wt.whiskers[i].y
 
-        for j=1:(size(w1,1)-cor_length)
-            for k=1:(size(w2,1)-cor_length)
-                mycor=Distances.euclidean(w1[j:(j+cor_length),:],w2[k:(k+cor_length),:])
+        for j=1:(size(w1_x,1)-cor_length)
+            for k=1:(size(w2_x,1)-cor_length)
+                mycor=w_dist(w1_x,w2_x,w1_y,w2_y,j,k,cor_length)
                 if mycor < mincor[i]
                     mincor[i]=mycor
                 end
@@ -113,6 +115,15 @@ function whisker_similarity(han,prev)
         end
     end
     findmin(mincor)
+end
+
+function w_dist(x1,x2,y1,y2,i1,i2,cor_length)
+
+    mysum=0.0
+    for jj=1:cor_length
+        mysum += sqrt((x2[i2+jj] - x1[i1+jj]) ^ 2 + (y2[i2+jj] - y1[i1+jj]) ^2)
+    end
+    mysum
 end
 
 whisker_similarity(han) = whisker_similarity(han,1)

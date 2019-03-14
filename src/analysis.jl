@@ -10,7 +10,7 @@ function get_phase(aa)
     designmethod=Butterworth(4)
     df1=digitalfilter(responsetype,designmethod)
     myfilter=DF2TFilter(df1)
-    filter_aa=filt(myfilter,aa)
+    filter_aa=filt(myfilter,aa) #filtfilt?
 
     hh=hilbert(filter_aa)
 
