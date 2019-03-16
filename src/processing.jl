@@ -522,6 +522,35 @@ function extend_whisker(whisker,mask)
     nothing
 end
 
+function find_intersecting(whiskers)
+
+    myoverlap=Array{Tuple{Int64,Int64},1}(0)
+    overlap_i=Array{Tuple{Int64,Int64},1}(0)
+
+    for i=1:length(whiskers)
+
+        w1_x=whiskers[i].x
+        w1_y=whiskers[i].y
+        for j=(i+1):length(whiskers)
+
+                w2_x=whiskers[j].x
+                w2_y=whiskers[j].y
+
+                for ii=2:length(w1_x), jj = 2:length(w2_x)
+                    if WhiskerTracking.intersect(w1_x[ii-1],w1_x[ii],w2_x[jj-1],w2_x[jj],
+                            w1_y[ii-1],w1_y[ii],w2_y[jj-1],w2_y[jj])
+                            push!(myoverlap,(i,j))
+                            push!(overlap_i,(ii,jj))
+                            break
+                    end
+                end
+
+        end
+
+    end
+    (myoverlap,overlap_i)
+end
+
 function offline_tracking_multiple()
 
 
