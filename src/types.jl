@@ -5,7 +5,7 @@ libwhisk = Libdl.dlopen(libwhisk_path)
 const ffmpeg_path = "/home/wanglab/Programs/ffmpeg/ffmpeg"
 
 
-type WT_Image
+mutable struct WT_Image
     kind::Int32 #bytes per pixel
     width::Int32
     height::Int32
@@ -13,21 +13,21 @@ type WT_Image
     array::Ptr{UInt8} #data
 end
 
-type Line_Params
+mutable struct Line_Params
     offset::Float32
     angle::Float32
     width::Float32
     score::Float32
 end
 
-type Seed
+mutable struct Seed
     xpnt::Int32
     ypnt::Int32
     xdir::Int32
     ydir::Int32
 end
 
-type Whisker1
+mutable struct Whisker1
     id::Int32
     time::Int32
     len::Int32
@@ -39,7 +39,7 @@ end
 
 Whisker1()=Whisker1(0,0,0,Array{Float32}(0),Array{Float32}(0),Array{Float32}(0),Array{Float32}(0))
 
-type Whisker2
+mutable struct Whisker2
     id::Int32
     time::Int32
     len::Int32
@@ -71,7 +71,7 @@ function Whisker1(w::Whisker2)
     Whisker1(id,time,len,x,y,thick,scores)
 end
 
-immutable JT_Measurements
+struct JT_Measurements
     row::Int32
     fid::Int32
     wid::Int32
@@ -87,7 +87,7 @@ immutable JT_Measurements
     velocity::Ptr{Float64}
 end
 
-type JT_Params
+mutable struct JT_Params
     paramMIN_LENPRJ::Int32
     paramMIN_LENSQR::Int32
     paramMIN_LENGTH::Int32
@@ -125,7 +125,7 @@ type JT_Params
     paramSHOW_DEBUG_MESSAGES::Cchar
 end
 
-type Tracker
+mutable struct Tracker
     vid::SharedArray{UInt8,3} #Video pixel data (width x height x frame)
     data_path::String
     file_name::String
@@ -143,7 +143,7 @@ type Tracker
     all_whiskers::Array{Array{Whisker1,1},1} #Whiskers on every frame
 end
 
-type Tracker_Handles
+mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
     win::Gtk.GtkWindowLeaf
     c::Gtk.GtkCanvasLeaf
