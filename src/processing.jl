@@ -328,13 +328,43 @@ function WT_reorder_whisker(whiskers,pad_pos)
     nothing
 end
 
-function make_tracking(path,name; frame_range = (false,0.0,0))
+function load_image_stack(path)
+
+    myfiles=readdir(path)
+
+    count=0
+
+    for i=1:length(myfiles)
+
+        if (myfiles[i][1:3])=="img" #this should be a variable
+            count+=1
+        end
+    end
+
+    vid=SharedArray{UInt8}(480,640,count)
+    count=1
+    for i=1:length(myfiles)
+
+        if (myfiles[i][1:3])=="img"
+            vid[:,:,count]=reinterpret(UInt8,load(string(path,myfiles[i])))[1,:,:]
+            count+=1
+        end
+    end
+
+    (vid,1)
+end
+
+function make_tracking(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     vid_name = string(path,name)
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
 
-    (vid,start_frame)=load_video(vid_name,frame_range)
+    if !image_stack
+        (vid,start_frame)=load_video(vid_name,frame_range)
+    else
+        (vid, start_frame)=load_image_stack(path)
+    end
     vid_length=size(vid,3)
 
     all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]

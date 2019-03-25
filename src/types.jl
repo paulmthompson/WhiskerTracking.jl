@@ -185,6 +185,10 @@ mutable struct Tracker_Handles
     cov1::Array{Int64,1}
     sharpen_button::Gtk.GtkCheckButtonLeaf
     sharpen_mode::Bool
+    anisotropic_button::Gtk.GtkCheckButtonLeaf
+    anisotropic_mode::Bool
+    local_contrast_button::Gtk.GtkCheckButtonLeaf
+    local_contrast_mode::Bool
     draw_button::Gtk.GtkToggleButtonLeaf
     draw_mode::Bool
     connect_button::Gtk.GtkButtonLeaf

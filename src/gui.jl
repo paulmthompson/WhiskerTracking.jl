@@ -1,13 +1,18 @@
 
 export make_gui
 
-function make_gui(path,name; frame_range = (false,0.0,0))
+function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     vid_name = string(path,name)
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
 
-    (vid,start_frame)=load_video(vid_name,frame_range)
+    if !image_stack
+        (vid,start_frame)=load_video(vid_name,frame_range)
+    else
+        (vid,start_frame)=load_image_stack(path)
+    end
+
     vid_length=size(vid,3)
 
     c=Canvas(640,480)
@@ -70,11 +75,17 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     sharpen_button = CheckButton("Sharpen Image")
     control_grid[1,11]=sharpen_button
 
+    aniso_button = CheckButton("Anisotropic Diffusion")
+    control_grid[1,12]=aniso_button
+
+    local_contrast_button = CheckButton("Local Contrast Enhancement")
+    control_grid[1,13]=local_contrast_button
+
     save_button = Button("Save")
-    control_grid[1,12]=save_button
+    control_grid[1,14]=save_button
 
     load_button = Button("Load")
-    control_grid[1,13]=load_button
+    control_grid[1,15]=load_button
 
     touch_button = ToggleButton("Define Touch")
     control_grid[2,9] = touch_button
@@ -112,7 +123,7 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
     delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
-    save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,
+    save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite)
@@ -133,6 +144,8 @@ function make_gui(path,name; frame_range = (false,0.0,0))
     signal_connect(save_cb, save_button, "clicked",Void,(),false,(handles,))
     signal_connect(load_cb, load_button, "clicked",Void,(),false,(handles,))
     signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
+    signal_connect(aniso_cb,aniso_button,"clicked",Void,(),false,(handles,))
+    signal_connect(local_contrast_cb,local_contrast_button,"clicked",Void,(),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
     signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_cb,touch_button,"clicked",Void,(),false,(handles,))
@@ -458,6 +471,24 @@ function sharpen_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.sharpen_mode = getproperty(han.sharpen_button,:active,Bool)
+
+    nothing
+end
+
+function aniso_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.anisotropic_mode = getproperty(han.anisotropic_button,:active,Bool)
+
+    nothing
+end
+
+function local_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.local_contrast_mode = getproperty(han.anisotropic_button,:active,Bool)
 
     nothing
 end
@@ -885,6 +916,13 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     end
     if han.sharpen_mode
         sharpen_image(han)
+    end
+    if han.local_contrast_mode
+        han.current_frame = round.(UInt8,local_contrast_enhance(han.current_frame))
+    end
+    if han.anisotropic_mode
+        myimg=convert(Array{Float64,2},han.current_frame)
+        han.current_frame = round.(UInt8,anisodiff(myimg,20,20.0,0.05,1))
     end
     han.wt.whiskers=WT_trace(han.frame,han.current_frame',han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 

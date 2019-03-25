@@ -1,7 +1,7 @@
 
 module WhiskerTracking
 
-using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP
+using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynominals
 
 if VERSION > v"0.7-"
     using SharedArrays, Libdl
