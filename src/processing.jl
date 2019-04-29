@@ -363,7 +363,7 @@ function make_tracking(path,name; frame_range = (false,0.0,0),image_stack=false)
     if !image_stack
         (vid,start_frame)=load_video(vid_name,frame_range)
     else
-        (vid, start_frame)=load_image_stack(path)
+        (vid, start_frame)=load_image_stack(string(path,name))
     end
     vid_length=size(vid,3)
 
