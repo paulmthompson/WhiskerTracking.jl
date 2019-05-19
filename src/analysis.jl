@@ -54,3 +54,39 @@ function savitsky_golay(x::Vector, windowSize::Integer, polyOrder::Integer; deri
     return y[2*halfWindow+1:end-2*halfWindow]
 
 end
+
+#Detect Contact Position
+#=
+if contact has been detected, find the most likely point of contact by minimizing the distance between the pole
+and whisker position
+
+w = array of whiskers
+contact = array of booleans indicating if contact occured in this frame (true)
+
+i_c = index (in whisker x y points) of contact
+xy_c = Tuple of x,y coordinates of contact point
+
+function find_contact_position(w,contact)
+
+    i_c = zeros(Int64,length(w))
+    xy_c = [(0.0,0.0) for i=1:length(w)]
+    for i=1:length(w)
+        if contact[i]
+
+
+
+        end
+    end
+
+end
+
+=#
+
+#=
+Calculate Forces
+
+
+
+
+
+=#

@@ -195,7 +195,7 @@ mutable struct Tracker_Handles
     touch_button::Gtk.GtkToggleButtonLeaf
     touch_mode::Bool
     touch_mask::BitArray{2}
-    touch_override::Gtk.GtkToggleButtonLeaf
+    touch_override::Gtk.GtkButtonLeaf
     touch_override_mode::Bool
     touch_frames::BitArray{1}
     woi_angle::Array{Float64,1}

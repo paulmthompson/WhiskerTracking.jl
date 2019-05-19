@@ -90,7 +90,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     touch_button = ToggleButton("Define Touch")
     control_grid[2,9] = touch_button
 
-    touch_override = ToggleButton("Touch Override")
+    touch_override = Button("Touch Override")
     control_grid[2,10] = touch_override
 
     janelia_label=Label("Janelia Parameters")
@@ -193,8 +193,8 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    #han.touch_frames[han.frame] = !han.touch_frames[han.frame]
-    han.touch_override_mode = getproperty(han.touch_override,:active,Bool)
+    han.touch_frames[han.frame] = !han.touch_frames[han.frame]
+    #han.touch_override_mode = getproperty(han.touch_override,:active,Bool)
 
     draw_touch(han)
 

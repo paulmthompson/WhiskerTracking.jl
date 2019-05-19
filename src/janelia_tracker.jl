@@ -74,10 +74,9 @@ function JT_measure(wt,frame_id,whisker_num)
     unsafe_load(mm,1)
 end
 
-function JT_measure(wt,w)
+function JT_measure(w::Whisker1,facex,facey)
     face_axis = 'x' #Or 'y'
-    facex=round(Int32,wt.pad_pos[1])
-    facey=round(Int32,wt.pad_pos[2])
+
     whisk_num = convert(Int32,1)
 
     whisk_array = Ref{Whisker2}(Whisker2(w))
@@ -86,6 +85,14 @@ function JT_measure(wt,w)
     (Ref{Whisker2},Int32,Int32,Int32,Cuchar),whisk_array,whisk_num,facex,facey,face_axis)
 
     unsafe_load(mm,1)
+end
+
+function JT_measure(wt,w)
+
+    facex=round(Int32,wt.pad_pos[1])
+    facey=round(Int32,wt.pad_pos[2])
+
+    JT_measure(w,facex,facey)
 end
 
 function get_JT_measurements(wt)
