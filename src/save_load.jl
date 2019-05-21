@@ -117,3 +117,27 @@ function read_whisker_hdf5(path)
 
     woi
 end
+
+function read_pole_hdf5(path)
+
+    file=h5open(path)
+    mytable=read(file,"df_with_missing")["table"];
+
+    p=zeros(Float64,length(mytable),2)
+
+    for i=1:length(mytable)
+        mydata=mytable[i].data[2]
+
+        if mydata[3]>0.1
+            p[i,1]=mydata[1]
+            p[i,2]=mydata[2]
+        else
+           p[i,1]=NaN
+           p[i,2]=NaN
+        end
+    end
+
+    close(file)
+
+    p
+end
