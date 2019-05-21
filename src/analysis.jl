@@ -189,3 +189,71 @@ function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
 
     (curv,aa,tracked)
 end
+
+function calculate_all_forces(xx,yy,p,c,aa,curv)
+
+    F_x=zeros(Float64,length(c))
+    F_y=zeros(Float64,length(c))
+    M=zeros(Float64,length(c))
+    F_t=zeros(Float64,length(c))
+    theta_c = zeros(Float64,length(c))
+    F_calc=falses(length(c))
+
+
+    for i=1:length(c)
+        if (c[i])&(length(xx[i])>1)
+
+            #ii - index of contact
+            ii=WhiskerTracking.calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
+
+            #i_p - index of high SNR point
+            i_p=culm_dist(xx[i],yy[i],20.0)
+
+            if (i_p<ii)
+                try
+                    (M[i],F_x[i],F_y[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],aa[i]-180.0,curv[i],ii,i_p)
+                    F_calc[i]=true
+                catch
+                end
+            end
+        end
+    end
+
+        A_x = find(F_calc)
+        knots = (A_x,)
+
+itp_fx = interpolate(knots, F_x[F_calc], Gridded(Linear()))
+itp_fy = interpolate(knots, F_y[F_calc], Gridded(Linear()))
+itp_m = interpolate(knots, M[F_calc], Gridded(Linear()))
+itp_ft = interpolate(knots, F_t[F_calc], Gridded(Linear()))
+itp_tc = interpolate(knots, theta_c[F_calc], Gridded(Linear()))
+
+    for i=1:length(c)
+
+        if (c[i])&(!F_calc[i])
+            F_x[i]=itp_fx[i]
+            F_y[i]=itp_fy[i]
+            M[i]=itp_m[i]
+            F_t[i]=itp_ft[i]
+            theta_c[i]=itp_tc[i]
+        end
+    end
+
+
+    (F_x,F_y,M,F_t,theta_c)
+end
+
+function culm_dist(x,y,thres)
+    tot=0.0
+    outind=1
+    for i=2:length(x)
+
+        tot += sqrt((x[i]-x[i-1])^2+(y[i]-y[i-1])^2)
+
+        if tot>thres
+            outind=i
+            break
+        end
+    end
+    outind
+end
