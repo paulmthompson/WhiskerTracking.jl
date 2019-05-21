@@ -119,8 +119,8 @@ function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0)
     theta_p = atan2((y_c - y_p),(x_c - x_p))
     r_p = sqrt((x_c - x_p)^2 + (y_c - y_p)^2)
 
-    #Contact force
-    F = delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact))
+    #Contact force magnitude
+    F = abs(delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact)))
 
     M_0 = r_0 * F * cos(theta_0 - theta_contact)
 
