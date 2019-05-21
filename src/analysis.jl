@@ -127,7 +127,7 @@ function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0)
     F_ax = F * sin(theta_f - theta_contact)
     F_lat = F * cos(theta_f - theta_contact)
 
-    (M_0,F_ax,F_lat)
+    (M_0,F_ax,F_lat,F,theta_contact)
 end
 
 function contact_angle(x,y,ii)
