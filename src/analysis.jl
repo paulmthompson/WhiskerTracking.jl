@@ -55,6 +55,25 @@ function savitsky_golay(x::Vector, windowSize::Integer, polyOrder::Integer; deri
 
 end
 
+#Distance to pole
+#(or other landmark)
+function calc_p_dist(wx,wy,p_x,p_y)
+
+    p_dist=1000.0
+    p_id=1
+
+    for i=1:length(wx)
+
+        mydist = sqrt((wx[i]-p_x)^2 + (wy[i]-p_y)^2)
+        if mydist < p_dist
+            p_dist = mydist
+            p_id=i
+        end
+
+    end
+    (p_dist,p_id)
+end
+
 #Detect Contact Position
 #=
 if contact has been detected, find the most likely point of contact by minimizing the distance between the pole
