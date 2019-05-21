@@ -75,6 +75,7 @@ function JT_measure(wt,frame_id,whisker_num)
 end
 
 function JT_measure(w::Whisker1,facex,facey)
+    #This should be an option depending on how the whisker is oriented
     face_axis = 'x' #Or 'y'
 
     whisk_num = convert(Int32,1)

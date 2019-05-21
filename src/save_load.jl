@@ -107,6 +107,10 @@ function read_whisker_hdf5(path)
 
     woi=[WhiskerTracking.Whisker1() for i=1:size(xx,2)]
 
+    #Assuming is stored such that first data point centered on the follicle,
+    #But Janelia assumes that the last point in the array is on the follicle, so we flip here
+    #To take on the Janelia convention
+    #Should probably be a flag for this
     for i=1:size(xx,2)
         inds=find(ll[:,i].==true)
         num_points=length(inds)

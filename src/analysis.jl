@@ -74,38 +74,118 @@ function calc_p_dist(wx,wy,p_x,p_y)
     (p_dist,p_id)
 end
 
-#Detect Contact Position
-#=
-if contact has been detected, find the most likely point of contact by minimizing the distance between the pole
-and whisker position
+#
+function get_p_distances(wx,wy,p::Array{T,2}) where T
+    pd=1000.0.*ones(Float64,length(wx))
 
-w = array of whiskers
-contact = array of booleans indicating if contact occured in this frame (true)
-
-i_c = index (in whisker x y points) of contact
-xy_c = Tuple of x,y coordinates of contact point
-
-function find_contact_position(w,contact)
-
-    i_c = zeros(Int64,length(w))
-    xy_c = [(0.0,0.0) for i=1:length(w)]
-    for i=1:length(w)
-        if contact[i]
-
-
-
-        end
+    for i=1:length(wx)
+        pd[i]=WhiskerTracking.calc_p_dist(wx[i],wy[i],p[i,1],p[i,2])[1]
     end
 
+    pd
 end
 
-=#
+function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0)
+    #x, y - whisker coordinates
+    #theta_f - whisker angle
+    #curv - whisker curvature
+    #ii - index of contact
+    #i_p - index of high SNR point - we should use the second DLC point for this (as long as it isn't past pole)
 
-#=
-Calculate Forces
+    E = 1.0 #Elastic Modulus of Whisker
+    I_p = 1.0 #Moment of inertia of whisker at point p
+    #curv_0 intrinsic curvature of the whisker
+    delta_kappa = curv - curv_0 #Change in curvature
+
+    theta_f = theta_f / 180 * pi
+
+    #x_f, y_f follicle x and y
+    x_f = x[end]
+    y_f = y[end]
+
+    #x_c, y_c contact x and y
+    x_c = x[ii]
+    y_c = y[ii]
+
+    #x_p, y_p point_p x and y
+    x_p = x[i_p]
+    y_p = y[i_p]
+
+    theta_contact = contact_angle(x,y,ii)#Angle that the whisker is pointing at point of contact
+
+    theta_0 = atan2((y_c - y_f),(x_c - x_f)) #
+    r_0 = sqrt((x_c - x_f)^2 + (y_c - y_f)^2)
+
+    theta_p = atan2((y_c - y_p),(x_c - x_p))
+    r_p = sqrt((x_c - x_p)^2 + (y_c - y_p)^2)
+
+    #Contact force
+    F = delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact))
+
+    M_0 = r_0 * F * cos(theta_0 - theta_contact)
+
+    F_ax = F * sin(theta_f - theta_contact)
+    F_lat = F * cos(theta_f - theta_contact)
+
+    (M_0,F_ax,F_lat)
+end
+
+function contact_angle(x,y,ii)
+    #x whisker coordinates
+    #y whisker coordinates
+    #ii index of whisker contact
+
+    atan2((y[ii]-y[ii+1]),(x[ii]-x[ii+1]))
+end
+
+function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
+    curv=zeros(Float64,length(woi))
+    aa=zeros(Float64,length(woi))
+    tracked=falses(length(woi))
 
 
+    #Get angle and curvature from Janelia
+    for i=1:length(woi)
+
+        if length(woi[i].x)>3
+            mymeas=JT_measure(woi[i],follicle[1],follicle[2])
+            curv[i]=unsafe_wrap(Array,mymeas.data,8)[4]
+            aa[i]=unsafe_wrap(Array,mymeas.data,8)[3]
+
+            if isnan(curv[i])|isnan(aa[i])
+            else
+                tracked[i]=true
+            end
+        end
+
+    end
 
 
+    #Interpolate missing data points
+    A_x = find(tracked)
+    knots = (A_x,)
 
-=#
+    itp_a = interpolate(knots, aa[tracked], Gridded(Linear()))
+    itp_c = interpolate(knots, curv[tracked], Gridded(Linear()))
+
+    for i=1:length(woi)
+
+        if !tracked[i]
+            curv[i]=itp_c(i)
+            aa[i]=itp_a(i)
+        end
+
+    end
+
+    for i=1:length(woi)
+        if isnan(curv[i])
+            curv[i]=itp_c(i)
+        end
+        if isnan(aa[i])
+            aa[i]=itp_a(i)
+        end
+
+    end
+
+    (curv,aa,tracked)
+end
