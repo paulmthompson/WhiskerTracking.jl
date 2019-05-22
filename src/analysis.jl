@@ -9,8 +9,8 @@ function get_phase(aa)
     responsetype = Bandpass(8.0,30.0; fs=500.0)
     designmethod=Butterworth(4)
     df1=digitalfilter(responsetype,designmethod)
-    myfilter=DF2TFilter(df1)
-    filter_aa=filt(myfilter,aa) #filtfilt?
+    #myfilter=DF2TFilter(df1)
+    filter_aa=filtfilt(df1,aa)
 
     hh=hilbert(filter_aa)
 
