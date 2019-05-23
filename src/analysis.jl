@@ -207,9 +207,10 @@ function calculate_all_forces(xx,yy,p,c,aa,curv)
             ii=WhiskerTracking.calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
 
             #i_p - index of high SNR point
-            i_p=culm_dist(xx[i],yy[i],20.0)
+            #We can use 50 units of length from whisker follicle
+            i_p=culm_dist(xx[i],yy[i],50.0)
 
-            if (i_p<ii)
+            if (i_p>ii) #Don't want our high SNR point past the point of contact
                 try
                     (M[i],F_x[i],F_y[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],aa[i]-180.0,curv[i],ii,i_p)
                     F_calc[i]=true
@@ -246,9 +247,9 @@ end
 function culm_dist(x,y,thres)
     tot=0.0
     outind=1
-    for i=2:length(x)
+    for i=(length(x)-1):-1:1
 
-        tot += sqrt((x[i]-x[i-1])^2+(y[i]-y[i-1])^2)
+        tot += sqrt((x[i]-x[i+1])^2+(y[i]-y[i+1])^2)
 
         if tot>thres
             outind=i
