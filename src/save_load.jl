@@ -40,7 +40,7 @@ function load_dlc(path,f_start,f_end)
     woi
 end
 
-function read_whisker_hdf5(path)
+function read_whisker_hdf5(path,w_inds=[1,4,7,10,13])
 
     #deeplabcut stores points as pandas dataframe
     #Assuming a whisker is labeled as a discrete set of points
@@ -53,7 +53,7 @@ function read_whisker_hdf5(path)
     #Each datapoint in an image of the pandas array is represented by values in 3 columns:
     #x,y and liklihood.
     #w_inds specifices the first index of each data point of interest
-    w_inds=[1,4,7,10,13]
+
 
     xx=zeros(Float64,length(w_inds),length(mytable))
     yy=zeros(Float64,length(w_inds),length(mytable))
@@ -122,7 +122,7 @@ function read_whisker_hdf5(path)
     woi
 end
 
-function read_pole_hdf5(path)
+function read_pole_hdf5(path,col_pos=1)
 
     file=h5open(path)
     mytable=read(file,"df_with_missing")["table"];
@@ -132,9 +132,9 @@ function read_pole_hdf5(path)
     for i=1:length(mytable)
         mydata=mytable[i].data[2]
 
-        if mydata[3]>0.1
-            p[i,1]=mydata[1]
-            p[i,2]=mydata[2]
+        if mydata[col_pos+2]>0.1
+            p[i,1]=mydata[col_pos]
+            p[i,2]=mydata[col_pos+1]
         else
            p[i,1]=NaN
            p[i,2]=NaN
@@ -144,6 +144,14 @@ function read_pole_hdf5(path)
     close(file)
 
     p
+end
+
+function read_pole_and_whisker_hdf5(path)
+
+    woi=read_whisker_hdf5(path)
+    p=read_pole_hdf5(path,16)
+
+    (woi,p)
 end
 
 function get_woi_x_y(w,w_id,follicle=(400.0f0,50.0f0))

@@ -212,7 +212,7 @@ function calculate_all_forces(xx,yy,p,c,aa,curv)
 
             if (i_p>ii) #Don't want our high SNR point past the point of contact
                 try
-                    (M[i],F_x[i],F_y[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],aa[i]-180.0,curv[i],ii,i_p)
+                    (M[i],F_x[i],F_y[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],-1.*aa[i],curv[i],ii,i_p)
                     F_calc[i]=true
                 catch
                 end
@@ -223,11 +223,11 @@ function calculate_all_forces(xx,yy,p,c,aa,curv)
         A_x = find(F_calc)
         knots = (A_x,)
 
-itp_fx = interpolate(knots, F_x[F_calc], Gridded(Linear()))
-itp_fy = interpolate(knots, F_y[F_calc], Gridded(Linear()))
-itp_m = interpolate(knots, M[F_calc], Gridded(Linear()))
-itp_ft = interpolate(knots, F_t[F_calc], Gridded(Linear()))
-itp_tc = interpolate(knots, theta_c[F_calc], Gridded(Linear()))
+        itp_fx = interpolate(knots, F_x[F_calc], Gridded(Linear()))
+        itp_fy = interpolate(knots, F_y[F_calc], Gridded(Linear()))
+        itp_m = interpolate(knots, M[F_calc], Gridded(Linear()))
+        itp_ft = interpolate(knots, F_t[F_calc], Gridded(Linear()))
+        itp_tc = interpolate(knots, theta_c[F_calc], Gridded(Linear()))
 
     for i=1:length(c)
 
@@ -259,41 +259,53 @@ function culm_dist(x,y,thres)
     outind
 end
 
-function outlier_removal_min(cov1,min_ex)
+function outlier_removal_min(cov1,min_ex,ind_range=(1,length(cov1)))
 
-    outlier_inds=cov1.<percentile(cov1,min_ex)
+    cov2=cov1[ind_range[1]:ind_range[2]]
 
-    itp_out = interpolate((find(.!outlier_inds),), cov1[.!outlier_inds], Gridded(Linear()))
+    outlier_inds=cov2.<percentile(cov2,min_ex)
+
+    itp_out = interpolate((find(.!outlier_inds),), cov2[.!outlier_inds], Gridded(Linear()))
 
     for i in find(outlier_inds)
-        cov1[i] = itp_out[i]
+        cov2[i] = itp_out[i]
     end
+
+    cov1[ind_range[1]:ind_range[2]]=cov2
     nothing
 end
 
-function outlier_removal_max(cov1,max_ex)
+function outlier_removal_max(cov1,max_ex,ind_range=(1,length(cov1)))
 
-    outlier_inds=cov1.>percentile(cov1,max_ex)
+    cov2=cov1[ind_range[1]:ind_range[2]]
 
-    itp_out = interpolate((find(.!outlier_inds),), cov1[.!outlier_inds], Gridded(Linear()))
+    outlier_inds=cov2.>percentile(cov2,max_ex)
+
+    itp_out = interpolate((find(.!outlier_inds),), cov2[.!outlier_inds], Gridded(Linear()))
 
     for i in find(outlier_inds)
-        cov1[i] = itp_out[i]
+        cov2[i] = itp_out[i]
     end
+
+    cov1[ind_range[1]:ind_range[2]]=cov2
     nothing
 end
-function outlier_removal_twosided(cov1,min_ex,max_ex)
+function outlier_removal_twosided(cov1,min_ex,max_ex,ind_range=(1,length(cov1)))
 
-    outlier_inds1=cov1.<percentile(cov1,min_ex)
-    outlier_inds2=cov1.>percentile(cov1,max_ex)
+    cov2=cov1[ind_range[1]:ind_range[2]]
+
+    outlier_inds1=cov2.<percentile(cov2,min_ex)
+    outlier_inds2=cov2.>percentile(cov2,max_ex)
 
     outlier_inds = outlier_inds1 .| outlier_inds2
 
-    itp_out = interpolate((find(.!outlier_inds),), cov1[.!outlier_inds], Gridded(Linear()))
+    itp_out = interpolate((find(.!outlier_inds),), cov2[.!outlier_inds], Gridded(Linear()))
 
     for i in find(outlier_inds)
-        cov1[i] = itp_out[i]
+        cov2[i] = itp_out[i]
     end
+
+    cov1[ind_range[1]:ind_range[2]]=cov2
     nothing
 end
 
