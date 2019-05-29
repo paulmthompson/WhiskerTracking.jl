@@ -138,6 +138,28 @@ function contact_angle(x,y,ii)
     atan2((y[ii]-y[ii+1]),(x[ii]-x[ii+1]))
 end
 
+#Decompose for into x and y components
+function contact_force_x_y(f_t,t_c,px,py,wx,wy)
+
+    #Force of contact is normal to the contact angle.
+    t_c_x = cos(t_c - pi/2)
+    t_c_y = sin(t_c - pi/2)
+
+    mag_v = sqrt((wx-px)^2 + (wy-py)^2)
+
+    vx = (wx - px) / mag_v
+    vy = (wy - py) / mag_v
+
+    t_n = t_c - pi/2
+
+    if dot([t_c_x; t_c_y],[vx;vy])>0
+    else
+        t_n = t_n + pi
+    end
+
+    (f_t * cos(t_n), f_t * sin(t_n))
+end
+
 function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
     curv=zeros(Float64,length(woi))
     aa=zeros(Float64,length(woi))
@@ -198,7 +220,6 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
     F_t=zeros(Float64,length(c))
     theta_c = zeros(Float64,length(c))
     F_calc=falses(length(c))
-
 
     for i=1:length(c)
         if ((c[i])&(length(xx[i])>1))&(tracked[i])
