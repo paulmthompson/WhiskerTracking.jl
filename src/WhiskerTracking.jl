@@ -16,5 +16,6 @@ include("processing.jl")
 include("image_processing.jl")
 include("analysis.jl")
 include("save_load.jl")
+include("dlc.jl")
 
 end

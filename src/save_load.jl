@@ -40,7 +40,7 @@ function load_dlc(path,f_start,f_end)
     woi
 end
 
-function read_whisker_hdf5(path,w_inds=[1,4,7,10,13])
+function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
 
     #deeplabcut stores points as pandas dataframe
     #Assuming a whisker is labeled as a discrete set of points
@@ -75,7 +75,7 @@ function read_whisker_hdf5(path,w_inds=[1,4,7,10,13])
             this_y=mydata[w_inds[j]+1]
 
             #We can set a liklihood threshold
-            if mydata[w_inds[j]+2]>0.1
+            if mydata[w_inds[j]+2]>l_thres
 
                 xx[j,i]=this_x
                 yy[j,i]=this_y
@@ -87,21 +87,27 @@ function read_whisker_hdf5(path,w_inds=[1,4,7,10,13])
 
     close(file)
 
-    #smoothing
+    #outlier removal
+    #smooth with gaussian kernel
+    #calculate residual distance threshold and set Threshold
+    x_smooth=zeros(Float64,size(xx))
+    y_smooth=zeros(Float64,size(yy))
+
+    for i=1:size(xx,1)
+        x_smooth[i,:]=smooth(xx[i,:],15)
+        y_smooth[i,:]=smooth(yy[i,:],15)
+    end
 
     dist_thres=50.0
 
-    for i=2:size(xx,2)-1
-
+    for i=1:size(xx,2)
         for j=1:length(w_inds)
+            mydist=sqrt((xx[j,i]-x_smooth[j,i])^2+(yy[j,i]-y_smooth[j,i])^2)
 
-            if (ll[j,i])&(ll[j,i-1])
-                mydist=sqrt((xx[j,i]-xx[j,i-1])^2+(yy[j,i]-yy[j,i-1])^2)
-
-                if mydist>dist_thres
-                    ll[j,i]=false
-                end
+            if mydist>dist_thres
+                ll[j,i]=false
             end
+
         end
     end
 
@@ -146,9 +152,9 @@ function read_pole_hdf5(path,col_pos=1)
     p
 end
 
-function read_pole_and_whisker_hdf5(path)
+function read_pole_and_whisker_hdf5(path,l_thres_in=0.5)
 
-    woi=read_whisker_hdf5(path)
+    woi=read_whisker_hdf5(path,l_thres=l_thres_in)
     p=read_pole_hdf5(path,16)
 
     (woi,p)

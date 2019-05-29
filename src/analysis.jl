@@ -190,7 +190,7 @@ function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
     (curv,aa,tracked)
 end
 
-function calculate_all_forces(xx,yy,p,c,aa,curv)
+function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
 
     F_x=zeros(Float64,length(c))
     F_y=zeros(Float64,length(c))
@@ -201,13 +201,14 @@ function calculate_all_forces(xx,yy,p,c,aa,curv)
 
 
     for i=1:length(c)
-        if (c[i])&(length(xx[i])>1)
+        if ((c[i])&(length(xx[i])>1))&(tracked[i])
 
             #ii - index of contact
             ii=WhiskerTracking.calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
 
             #i_p - index of high SNR point
             #We can use 50 units of length from whisker follicle
+            #This is only accurate if the fit up to 50 units is accurate
             i_p=culm_dist(xx[i],yy[i],50.0)
 
             if (i_p>ii) #Don't want our high SNR point past the point of contact
@@ -220,14 +221,14 @@ function calculate_all_forces(xx,yy,p,c,aa,curv)
         end
     end
 
-        A_x = find(F_calc)
-        knots = (A_x,)
+    A_x = find(F_calc)
+    knots = (A_x,)
 
-        itp_fx = interpolate(knots, F_x[F_calc], Gridded(Linear()))
-        itp_fy = interpolate(knots, F_y[F_calc], Gridded(Linear()))
-        itp_m = interpolate(knots, M[F_calc], Gridded(Linear()))
-        itp_ft = interpolate(knots, F_t[F_calc], Gridded(Linear()))
-        itp_tc = interpolate(knots, theta_c[F_calc], Gridded(Linear()))
+    itp_fx = interpolate(knots, F_x[F_calc], Gridded(Linear()))
+    itp_fy = interpolate(knots, F_y[F_calc], Gridded(Linear()))
+    itp_m = interpolate(knots, M[F_calc], Gridded(Linear()))
+    itp_ft = interpolate(knots, F_t[F_calc], Gridded(Linear()))
+    itp_tc = interpolate(knots, theta_c[F_calc], Gridded(Linear()))
 
     for i=1:length(c)
 
