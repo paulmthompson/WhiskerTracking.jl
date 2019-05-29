@@ -157,7 +157,33 @@ function contact_force_x_y(f_t,t_c,px,py,wx,wy)
         t_n = t_n + pi
     end
 
-    (f_t * cos(t_n), f_t * sin(t_n))
+    (f_t * cos(t_n), f_t * sin(t_n),t_n)
+end
+
+function get_ax_lat_angles(aa,t_n)
+
+    n_x=cos(t_n)
+    n_y=sin(t_n)
+
+    a_x=cosd(aa)
+    a_y=sind(aa)
+
+    theta_ax=aa
+
+    #I am only using force magnitudes, so find the direction where the axial force component is
+    #positive.
+    if dot([n_x; n_y],[a_x; a_y]) < 0
+        theta_ax = aa + 180
+        a_x = cosd(theta_ax)
+        a_y = sind(theta_ax)
+    end
+
+    #Project the force vector onto the axial component and subtract from the force vector to get the lateral component
+    n_a_x = dot([n_x; n_y],[cosd(theta_ax); sind(theta_ax)]) .* [a_x; a_y]
+
+    theta_lat=atan2(n_y-n_a_x[2],n_x-n_a_x[1])
+
+    (theta_lat/pi * 180, theta_ax)
 end
 
 function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
@@ -234,7 +260,7 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
 
             if (i_p>ii) #Don't want our high SNR point past the point of contact
                 try
-                    (M[i],F_x[i],F_y[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],-1.*aa[i],curv[i],ii,i_p)
+                    (M[i],F_x[i],F_y[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],aa[i],curv[i],ii,i_p)
                     F_calc[i]=true
                 catch
                 end

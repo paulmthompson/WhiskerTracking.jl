@@ -2,7 +2,7 @@
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5
+Pandas, HDF5, PyPlot
 
 if VERSION > v"0.7-"
     using SharedArrays, Libdl
@@ -17,5 +17,6 @@ include("image_processing.jl")
 include("analysis.jl")
 include("save_load.jl")
 include("dlc.jl")
+include("plotting.jl")
 
 end

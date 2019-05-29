@@ -1,3 +1,7 @@
+
+#=
+function plot_test()
+
 (myfig,myax)=subplots(1,1)
 vid_name=string(data_path,"output.mp4")
 
@@ -49,4 +53,16 @@ for w_id=w_ids
     savefig(string("video_data/",frame_id))
     frame_id+=1
     myax[:clear]()
+end
+end
+=#
+function w_plot_image(ax,frame_array,f_id)
+
+    ax[:set_xlim]([1,640])
+    ax[:set_ylim]([1,480])
+    ax[:imshow](frame_array[:,:,f_id],cmap="gray",vmin=0,vmax=130)
+    ax[:set_xticks]([])
+    ax[:set_yticks]([])
+
+    nothing
 end
