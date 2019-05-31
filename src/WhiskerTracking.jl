@@ -7,6 +7,8 @@ Pandas, HDF5, PyPlot
 if VERSION > v"0.7-"
     using SharedArrays, Libdl
     const Void = Nothing
+    const setproperty! = set_gtk_property!
+    const getproperty = get_gtk_property
 end
 
 include("types.jl")
