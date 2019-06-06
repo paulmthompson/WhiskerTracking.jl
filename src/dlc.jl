@@ -1,4 +1,13 @@
 
+#=
+When we load the DLC data, we try to remove outlier points by using the confidence of the estimate
+and the movement of individual points from some smoothed average.
+One final check for noisey estimates here is to make sure that the segment that is supposed to be high signal to
+noise for the purpose of force calculation (here defined as being 30 to 80 units of distance from
+the follicle base) is relatively stable.
+
+=#
+
 function dlc_remove_bad_whiskers(xx,yy,thres)
 
     tracked=trues(length(xx))

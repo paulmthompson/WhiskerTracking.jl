@@ -1,4 +1,6 @@
 
+export central_difference
+
 #=
 Finds the phase over time for a given angle vs time array
 using the Hilbert Transform
@@ -208,7 +210,6 @@ function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
 
     end
 
-
     #Interpolate missing data points
     A_x = find(tracked)
     knots = (A_x,)
@@ -355,6 +356,37 @@ function outlier_removal_twosided(cov1,min_ex,max_ex,ind_range=(1,length(cov1)))
 
     cov1[ind_range[1]:ind_range[2]]=cov2
     nothing
+end
+
+#Central Differences
+#=
+One implementation only calculates if points are tracked on either side
+=#
+
+function central_difference(x)
+    y=zeros(Float64,length(x))
+
+    for i=2:length(y)-1
+        y[i]=(x[i+1] - x[i-1]) / 2
+    end
+    y
+end
+
+function central_difference(x,tracked)
+    y=zeros(Float64,length(x))
+    diff_tracked=deepcopy(tracked)
+
+    for i=2:length(y)-1
+        if (tracked[i-1]&tracked[i+1])
+            y[i]=(x[i+1] - x[i-1]) / 2
+        else
+            diff_tracked[i] = false
+        end
+    end
+
+    tracked=diff_tracked
+
+    y
 end
 
 #Finds the number of unique pole positions
