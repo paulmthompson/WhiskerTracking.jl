@@ -26,6 +26,8 @@ end
 # Theory: http://www.ece.rutgers.edu/~orfanidi/intro2sp/orfanidis-i2sp.pdf
 # Python Example: http://wiki.scipy.org/Cookbook/SavitzkyGolay
 # Modified from https://github.com/BBN-Q/Qlab.jl/blob/master/src/SavitskyGolay.jl
+
+#This can't handle NaNs or skipped data
 function savitsky_golay(x::Vector, windowSize::Integer, polyOrder::Integer; deriv::Integer=0)
 
 #Some error checking

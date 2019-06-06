@@ -1,4 +1,6 @@
 
+export fit_poly_to_dlc
+
 #=
 When we load the DLC data, we try to remove outlier points by using the confidence of the estimate
 and the movement of individual points from some smoothed average.
@@ -51,6 +53,29 @@ function dlc_remove_bad_whiskers(xx,yy,thres,tracked)
 
     nothing
 end
+
+#=
+Fit polynomial to points to get whisker traces
+
+=#
+
+function fit_poly_to_dlc(whiskers,tracked,bad_whisker_thres=40.0)
+    #Fit polynomial to DLC points and generate line of values spaced 1 unit apart (for better visualization)
+    wx=[Array{Float64}(0) for i=1:length(whiskers)]
+    wy=[Array{Float64}(0) for i=1:length(whiskers)]
+
+    for i=1:length(whiskers)
+        if length(whiskers[i].x)>2
+            (wx[i],wy[i]) = get_woi_x_y(whiskers,i)
+        end
+    end
+
+    #Now remove any fits that appear to be very bad (high SNR region moves beyond some threshold)
+    dlc_remove_bad_whiskers(wx,wy,bad_whisker_thres,tracked)
+
+    (wx,wy)
+end
+
 
 function get_woi_x_y(w,w_id,follicle=(400.0f0,50.0f0))
 
