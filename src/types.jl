@@ -1,5 +1,10 @@
 
-const libwhisk_path = "/home/wanglab/Programs/whisk/build/libwhisk.so"
+if is_unix()
+    const libwhisk_path = "/home/wanglab/Programs/whisk/build/libwhisk.so"
+else
+    const libwhisk_path = "C:\\Program Files\\WhiskerTracking\\lib\\whisk.dll"
+end
+
 jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
 libwhisk = Libdl.dlopen(libwhisk_path)
 const ffmpeg_path = "/home/wanglab/Programs/ffmpeg/ffmpeg"
