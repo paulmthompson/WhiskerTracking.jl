@@ -142,7 +142,7 @@ function contact_angle(x,y,ii)
     atan2((y[ii]-y[ii+1]),(x[ii]-x[ii+1]))
 end
 
-#Decompose for into x and y components
+#Decompose force into x and y components
 function contact_force_x_y(f_t,t_c,px,py,wx,wy)
 
     #Force of contact is normal to the contact angle.
@@ -188,6 +188,35 @@ function get_ax_lat_angles(aa,t_n)
     theta_lat=atan2(n_y-n_a_x[2],n_x-n_a_x[1])
 
     (theta_lat/pi * 180, theta_ax)
+end
+
+function get_force_signs(xx,yy,tracked,p,F_t,t_c,aa,c)
+    F_lat_sign=zeros(Int64,length(xx))
+    F_ax_sign=zeros(Int64,length(xx))
+    for i=1:length(xx)
+
+        if (tracked[i])&(c[i])
+            ii=calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
+
+            (F_t_x,F_t_y,theta_n) = contact_force_x_y(F_t[i],t_c[i],
+                p[i,1],p[i,2],xx[i][ii],yy[i][ii])
+
+            (t_lat,t_ax) = get_ax_lat_angles(aa[i],theta_n)
+
+            if abs(t_ax - aa[i]) < 10
+                F_ax_sign[i] = -1
+            else
+                F_ax_sign[i] = 1
+            end
+
+            if (t_lat < aa[i]) & (t_lat > aa[i]-180)
+                F_lat_sign[i] = 1
+            else
+                F_lat_sign[i] = -1
+            end
+        end
+    end
+    (F_lat_sign,F_ax_sign)
 end
 
 function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
@@ -243,8 +272,8 @@ end
 
 function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
 
-    F_x=zeros(Float64,length(c))
-    F_y=zeros(Float64,length(c))
+    F_ax=zeros(Float64,length(c))
+    F_lat=zeros(Float64,length(c))
     M=zeros(Float64,length(c))
     F_t=zeros(Float64,length(c))
     theta_c = zeros(Float64,length(c))
@@ -263,7 +292,7 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
 
             if (i_p>ii) #Don't want our high SNR point past the point of contact
                 try
-                    (M[i],F_x[i],F_y[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],aa[i],curv[i],ii,i_p)
+                    (M[i],F_ax[i],F_lat[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],aa[i],curv[i],ii,i_p)
                     F_calc[i]=true
                 catch
                 end
@@ -274,8 +303,8 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
     A_x = find(F_calc)
     knots = (A_x,)
 
-    itp_fx = interpolate(knots, F_x[F_calc], Gridded(Linear()))
-    itp_fy = interpolate(knots, F_y[F_calc], Gridded(Linear()))
+    itp_fx = interpolate(knots, F_ax[F_calc], Gridded(Linear()))
+    itp_fy = interpolate(knots, F_lat[F_calc], Gridded(Linear()))
     itp_m = interpolate(knots, M[F_calc], Gridded(Linear()))
     itp_ft = interpolate(knots, F_t[F_calc], Gridded(Linear()))
     itp_tc = interpolate(knots, theta_c[F_calc], Gridded(Linear()))
@@ -283,8 +312,8 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
     for i=1:length(c)
 
         if (c[i])&(!F_calc[i])
-            F_x[i]=itp_fx[i]
-            F_y[i]=itp_fy[i]
+            F_ax[i]=itp_fx[i]
+            F_lat[i]=itp_fy[i]
             M[i]=itp_m[i]
             F_t[i]=itp_ft[i]
             theta_c[i]=itp_tc[i]
@@ -292,7 +321,7 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
     end
 
 
-    (F_x,F_y,M,F_t,theta_c)
+    (F_ax,F_lat,M,F_t,theta_c)
 end
 
 function culm_dist(x,y,thres)
