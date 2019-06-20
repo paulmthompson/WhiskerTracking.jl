@@ -20,5 +20,8 @@ include("analysis.jl")
 include("save_load.jl")
 include("dlc.jl")
 include("plotting.jl")
+include("analysis/forces.jl")
+include("analysis/touch.jl")
+include("analysis/math.jl")
 
 end
