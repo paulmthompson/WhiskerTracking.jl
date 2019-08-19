@@ -1,0 +1,70 @@
+
+
+
+#=
+Takes a smooth janelia traced whisker, and generateds a set of discrete points
+along the whisker of equal spacing
+=#
+function make_discrete(p_array::Array{Float32,2},ind,w::Whisker1,spacing)
+
+    p_array[1,ind] = w.x[end]
+    p_array[2,ind] = w.y[end]
+
+    num_points=div(size(p_array,1),2)
+
+    for i=2:num_points
+
+        id=culm_dist(w.x,w.y,spacing*(i-1))
+        if id != 1
+            p_array[(i*2) - 1,ind] = w.x[id]
+            p_array[(i*2),ind] = w.y[id]
+        else
+            break
+        end
+    end
+
+    nothing
+end
+
+function change_discrete_size(p_array::Array{Float32,2},new_size)
+
+    num_points = div(size(p_array,1),2)
+
+    if new_size > num_points
+
+        new_p_array=zeros(Float32,new_size*2,size(p_array,2))
+
+        for i=1:size(p_array,1),j=1:size(p_array,2)
+            new_p_array[i,j] = p_array[i,j]
+        end
+
+        p_array=new_p_array
+
+    elseif new_size < num_points
+
+        new_p_array=zeros(Float32,new_size*2,size(p_array,2))
+
+        for i=1:size(new_p_array,1),j=1:size(p_array,2)
+            new_p_array[i,j] = p_array[i,j]
+        end
+
+        p_array=new_p_array
+    else
+
+    end
+
+    nothing
+end
+
+function make_discrete_woi(woi::Array{Whisker1,1},tracked,p_array,spacing)
+
+    for i=1:length(woi)
+
+        if tracked[i]
+
+            make_discrete(p_array,i,woi[i],spacing)
+        end
+    end
+
+    nothing
+end

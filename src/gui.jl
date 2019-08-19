@@ -116,7 +116,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     tracker_name = (vid_name)[1:(end-4)]
 
     wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1}(0),
-    (0.0,0.0),255,0,all_whiskers)
+    (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
 
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     hist_c,vid[:,:,1],0,Array{Whisker1}(size(vid,3)),

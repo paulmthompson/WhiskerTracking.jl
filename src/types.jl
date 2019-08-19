@@ -146,6 +146,7 @@ mutable struct Tracker
     contrast_max::Int64
     contrast_min::Int64
     all_whiskers::Array{Array{Whisker1,1},1} #Whiskers on every frame
+    w_p::Array{Float32,2}
 end
 
 mutable struct Tracker_Handles
