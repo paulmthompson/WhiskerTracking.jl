@@ -19,13 +19,13 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     grid=Grid()
 
-    grid[1,1]=c
+    grid[1,2]=c
 
     frame_slider = Scale(false, 1,size(vid,3),1)
     adj_frame = Adjustment(frame_slider)
     setproperty!(adj_frame,:value,1)
 
-    grid[1,2]=frame_slider
+    grid[1,3]=frame_slider
 
     control_grid=Grid()
 
@@ -106,8 +106,24 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     control_grid[3,6]=janelia_seed_iterations
     control_grid[4,6]=Label("Seed Iterations")
 
+    grid[2,2]=control_grid
 
-    grid[2,1]=control_grid
+    #Menus
+    mb = MenuBar()
+    sortopts = MenuItem("_File")
+    sortmenu = Menu(sortopts)
+    load_whisk_ = MenuItem("Load Whiskers")
+    push!(sortmenu,load_whisk_)
+    push!(mb,sortopts)
+
+    extraopts = MenuItem("_Extra")
+    extramenu = Menu(extraopts)
+    discrete_menu_ = MenuItem("Discretization")
+    push!(extramenu,discrete_menu_)
+    push!(mb,extraopts)
+
+    grid[1,1] = mb
+
 
     win = Window(grid, "Whisker Tracker") |> showall
 
