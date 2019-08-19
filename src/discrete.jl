@@ -68,3 +68,25 @@ function make_discrete_woi(wt,woi,tracked,spacing)
 
     nothing
 end
+
+function draw_discrete(han)
+
+    circ_rad=5.0
+
+    ctx=Gtk.getgc(han.c)
+
+    if han.touch_frames[han.frame]
+        set_source_rgb(ctx,0,1,0)
+    end
+
+    num_points = div(size(han.wt.w_p,1),2)
+
+    for i=1:num_points
+        arc(ctx, han.wt.w_p[i*2-1,han.frame],han.wt.w_p[i*2,han.frame], circ_rad, 0, 2*pi);
+        stroke(ctx);
+    end
+
+
+    nothing
+
+end
