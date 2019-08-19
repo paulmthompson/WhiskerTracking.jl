@@ -56,6 +56,10 @@ function change_discrete_size(wt::Tracker,new_size)
     nothing
 end
 
+#=
+Go through all loaded frames and discretize the whisker of interest
+=#
+
 function make_discrete_woi(wt,woi,tracked,spacing)
 
     for i=1:length(woi)

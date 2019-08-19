@@ -126,7 +126,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite)
+    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -655,6 +655,10 @@ function plot_image(han,img)
     end
 
     draw_touch(han)
+
+    if han.discrete_draw
+        draw_discrete(han)
+    end
 
     reveal(han.c)
 end
