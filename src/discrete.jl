@@ -26,29 +26,29 @@ function make_discrete(p_array::Array{Float32,2},ind,w::Whisker1,spacing)
     nothing
 end
 
-function change_discrete_size(p_array::Array{Float32,2},new_size)
+function change_discrete_size(wt::Tracker,new_size)
 
-    num_points = div(size(p_array,1),2)
+    num_points = div(size(wt.w_p,1),2)
 
     if new_size > num_points
 
-        new_p_array=zeros(Float32,new_size*2,size(p_array,2))
+        new_p_array=zeros(Float32,new_size*2,size(wt.w_p,2))
 
-        for i=1:size(p_array,1),j=1:size(p_array,2)
-            new_p_array[i,j] = p_array[i,j]
+        for i=1:size(wt.w_p,1),j=1:size(wt.w_p,2)
+            new_p_array[i,j] = wt.w_p[i,j]
         end
 
-        p_array=new_p_array
+        wt.w_p=new_p_array
 
     elseif new_size < num_points
 
-        new_p_array=zeros(Float32,new_size*2,size(p_array,2))
+        new_p_array=zeros(Float32,new_size*2,size(wt.w_p,2))
 
-        for i=1:size(new_p_array,1),j=1:size(p_array,2)
-            new_p_array[i,j] = p_array[i,j]
+        for i=1:size(new_p_array,1),j=1:size(wt.w_p,2)
+            new_p_array[i,j] = wt.w_p[i,j]
         end
 
-        p_array=new_p_array
+        wt.w_p=new_p_array
     else
 
     end
@@ -56,13 +56,13 @@ function change_discrete_size(p_array::Array{Float32,2},new_size)
     nothing
 end
 
-function make_discrete_woi(woi::Array{Whisker1,1},tracked,p_array,spacing)
+function make_discrete_woi(wt,woi,tracked,spacing)
 
     for i=1:length(woi)
 
         if tracked[i]
 
-            make_discrete(p_array,i,woi[i],spacing)
+            make_discrete(wt.w_p,i,woi[i],spacing)
         end
     end
 
