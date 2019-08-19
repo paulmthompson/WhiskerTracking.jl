@@ -125,6 +125,34 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     grid[1,1] = mb
 
 
+    #=
+    Menu for discrete points
+    =#
+    discrete_grid = Grid()
+    #Space between spinbutton
+    #Maximum number of points spinbutton
+    #Automatically calculate checkboxes
+
+    #=
+    Image adjustment window
+    =#
+    #Grid
+    #Histogram Canvas
+    #Min slider
+    #Max Slider
+    #Sharpen Checkbox
+    #Anisotropic Diffusion Frame
+    #Anisotropic Frame
+    #Anisotropic Paramters
+    #Local Contrast Frame
+    #Anisotropic Checkbox
+    #Anisotropic Parameters
+
+    #=
+    Menu for Janelia Tracker Parameter Tweaking
+    =#
+
+
     win = Window(grid, "Whisker Tracker") |> showall
 
     all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
