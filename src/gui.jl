@@ -185,7 +185,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,d_widgets)
+    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -291,6 +291,8 @@ function discrete_distance_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     num_dist=getproperty(han.d_widgets.space_button,:value,Int)
 
+    han.d_spacing = num_dist
+
     make_discrete_woi(han.wt,han.woi,han.tracked,num_dist)
 
     redraw_all(han)
@@ -317,6 +319,8 @@ end
 function discrete_auto_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
 
     han, = user_data
+
+    han.discrete_auto_calc=getproperty(han.d_widgets.calc_button,:active,Bool)
 
     nothing
 end
@@ -846,7 +850,8 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     elseif han.touch_mode
         touch_start(han,m_x,m_y)
     else
-        plot_whiskers(han)
+        #plot_whiskers(han)
+        redraw_all(han)
     end
 
     nothing

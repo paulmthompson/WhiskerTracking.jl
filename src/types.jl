@@ -222,6 +222,8 @@ mutable struct Tracker_Handles
     overwrite_button::Gtk.GtkCheckButtonLeaf
 
     discrete_draw::Bool
+    discrete_auto_calc::Bool
+    d_spacing::Int64
 
     d_widgets::discrete_widgets
 end
