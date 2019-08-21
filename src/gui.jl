@@ -222,6 +222,12 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
         true
     end
 
+
+    #Discrete Callbacks
+    signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
+    signal_connect(discrete_points_cb,discrete_max_points_button,"value-changed",Void,(),false,(handles,))
+    signal_connect(discrete_auto_cb,discrete_auto_calc,"clicked",Void,(),false,(handles,))
+
     handles
 end
 
@@ -260,6 +266,65 @@ function jt_seed_iterations_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+function auto_overwrite_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.overwrite_mode = getproperty(han.overwrite_button,:active,Bool)
+
+    nothing
+end
+
+
+#=
+Discrete Callbacks
+=#
+
+function redraw_all(han)
+    plot_image(han,han.current_frame')
+    plot_whiskers(han)
+end
+
+function discrete_distance_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    num_dist=getproperty(han.d_widgets.space_button,:value,Int)
+
+    make_discrete_woi(han.wt,han.woi,han.tracked,num_dist)
+
+    redraw_all(han)
+
+    nothing
+end
+
+function discrete_points_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    num_points=getproperty(han.d_widgets.points_button,:value,Int)
+    num_dist=getproperty(han.d_widgets.space_button,:value,Int)
+
+    change_discrete_size(han.wt,num_points)
+    make_discrete_woi(han.wt,han.woi,han.tracked,num_dist)
+
+    redraw_all(han)
+
+    nothing
+
+end
+
+function discrete_auto_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    nothing
+end
+
+#=
+Touch Functions
+=#
+
 function touch_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -277,15 +342,6 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #han.touch_override_mode = getproperty(han.touch_override,:active,Bool)
 
     draw_touch(han)
-
-    nothing
-end
-
-function auto_overwrite_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.overwrite_mode = getproperty(han.overwrite_button,:active,Bool)
 
     nothing
 end
@@ -392,6 +448,10 @@ function touch_stop(han,x,y)
 
     nothing
 end
+
+#=
+Save Callbacks
+=#
 
 function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
