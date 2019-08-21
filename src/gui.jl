@@ -129,9 +129,22 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     Menu for discrete points
     =#
     discrete_grid = Grid()
-    #Space between spinbutton
-    #Maximum number of points spinbutton
-    #Automatically calculate checkboxes
+    discrete_space_button = SpinButton(2:100)
+    discrete_grid[1,1] = discrete_space_button
+    discrete_grid[2,1] = Label("Space Between Points")
+
+    discrete_max_points_button = SpinButton(4:20)
+    discrete_grid[1,2] = discrete_max_points_button
+    discrete_grid[2,2] = Label("Max number of Points")
+
+    discrete_auto_calc = CheckButton("Auto Calculate")
+    discrete_grid[1,3] = discrete_auto_calc
+
+    discrete_win=Window(discrete_grid)
+    Gtk.showall(discrete_win)
+    visible(discrete_win,false)
+
+    d_widgets=discrete_widgets(discrete_win,discrete_space_button,discrete_max_points_button,discrete_auto_calc)
 
     #=
     Image adjustment window
@@ -153,6 +166,8 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     =#
 
 
+
+
     win = Window(grid, "Whisker Tracker") |> showall
 
     all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
@@ -170,7 +185,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false)
+    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,d_widgets)
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -199,7 +214,28 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
     signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
 
+
+    #File Menus
+    signal_connect(discrete_cb,discrete_menu_,"activate",Void,(),false,(handles,))
+    signal_connect(discrete_win, :delete_event) do widget, event
+        visible(discrete_win, false)
+        true
+    end
+
     handles
+end
+
+#=
+Menu Buttons
+=#
+
+function discrete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    visible(han.d_widgets.win,true)
+
+    nothing
 end
 
 function jt_seed_thres_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -707,6 +743,11 @@ function plot_image(han,img)
     reveal(han.c)
 end
 
+#=
+Clicking on the GUI for interaction
+Different functionality depending on the mode
+=#
+
 function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -716,7 +757,7 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     m_x = event.x
     m_y = event.y
 
-    #Find whisker of interest
+    #Find whisker of interest (nearest to selection)
     for i=1:length(han.wt.whiskers)
         for j=1:han.wt.whiskers[i].len
             if (m_x>han.wt.whiskers[i].x[j]-5.0)&(m_x<han.wt.whiskers[i].x[j]+5.0)

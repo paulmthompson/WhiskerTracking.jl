@@ -149,6 +149,13 @@ mutable struct Tracker
     w_p::Array{Float32,2}
 end
 
+mutable struct discrete_widgets
+    win::Gtk.GtkWindowLeaf
+    space_button::Gtk.GtkSpinButtonLeaf
+    points_button::Gtk.GtkSpinButtonLeaf
+    calc_button::Gtk.GtkCheckButtonLeaf
+end
+
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
     win::Gtk.GtkWindowLeaf
@@ -216,6 +223,7 @@ mutable struct Tracker_Handles
 
     discrete_draw::Bool
 
+    d_widgets::discrete_widgets
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)
