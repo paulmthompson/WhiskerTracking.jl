@@ -179,10 +179,24 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     pad_grid=Grid()
     pad_gen_button = CheckButton("Select Whisker Pad")
     pad_grid[1,1] = pad_gen_button
+    pad_grid[1,2] = Label("Select the location of the whisker pad when box is checked")
+    pad_grid[1,3] = Label("Whiskers will be oriented so that the root is nearest the pad location")
     pad_win=Window(pad_grid)
     Gtk.showall(pad_win)
     visible(pad_win,false)
     p_widgets=pad_widgets(pad_win,pad_gen_button)
+
+    #=
+    ROI Menu Widgets
+    =#
+
+    #=
+    Pole Menu Widgets
+    =#
+
+    #=
+    Visual Display Widgets
+    =#
 
     #=
     Image adjustment window
@@ -945,6 +959,15 @@ end
 #=
 Clicking on the GUI for interaction
 Different functionality depending on the mode
+Mode 1 = Select Whisker
+Mode 2 = Select Whisker Pad
+Mode 3 = Select ROI
+Mode 4 = Select Pole
+
+Erase
+Draw
+Select Single Point
+
 =#
 
 function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
