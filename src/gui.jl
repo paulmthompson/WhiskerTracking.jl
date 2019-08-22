@@ -217,9 +217,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     Menu for Janelia Tracker Parameter Tweaking
     =#
 
-
-
-
     win = Window(grid, "Whisker Tracker") |> showall
 
     all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
@@ -271,25 +268,10 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
 
     #File Menus
-    signal_connect(discrete_cb,discrete_menu_,"activate",Void,(),false,(handles,))
-    signal_connect(discrete_win, :delete_event) do widget, event
-        visible(discrete_win, false)
-        true
-    end
 
-    signal_connect(mask_cb,mask_menu_,"activate",Void,(),false,(handles,))
-    signal_connect(mask_win, :delete_event) do widget, event
-        visible(mask_win, false)
-        true
-    end
-
-    signal_connect(pad_cb,pad_menu_,"activate",Void,(),false,(handles,))
-    signal_connect(pad_win, :delete_event) do widget, event
-        visible(pad_win, false)
-        true
-    end
-
-
+    make_menu_callbacks(discrete_menu_,discrete_win)
+    make_menu_callbacks(mask_menu_,mask_win)
+    make_menu_callbacks(pad_menu_,pad_win)
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
@@ -311,29 +293,13 @@ end
 Menu Buttons
 =#
 
-function discrete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+function make_menu_callbacks(menu,win)
 
-    han, = user_data
-
-    visible(han.d_widgets.win,true)
-
-    nothing
-end
-
-function mask_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    visible(han.mask_widgets.win,true)
-
-end
-
-function pad_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    visible(han.pad_widgets.win,true)
-
+    signal_connect((widget,w)->visible(w[1],true),menu,"activate",Void,(),false,(win,))
+    signal_connect(win, :delete_event) do widget, event
+        visible(win, false)
+        true
+    end
 end
 
 function jt_seed_thres_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
