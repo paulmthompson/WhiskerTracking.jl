@@ -120,6 +120,10 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     extramenu = Menu(extraopts)
     discrete_menu_ = MenuItem("Discretization")
     push!(extramenu,discrete_menu_)
+
+    mask_menu_ = MenuItem("Mask")
+    push!(extramenu,mask_menu_)
+
     push!(mb,extraopts)
 
     grid[1,1] = mb
@@ -145,6 +149,26 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     visible(discrete_win,false)
 
     d_widgets=discrete_widgets(discrete_win,discrete_space_button,discrete_max_points_button,discrete_auto_calc)
+
+    #=
+    Mask Menu Widgets
+    =#
+
+    mask_grid = Grid()
+    mask_gen_button = CheckButton("Create Mask")
+    mask_grid[1,1] = mask_gen_button
+    mask_min_button = SpinButton(0:255)
+    mask_grid[1,2] = mask_min_button
+    mask_grid[2,2] = Label("Minimum Intensity")
+    mask_max_button = SpinButton(0:255)
+    mask_grid[1,3] = mask_max_button
+    mask_grid[2,3] = Label("Maximum Intensity")
+
+    mask_win=Window(mask_grid)
+    Gtk.showall(mask_win)
+    visible(mask_win,false)
+
+    m_widgets=mask_widgets(mask_win,mask_gen_button,mask_min_button,mask_max_button)
 
     #=
     Image adjustment window
@@ -177,6 +201,8 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1}(0),
     (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
 
+    sleep(5.0)
+
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     hist_c,vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
@@ -185,7 +211,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,DLC_Wrapper())
+    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -222,11 +248,22 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
         true
     end
 
+    signal_connect(mask_cb,mask_menu_,"activate",Void,(),false,(handles,))
+    signal_connect(mask_win, :delete_event) do widget, event
+        visible(mask_win, false)
+        true
+    end
+
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
     signal_connect(discrete_points_cb,discrete_max_points_button,"value-changed",Void,(),false,(handles,))
     signal_connect(discrete_auto_cb,discrete_auto_calc,"clicked",Void,(),false,(handles,))
+
+    #Mask Callbacks
+    signal_connect(mask_min_cb,mask_min_button,"value-changed",Void,(),false,(handles,))
+    signal_connect(mask_max_cb,mask_max_button,"value-changed",Void,(),false,(handles,))
+    signal_connect(mask_gen_cb,mask_gen_button,"clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -242,6 +279,14 @@ function discrete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     visible(han.d_widgets.win,true)
 
     nothing
+end
+
+function mask_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    visible(han.mask_widgets.win,true)
+
 end
 
 function jt_seed_thres_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -321,6 +366,50 @@ function discrete_auto_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.discrete_auto_calc=getproperty(han.d_widgets.calc_button,:active,Bool)
+
+    nothing
+end
+
+#=
+Mask Callbacks
+=#
+
+function mask_gen_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    redraw_all(han)
+    plot_mask(han)
+
+    nothing
+end
+
+function mask_min_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    mymin=getproperty(han.mask_widgets.min_button,:value,Int)
+    mymax=getproperty(han.mask_widgets.max_button,:value,Int)
+
+    generate_mask(han.wt,mymin,mymax,han.frame)
+
+    redraw_all(han)
+    plot_mask(han)
+
+    nothing
+end
+
+function mask_max_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    mymin=getproperty(han.mask_widgets.min_button,:value,Int)
+    mymax=getproperty(han.mask_widgets.max_button,:value,Int)
+
+    redraw_all(han)
+    generate_mask(han.wt,mymin,mymax,han.frame)
+
+    plot_mask(han)
 
     nothing
 end

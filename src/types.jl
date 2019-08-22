@@ -156,6 +156,13 @@ mutable struct discrete_widgets
     calc_button::Gtk.GtkCheckButtonLeaf
 end
 
+mutable struct mask_widgets
+    win::Gtk.GtkWindowLeaf
+    gen_button::Gtk.GtkCheckButtonLeaf
+    max_button::Gtk.GtkSpinButtonLeaf
+    min_button::Gtk.GtkSpinButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     dlc_module::PyObject
     config_path::String
@@ -236,6 +243,7 @@ mutable struct Tracker_Handles
     d_spacing::Int64
 
     d_widgets::discrete_widgets
+    mask_widgets::mask_widgets
 
     dlc::DLC_Wrapper
 end

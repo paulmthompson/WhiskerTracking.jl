@@ -25,6 +25,24 @@ function generate_mask(wt,min_val,max_val,frame_id)
 
     wt.mask=myimg.==0
 
+    #Find connected Regions
+    comp=label_components(wt.mask)
+
+    if maximum(comp)>1
+        total_counts=zeros(Int64,maximum(comp))
+        for i=1:length(total_counts)
+            total_counts[i]=length(find(comp.==i))
+        end
+
+        max_comp=indmax(total_counts)
+
+        for i=1:length(wt.mask)
+            if comp[i] != max_comp
+                wt.mask[i] = false
+            end
+        end
+    end
+
     nothing
 end
 
