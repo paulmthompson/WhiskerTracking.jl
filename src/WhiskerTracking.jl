@@ -2,7 +2,9 @@
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot
+Pandas, HDF5, PyPlot, PyCall
+
+unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
 
 if VERSION > v"0.7-"
     using SharedArrays, Libdl

@@ -156,6 +156,16 @@ mutable struct discrete_widgets
     calc_button::Gtk.GtkCheckButtonLeaf
 end
 
+mutable struct DLC_Wrapper
+    dlc_module::PyObject
+    config_path::String
+end
+
+function DLC_Wrapper()
+    dlc_module=pyimport("deeplabcut")
+    DLC_Wrapper(dlc_module,"")
+end
+
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
     win::Gtk.GtkWindowLeaf
@@ -226,6 +236,8 @@ mutable struct Tracker_Handles
     d_spacing::Int64
 
     d_widgets::discrete_widgets
+
+    dlc::DLC_Wrapper
 end
 
 ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)
