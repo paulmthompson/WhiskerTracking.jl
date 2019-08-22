@@ -124,6 +124,9 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     mask_menu_ = MenuItem("Mask")
     push!(extramenu,mask_menu_)
 
+    pad_menu_ = MenuItem("Whisker Pad")
+    push!(extramenu,pad_menu_)
+
     push!(mb,extraopts)
 
     grid[1,1] = mb
@@ -171,6 +174,17 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     m_widgets=mask_widgets(mask_win,mask_gen_button,mask_min_button,mask_max_button)
 
     #=
+    Pad Menu Widgets
+    =#
+    pad_grid=Grid()
+    pad_gen_button = CheckButton("Select Whisker Pad")
+    pad_grid[1,1] = pad_gen_button
+    pad_win=Window(pad_grid)
+    Gtk.showall(pad_win)
+    visible(pad_win,false)
+    p_widgets=pad_widgets(pad_win,pad_gen_button)
+
+    #=
     Image adjustment window
     =#
     #Grid
@@ -211,7 +225,8 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,DLC_Wrapper())
+    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
+    false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -254,6 +269,13 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
         true
     end
 
+    signal_connect(pad_cb,pad_menu_,"activate",Void,(),false,(handles,))
+    signal_connect(pad_win, :delete_event) do widget, event
+        visible(pad_win, false)
+        true
+    end
+
+
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
@@ -264,6 +286,9 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     signal_connect(mask_min_cb,mask_min_button,"value-changed",Void,(),false,(handles,))
     signal_connect(mask_max_cb,mask_max_button,"value-changed",Void,(),false,(handles,))
     signal_connect(mask_gen_cb,mask_gen_button,"clicked",Void,(),false,(handles,))
+
+    #Pad Callbacks
+    signal_connect(pad_gen_cb,pad_gen_button,"clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -286,6 +311,14 @@ function mask_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     visible(han.mask_widgets.win,true)
+
+end
+
+function pad_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    visible(han.pad_widgets.win,true)
 
 end
 
@@ -410,6 +443,19 @@ function mask_max_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
     generate_mask(han.wt,mymin,mymax,han.frame)
 
     plot_mask(han)
+
+    nothing
+end
+
+#=
+Whisker Pad
+=#
+
+function pad_gen_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.select_pad_mode=getproperty(han.pad_widgets.gen_button,:active,Bool)
 
     nothing
 end

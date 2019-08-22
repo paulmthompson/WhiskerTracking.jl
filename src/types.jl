@@ -163,6 +163,11 @@ mutable struct mask_widgets
     min_button::Gtk.GtkSpinButtonLeaf
 end
 
+mutable struct pad_widgets
+    win::Gtk.GtkWindowLeaf
+    gen_button::Gtk.CheckButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     dlc_module::PyObject
     config_path::String
@@ -244,6 +249,10 @@ mutable struct Tracker_Handles
 
     d_widgets::discrete_widgets
     mask_widgets::mask_widgets
+    pad_widgets::pad_widgets
+    select_pad_mode::Bool
+
+    selection_mode::Int64 #What the mouse will do when you click
 
     dlc::DLC_Wrapper
 end
