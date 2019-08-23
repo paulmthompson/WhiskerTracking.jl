@@ -53,18 +53,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     combine_button=ToggleButton("Combine Segments")
     control_grid[1,9]=combine_button
 
-    background_button = CheckButton("Subtract Background")
-    control_grid[1,10]=background_button
-
-    sharpen_button = CheckButton("Sharpen Image")
-    control_grid[1,11]=sharpen_button
-
-    aniso_button = CheckButton("Anisotropic Diffusion")
-    control_grid[1,12]=aniso_button
-
-    local_contrast_button = CheckButton("Local Contrast Enhancement")
-    control_grid[1,13]=local_contrast_button
-
     touch_button = ToggleButton("Define Touch")
     control_grid[2,9] = touch_button
 
@@ -272,10 +260,23 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     image_adj_grid[1,3]=contrast_max_slider
     image_adj_grid[2,3]=Label("Maximum")
 
+    background_button = CheckButton("Subtract Background")
+    image_adj_grid[1,4]=background_button
+
+    sharpen_button = CheckButton("Sharpen Image")
+    image_adj_grid[1,5]=sharpen_button
+
+    aniso_button = CheckButton("Anisotropic Diffusion")
+    image_adj_grid[1,6]=aniso_button
+
+    local_contrast_button = CheckButton("Local Contrast Enhancement")
+    image_adj_grid[1,7]=local_contrast_button
+
     image_adj_win = Window(image_adj_grid)
     Gtk.showall(image_adj_win)
     visible(image_adj_win,false)
-    ia_widgets = image_adj_widgets(image_adj_win,hist_c,contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max)
+    ia_widgets = image_adj_widgets(image_adj_win,hist_c,contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
+    background_button,sharpen_button,aniso_button,local_contrast_button)
     #Grid
     #Histogram Canvas
     #Min slider
@@ -306,8 +307,8 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
-    delete_button,combine_button,0,Whisker1(),background_button,false,
-    start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
+    delete_button,combine_button,0,Whisker1(),false,
+    start_frame,zeros(Int64,vid_length),false,false,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
@@ -889,7 +890,7 @@ function background_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.background_mode = getproperty(han.background_button,:active,Bool)
+    han.background_mode = getproperty(han.image_adj_widgets.background_button,:active,Bool)
 
     nothing
 end
@@ -898,7 +899,7 @@ function sharpen_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.sharpen_mode = getproperty(han.sharpen_button,:active,Bool)
+    han.sharpen_mode = getproperty(han.image_adj_widgets.sharpen_button,:active,Bool)
 
     nothing
 end
@@ -907,7 +908,7 @@ function aniso_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.anisotropic_mode = getproperty(han.anisotropic_button,:active,Bool)
+    han.anisotropic_mode = getproperty(han.image_adj_widgets.anisotropic_button,:active,Bool)
 
     nothing
 end
@@ -916,7 +917,7 @@ function local_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.local_contrast_mode = getproperty(han.anisotropic_button,:active,Bool)
+    han.local_contrast_mode = getproperty(han.image_adj_widgets,local_contrast_button,:active,Bool)
 
     nothing
 end
