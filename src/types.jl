@@ -250,7 +250,7 @@ mutable struct Tracker_Handles
     d_widgets::discrete_widgets
     mask_widgets::mask_widgets
     pad_widgets::pad_widgets
-    select_pad_mode::Bool
+    view_pad::Bool
 
     selection_mode::Int64 #What the mouse will do when you click
 

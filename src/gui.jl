@@ -435,7 +435,22 @@ function pad_gen_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.select_pad_mode=getproperty(han.pad_widgets.gen_button,:active,Bool)
+    if getproperty(han.pad_widgets.gen_button,:active,Bool)
+        han.selection_mode = 10
+        han.view_pad = true
+    else
+        han.selection_mode = 1
+        determine_viewers(han)
+    end
+
+    redraw_all(han)
+
+    nothing
+end
+
+function determine_viewers(han)
+
+    han.view_pad=false
 
     nothing
 end
@@ -919,6 +934,12 @@ function plot_image(han,img)
         draw_discrete(han)
     end
 
+    if han.view_pad
+        set_source_rgb(ctx,0,0,1)
+        arc(ctx, han.wt.pad_pos[1],han.wt.pad_pos[2], 10, 0, 2*pi);
+        stroke(ctx)
+    end
+
     reveal(han.c)
 end
 
@@ -926,13 +947,14 @@ end
 Clicking on the GUI for interaction
 Different functionality depending on the mode
 Mode 1 = Select Whisker
-Mode 2 = Select Whisker Pad
-Mode 3 = Select ROI
-Mode 4 = Select Pole
+Mode 2 = Erase Mode
+Mode 3 = Draw Mode
+Mode 4 = Select Single Point
+Mode 5 =
 
-Erase
-Draw
-Select Single Point
+Mode 10 = Select Whisker Pad
+Mode 11 = Select ROI
+Mode 12 = Select Pole
 
 =#
 
@@ -945,20 +967,28 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     m_x = event.x
     m_y = event.y
 
-    #Find whisker of interest (nearest to selection)
-    for i=1:length(han.wt.whiskers)
-        for j=1:han.wt.whiskers[i].len
-            if (m_x>han.wt.whiskers[i].x[j]-5.0)&(m_x<han.wt.whiskers[i].x[j]+5.0)
-                if (m_y>han.wt.whiskers[i].y[j]-5.0)&(m_y<han.wt.whiskers[i].y[j]+5.0)
-                    han.woi_id = i
-                    #han.woi_x_f = han.whiskers[han.woi_id].x[end]
-                    #han.woi_y_f = han.whiskers[han.woi_id].y[end]
-                    han.tracked[han.frame]=true
-                    assign_woi(han)
-                    break
+    if han.selection_mode==1
+
+        #Find whisker of interest (nearest to selection)
+        for i=1:length(han.wt.whiskers)
+            for j=1:han.wt.whiskers[i].len
+                if (m_x>han.wt.whiskers[i].x[j]-5.0)&(m_x<han.wt.whiskers[i].x[j]+5.0)
+                    if (m_y>han.wt.whiskers[i].y[j]-5.0)&(m_y<han.wt.whiskers[i].y[j]+5.0)
+                        han.woi_id = i
+                        #han.woi_x_f = han.whiskers[han.woi_id].x[end]
+                        #han.woi_y_f = han.whiskers[han.woi_id].y[end]
+                        han.tracked[han.frame]=true
+                        assign_woi(han)
+                        break
+                    end
                 end
             end
         end
+    end
+
+    if han.selection_mode == 10 #whisker pad select
+        select_whisker_pad(han,m_x,m_y)
+        redraw_all(han)
     end
 
     if han.erase_mode
@@ -979,6 +1009,14 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     end
 
     nothing
+end
+
+function select_whisker_pad(han,x,y)
+
+    han.wt.pad_pos=(x,y)
+
+    redraw_all(han)
+
 end
 
 function combine_start(han,x,y)
