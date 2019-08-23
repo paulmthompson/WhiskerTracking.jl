@@ -184,6 +184,14 @@ mutable struct pole_widgets
     touch_button::Gtk.GtkCheckButtonLeaf
 end
 
+mutable struct view_widgets
+    win::Gtk.GtkWindowLeaf
+    whisker_pad_button::Gtk.GtkCheckButtonLeaf
+    roi_button::Gtk.GtkCheckButtonLeaf
+    discrete_button::Gtk.GtkCheckButtonLeaf
+    pole_button::Gtk.GtkCheckButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     dlc_module::PyObject
     config_path::String
@@ -268,6 +276,7 @@ mutable struct Tracker_Handles
     pad_widgets::pad_widgets
     roi_widgets::roi_widgets
     pole_widgets::pole_widgets
+    view_widgets::view_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}

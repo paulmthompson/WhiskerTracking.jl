@@ -133,6 +133,9 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     pole_menu_ = MenuItem("Pole")
     push!(extramenu,pole_menu_)
 
+    view_menu_ = MenuItem("Viewer")
+    push!(extramenu,view_menu_)
+
     push!(mb,extraopts)
 
     grid[1,1] = mb
@@ -232,6 +235,26 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     visible(pole_win,false)
     pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button)
 
+    #=
+    View Window
+    =#
+
+    view_grid=Grid()
+    view_whisker_pad_button = CheckButtonLeaf("Whisker Pad")
+    view_grid[1,1] = view_whisker_pad_button
+    view_roi_button = CheckButtonLeaf("Region of Interest")
+    view_grid[1,2] = view_roi_button
+    view_discrete_button = CheckButtonLeaf("Discrete Points")
+    view_grid[1,3] = view_discrete_button
+    view_pole_button = CheckButtonLeaf("Pole")
+    view_grid[1,4] = view_pole_button
+
+    view_grid[1,7] = Label("Select which items are always displayed for each frame")
+
+    view_win = Window(view_grid)
+    Gtk.showall(view_win)
+    visible(view_win,false)
+    v_widgets=view_widgets(view_win,view_whisker_pad_button,view_roi_button,view_discrete_button,view_pole_button)
 
     #=
     Visual Display Widgets
@@ -276,7 +299,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
+    r_widgets,pp_widgets,v_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -313,6 +336,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     make_menu_callbacks(pad_menu_,pad_win)
     make_menu_callbacks(roi_menu_,roi_win)
     make_menu_callbacks(pole_menu_,pole_win)
+    make_menu_callbacks(view_menu_,view_win)
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
@@ -330,6 +354,12 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     #Pole Callbacks
     signal_connect(pole_mode_cb,pole_mode_button,"clicked",Void,(),false,(handles,))
     signal_connect(pole_select_cb,pole_gen_button,"clicked",Void,(),false,(handles,))
+
+    #View Callbacks
+    signal_connect(view_whisker_pad_cb,view_whisker_pad_button,"clicked",Void,(),false,(handles,))
+    signal_connect(view_roi_cb,view_roi_button,"clicked",Void,(),false,(handles,))
+    signal_connect(view_pole_cb,view_pole_button,"clicked",Void,(),false,(handles,))
+    signal_connect(view_discrete_cb,view_discrete_button,"clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -495,9 +525,10 @@ end
 
 function determine_viewers(han)
 
-    han.view_pad=false
-    han.view_roi=false
-    han.view_pole=false
+    han.view_pad = getproperty(han.view_widgets.whisker_pad_button,:active,Bool)
+    han.view_roi = getproperty(han.view_widgets.roi_button,:active,Bool)
+    han.view_pole = getproperty(han.view_widgets.pole_button,:active,Bool)
+    han.discrete_draw = getproperty(han.view_widgets.discrete_button,:active,Bool)
 
     nothing
 end
@@ -654,6 +685,42 @@ function touch_stop(han,x,y)
     pop!((han.c.mouse, :motion))
     pop!((han.c.mouse, :button1release))
 
+    nothing
+end
+
+#=
+View Callbacks
+=#
+
+function view_whisker_pad_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+    han.view_pad = getproperty(han.view_widgets.whisker_pad_button,:active,Bool)
+    redraw_all(han)
+    nothing
+end
+
+function view_roi_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+    han.view_roi = getproperty(han.view_widgets.roi_button,:active,Bool)
+    redraw_all(han)
+    nothing
+end
+
+function view_pole_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+    han.view_pole = getproperty(han.view_widgets.pole_button,:active,Bool)
+    redraw_all(han)
+    nothing
+end
+
+function view_discrete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+    han.discrete_draw = getproperty(han.view_widgets.discrete_button,:active,Bool)
+    redraw_all(han)
     nothing
 end
 
