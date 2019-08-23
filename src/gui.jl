@@ -32,9 +32,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     trace_button=Button("Trace")
     control_grid[1,4]=trace_button
 
-    auto_button=ToggleButton("Auto")
-    control_grid[1,5]=auto_button
-
     erase_button=ToggleButton("Erase Mode")
     control_grid[1,6]=erase_button
 
@@ -302,7 +299,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
-    0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
+    0.0,0.0,zeros(Float64,size(vid,3),2),false,erase_button,false,0,falses(size(vid,3)),
     delete_button,combine_button,0,Whisker1(),false,
     start_frame,zeros(Int64,vid_length),false,false,false,
     draw_button,false,connect_button,false,falses(480,640),touch_override,false,
@@ -314,7 +311,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     signal_connect(frame_select, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(trace_cb,trace_button, "clicked", Void, (), false, (handles,))
-    signal_connect(auto_cb,auto_button, "clicked",Void,(),false,(handles,))
+
     signal_connect(erase_cb,erase_button, "clicked",Void,(),false,(handles,))
     signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
@@ -924,24 +921,6 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    @async if getproperty(han.auto_button, :active, Bool)
-        han.auto_mode = true
-        han.stop_flag=false
-        while getproperty(han.auto_button, :active, Bool)
-            start_auto(han)
-        end
-    else
-        han.auto_mode = false
-        han.stop_flag=false
-    end
-
-    nothing
-end
-
 function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -1457,28 +1436,6 @@ function WT_constraints(han)
     end
 
     #Find
-
-    nothing
-end
-
-function start_auto(han::Tracker_Handles)
-
-    if (han.frame+1 <= size(han.wt.vid,3))&(!han.stop_flag)
-        #advance one frame
-        setproperty!(han.adj_frame,:value,han.frame+1)
-
-        if length(han.wt.all_whiskers[han.frame])==0
-            WT_trace(han.frame,han.current_frame',han.wt.min_length,han.wt.pad_pos,han.wt.mask)
-        end
-
-        #Link whiskers
-        WT_constraints(han)
-
-        plot_whiskers(han)
-    else
-        setproperty!(han.auto_button,:active,false)
-    end
-    sleep(0.001)
 
     nothing
 end

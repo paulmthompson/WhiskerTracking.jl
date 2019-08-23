@@ -238,7 +238,7 @@ mutable struct Tracker_Handles
     woi_x_f::Float64 #last frame whisker follicle position
     woi_y_f::Float64 #last frame whisker follicle position
     woi_follicle::Array{Float64,2} #Array that stores manually curated points of follicle position
-    auto_button::Gtk.GtkToggleButtonLeaf
+
     auto_mode::Bool
     erase_button::Gtk.GtkToggleButtonLeaf
     erase_mode::Bool
@@ -258,10 +258,9 @@ mutable struct Tracker_Handles
     cov1::Array{Int64,1}
 
     sharpen_mode::Bool
-
     anisotropic_mode::Bool
-
     local_contrast_mode::Bool
+
     draw_button::Gtk.GtkToggleButtonLeaf
     draw_mode::Bool
     connect_button::Gtk.GtkButtonLeaf
