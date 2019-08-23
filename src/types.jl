@@ -269,6 +269,9 @@ mutable struct Tracker_Handles
     roi_widgets::roi_widgets
     pole_widgets::pole_widgets
 
+    pole_present::BitArray{1}
+    pole_loc::Array{Float32,2}
+
     view_pad::Bool
     view_roi::Bool
     view_pole::Bool

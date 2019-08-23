@@ -276,7 +276,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,false,false,false,1,DLC_Wrapper())
+    r_widgets,pp_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -326,6 +326,10 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     #Pad Callbacks
     signal_connect(pad_gen_cb,pad_gen_button,"clicked",Void,(),false,(handles,))
+
+    #Pole Callbacks
+    signal_connect(pole_mode_cb,pole_mode_button,"clicked",Void,(),false,(handles,))
+    signal_connect(pole_select_cb,pole_gen_button,"clicked",Void,(),false,(handles,))
 
     handles
 end
@@ -502,6 +506,30 @@ end
 Touch Functions
 =#
 
+function pole_mode_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    #Update DLC parameter file
+
+    nothing
+end
+
+function pole_select_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    if getproperty(han.pole_widgets.gen_button,:active,Bool)
+        han.selection_mode = 12
+        han.view_pole = true
+    else
+        han.selection_mode = 1
+        determine_viewers(han)
+    end
+
+    nothing
+end
+
 function touch_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -516,7 +544,6 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.touch_frames[han.frame] = !han.touch_frames[han.frame]
-    #han.touch_override_mode = getproperty(han.touch_override,:active,Bool)
 
     draw_touch(han)
 
@@ -550,6 +577,10 @@ function detect_touch(han)
     end
     nothing
 end
+
+#=
+Draw marker to indicate that touch has occured
+=#
 
 function draw_touch(han::Tracker_Handles)
 
@@ -983,6 +1014,14 @@ function plot_image(han,img)
         stroke(ctx)
     end
 
+    if han.view_pole
+        if han.pole_present[han.frame]
+            set_source_rgb(ctx,0,0,1)
+            arc(ctx,han.pole_loc[han.frame,1],han.pole_loc[han.frame,2],10,0,2*pi)
+            stroke(ctx)
+        end
+    end
+
     reveal(han.c)
 end
 
@@ -1032,6 +1071,9 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     if han.selection_mode == 10 #whisker pad select
         select_whisker_pad(han,m_x,m_y)
         redraw_all(han)
+    elseif han.selection_mode == 12
+        select_pole_location(han,m_x,m_y)
+        redraw_all(han)
     end
 
     if han.erase_mode
@@ -1060,6 +1102,15 @@ function select_whisker_pad(han,x,y)
 
     redraw_all(han)
 
+end
+
+function select_pole_location(han,x,y)
+
+    han.pole_present[han.frame] = true
+    han.pole_loc[han.frame,1] = x
+    han.pole_loc[han.frame,2] = y
+
+    redraw_all(han)
 end
 
 function combine_start(han,x,y)
