@@ -50,9 +50,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     combine_button=ToggleButton("Combine Segments")
     control_grid[1,9]=combine_button
 
-    touch_button = ToggleButton("Define Touch")
-    control_grid[2,9] = touch_button
-
     touch_override = Button("Touch Override")
     control_grid[2,10] = touch_override
 
@@ -308,7 +305,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
     delete_button,combine_button,0,Whisker1(),false,
     start_frame,zeros(Int64,vid_length),false,false,false,
-    draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
+    draw_button,false,connect_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),
     wt,5.0,false,false,false,2,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,ia_widgets,j_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
@@ -326,7 +323,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
     signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
-    signal_connect(touch_cb,touch_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
 
     #File Menus
@@ -572,15 +568,6 @@ function pole_select_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function touch_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.touch_mode = getproperty(han.touch_button,:active,Bool)
-
-    nothing
-end
-
 function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -636,65 +623,6 @@ function draw_touch(han::Tracker_Handles)
 
     rectangle(ctx,600,0,20,20)
     fill(ctx)
-
-    nothing
-end
-
-
-function touch_start(han,x,y)
-
-    plot_image(han,han.current_frame')
-    plot_touch_mask(han)
-    reveal(han.c)
-
-    push!((han.c.mouse, :button1motion),  (c, event) -> touch_move(han, event.x, event.y))
-    push!((han.c.mouse, :motion), Gtk.default_mouse_cb)
-    push!((han.c.mouse, :button1release), (c, event) -> touch_stop(han, event.x, event.y))
-
-    nothing
-end
-
-function touch_move(han, x,y)
-
-    x=round(Int64,x)
-    y=round(Int64,y)
-
-    for i=x-3:x+3
-        for j=y-3:y+3
-            han.touch_mask[j,i]=true
-        end
-    end
-
-    plot_touch_mask(han)
-    reveal(han.c)
-
-    nothing
-end
-
-function plot_touch_mask(han)
-
-    ctx=Gtk.getgc(han.c)
-
-    set_source_rgb(ctx,1.0,0.0,0.0)
-
-    for x=1:639
-        for y=1:479
-            if han.touch_mask[y,x]
-                rectangle(ctx,x,y,1.0,1.0)
-            end
-        end
-    end
-
-    fill(ctx)
-
-    nothing
-end
-
-function touch_stop(han,x,y)
-
-    pop!((han.c.mouse, :button1motion))
-    pop!((han.c.mouse, :motion))
-    pop!((han.c.mouse, :button1release))
 
     nothing
 end
@@ -1170,8 +1098,6 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
         else
             combine_end(han,m_x,m_y)
         end
-    elseif han.touch_mode
-        touch_start(han,m_x,m_y)
     else
         #plot_whiskers(han)
         redraw_all(han)

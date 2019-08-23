@@ -265,7 +265,7 @@ mutable struct Tracker_Handles
     draw_button::Gtk.GtkToggleButtonLeaf
     draw_mode::Bool
     connect_button::Gtk.GtkButtonLeaf
-    touch_button::Gtk.GtkToggleButtonLeaf
+
     touch_mode::Bool
     touch_mask::BitArray{2}
     touch_override::Gtk.GtkButtonLeaf
