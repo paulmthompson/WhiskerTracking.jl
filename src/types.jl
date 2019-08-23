@@ -205,6 +205,12 @@ mutable struct image_adj_widgets
     local_contrast_button::Gtk.GtkCheckButtonLeaf
 end
 
+mutable struct janelia_widgets
+    win::Gtk.GtkWindowLeaf
+    jt_seed_thres_button::Gtk.GtkSpinButtonLeaf
+    jt_seed_iterations_button::Gtk.GtkSpinButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     dlc_module::PyObject
     config_path::String
@@ -267,13 +273,9 @@ mutable struct Tracker_Handles
     touch_frames::BitArray{1}
     woi_angle::Array{Float64,1}
     woi_curv::Array{Float64,1}
-    jt_seed_thres_button::Gtk.GtkSpinButtonLeaf
-    jt_seed_iterations_button::Gtk.GtkSpinButtonLeaf
     wt::Tracker
     cor_thres::Float64
     stop_flag::Bool
-    overwrite_mode::Bool
-    overwrite_button::Gtk.GtkCheckButtonLeaf
 
     discrete_draw::Bool
     discrete_auto_calc::Bool
@@ -286,6 +288,7 @@ mutable struct Tracker_Handles
     pole_widgets::pole_widgets
     view_widgets::view_widgets
     image_adj_widgets::image_adj_widgets
+    janelia_widgets::janelia_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}

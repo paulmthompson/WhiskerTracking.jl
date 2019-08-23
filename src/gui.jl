@@ -35,9 +35,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     auto_button=ToggleButton("Auto")
     control_grid[1,5]=auto_button
 
-    auto_overwrite = CheckButton("Auto Overwrite")
-    control_grid[2,5]=auto_overwrite
-
     erase_button=ToggleButton("Erase Mode")
     control_grid[1,6]=erase_button
 
@@ -58,19 +55,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     touch_override = Button("Touch Override")
     control_grid[2,10] = touch_override
-
-    janelia_label=Label("Janelia Parameters")
-    control_grid[3,4]=janelia_label
-
-    janelia_seed_thres=SpinButton(0.01:.01:1.0)
-    setproperty!(janelia_seed_thres,:value,0.99)
-    control_grid[3,5]=janelia_seed_thres
-    control_grid[4,5]=Label("Seed Threshold")
-
-    janelia_seed_iterations=SpinButton(1:1:10)
-    setproperty!(janelia_seed_iterations,:value,1)
-    control_grid[3,6]=janelia_seed_iterations
-    control_grid[4,6]=Label("Seed Iterations")
 
     grid[2,2]=control_grid
 
@@ -115,6 +99,13 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     push!(imagemenu,image_adjust_menu_)
 
     push!(mb,imageopts)
+
+    otheropts = MenuItem("_Other Programs")
+    othermenu = Menu(otheropts)
+    janelia_menu_ = MenuItem("Janelia Tracker")
+    push!(othermenu,janelia_menu_)
+
+    push!(mb,otheropts)
 
     grid[1,1] = mb
 
@@ -277,21 +268,29 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     visible(image_adj_win,false)
     ia_widgets = image_adj_widgets(image_adj_win,hist_c,contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
     background_button,sharpen_button,aniso_button,local_contrast_button)
-    #Grid
-    #Histogram Canvas
-    #Min slider
-    #Max Slider
-    #Sharpen Checkbox
-    #Anisotropic Diffusion Frame
-    #Anisotropic Frame
-    #Anisotropic Paramters
-    #Local Contrast Frame
-    #Anisotropic Checkbox
-    #Anisotropic Parameters
 
     #=
     Menu for Janelia Tracker Parameter Tweaking
     =#
+    janelia_grid=Grid()
+    janelia_label=Label("Janelia Parameters")
+    janelia_grid[1,1]=janelia_label
+
+    janelia_seed_thres=SpinButton(0.01:.01:1.0)
+    setproperty!(janelia_seed_thres,:value,0.99)
+    janelia_grid[1,2]=janelia_seed_thres
+    janelia_grid[2,2]=Label("Seed Threshold")
+
+    janelia_seed_iterations=SpinButton(1:1:10)
+    setproperty!(janelia_seed_iterations,:value,1)
+    janelia_grid[1,3]=janelia_seed_iterations
+    janelia_grid[1,3]=Label("Seed Iterations")
+
+    janelia_win=Window(janelia_grid)
+    Gtk.showall(janelia_win)
+    visible(janelia_win,false)
+    j_widgets=janelia_widgets(janelia_win,janelia_seed_thres,janelia_seed_iterations)
+
 
     win = Window(grid, "Whisker Tracker") |> showall
 
@@ -310,9 +309,9 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     delete_button,combine_button,0,Whisker1(),false,
     start_frame,zeros(Int64,vid_length),false,false,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
-    falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
-    janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,v_widgets,ia_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
+    falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),
+    wt,5.0,false,false,false,2,d_widgets,m_widgets,p_widgets,
+    r_widgets,pp_widgets,v_widgets,ia_widgets,j_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -323,24 +322,12 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
     signal_connect(combine_cb,combine_button,"clicked",Void,(),false,(handles,))
-    signal_connect(background_cb,background_button,"clicked",Void,(),false,(handles,))
-    signal_connect(adjust_contrast_cb,contrast_min_slider,"value-changed",Void,(),false,(handles,))
-    signal_connect(adjust_contrast_cb,contrast_max_slider,"value-changed",Void,(),false,(handles,))
+
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
-    signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
-    signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
-    signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
-    signal_connect(aniso_cb,aniso_button,"clicked",Void,(),false,(handles,))
-    signal_connect(local_contrast_cb,local_contrast_button,"clicked",Void,(),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
     signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_cb,touch_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
-    signal_connect(auto_overwrite_cb,auto_overwrite,"clicked",Void,(),false,(handles,))
-
-    signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
-    signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
-
 
     #File Menus
 
@@ -351,6 +338,11 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     make_menu_callbacks(pole_menu_,pole_win)
     make_menu_callbacks(view_menu_,view_win)
     make_menu_callbacks(image_adjust_menu_,image_adj_win)
+    make_menu_callbacks(janelia_menu_,janelia_win)
+
+    #File Callbacks
+    signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
+    signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
@@ -375,6 +367,18 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     signal_connect(view_pole_cb,view_pole_button,"clicked",Void,(),false,(handles,))
     signal_connect(view_discrete_cb,view_discrete_button,"clicked",Void,(),false,(handles,))
 
+    #Image Adjustment Callbacks
+    signal_connect(adjust_contrast_cb,contrast_min_slider,"value-changed",Void,(),false,(handles,))
+    signal_connect(adjust_contrast_cb,contrast_max_slider,"value-changed",Void,(),false,(handles,))
+    signal_connect(background_cb,background_button,"clicked",Void,(),false,(handles,))
+    signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
+    signal_connect(aniso_cb,aniso_button,"clicked",Void,(),false,(handles,))
+    signal_connect(local_contrast_cb,local_contrast_button,"clicked",Void,(),false,(handles,))
+
+    #Janelia Tweaking Callbacks
+    signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
+    signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
+
     handles
 end
 
@@ -391,11 +395,14 @@ function make_menu_callbacks(menu,win)
     end
 end
 
+#=
+Janelia Callbacks
+=#
 function jt_seed_thres_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    thres=getproperty(han.jt_seed_thres_button,:value,Float64)
+    thres=getproperty(han.janelia_widgets.jt_seed_thres_button,:value,Float64)
 
     change_JT_param(:paramSEED_THRESH,convert(Float32,thres))
 
@@ -406,22 +413,12 @@ function jt_seed_iterations_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    iterations=getproperty(han.jt_seed_iterations_button,:value,Int64)
+    iterations=getproperty(han.janelia_widgets.jt_seed_iterations_button,:value,Int64)
 
     change_JT_param(:paramSEED_ITERATIONS,convert(Int32,iterations))
 
     nothing
 end
-
-function auto_overwrite_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.overwrite_mode = getproperty(han.overwrite_button,:active,Bool)
-
-    nothing
-end
-
 
 #=
 Discrete Callbacks
