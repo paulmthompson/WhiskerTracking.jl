@@ -81,12 +81,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     local_contrast_button = CheckButton("Local Contrast Enhancement")
     control_grid[1,13]=local_contrast_button
 
-    save_button = Button("Save")
-    control_grid[1,14]=save_button
-
-    load_button = Button("Load")
-    control_grid[1,15]=load_button
-
     touch_button = ToggleButton("Define Touch")
     control_grid[2,9] = touch_button
 
@@ -112,6 +106,8 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     mb = MenuBar()
     sortopts = MenuItem("_File")
     sortmenu = Menu(sortopts)
+    save_whisk_ = MenuItem("Save Whiskers")
+    push!(sortmenu,save_whisk_)
     load_whisk_ = MenuItem("Load Whiskers")
     push!(sortmenu,load_whisk_)
     push!(mb,sortopts)
@@ -210,6 +206,9 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     roi_tilt_button = SpinButton(-45:45)
     roi_grid[1,4] = roi_tilt_button
     roi_grid[2,4] = Label("ROI Tilt")
+
+    roi_grid[1,7] = Label("When candidate whisker traces are detected in the image, \n only whiskers with bases inside the ROI are kept.")
+
     roi_win=Window(roi_grid)
     Gtk.showall(roi_win)
     visible(roi_win,false)
@@ -295,7 +294,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
     delete_button,combine_button,0,Whisker1(),background_button,false,
     contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
-    save_button, load_button,start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
+    start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
@@ -314,8 +313,8 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     signal_connect(adjust_contrast_cb,contrast_min_slider,"value-changed",Void,(),false,(handles,))
     signal_connect(adjust_contrast_cb,contrast_max_slider,"value-changed",Void,(),false,(handles,))
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
-    signal_connect(save_cb, save_button, "clicked",Void,(),false,(handles,))
-    signal_connect(load_cb, load_button, "clicked",Void,(),false,(handles,))
+    signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
+    signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
     signal_connect(aniso_cb,aniso_button,"clicked",Void,(),false,(handles,))
     signal_connect(local_contrast_cb,local_contrast_button,"clicked",Void,(),false,(handles,))

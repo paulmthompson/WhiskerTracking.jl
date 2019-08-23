@@ -238,8 +238,6 @@ mutable struct Tracker_Handles
     contrast_max_slider::Gtk.GtkScaleLeaf
     adj_contrast_max::Gtk.GtkAdjustmentLeaf
 
-    save_button::Gtk.GtkButtonLeaf
-    load_button::Gtk.GtkButtonLeaf
     start_frame::Int64
     cov1::Array{Int64,1}
     sharpen_button::Gtk.GtkCheckButtonLeaf
