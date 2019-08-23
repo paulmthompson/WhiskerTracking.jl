@@ -1170,12 +1170,16 @@ function combine_end(han,x,y)
         han.woi[han.frame].thick=new_thick
         han.woi[han.frame].scores=new_scores
         han.woi[han.frame].len = length(new_thick)
+
+        if han.discrete_auto_calc
+            make_discrete(han.wt.w_p,han.frame,han.woi[han.frame],han.d_spacing)
+        end
     else
         println("No intersection found")
     end
 
     han.combine_mode = 1
-    plot_whiskers(han)
+    redraw_all(han)
 
     nothing
 end
