@@ -53,6 +53,11 @@ function adjust_contrast_gui(han)
     nothing
 end
 
+#=
+Only Whiskers are identified that are inside a region of interest (ROI)
+That ROI is a circle centered on the whisker pad of radius 100
+=#
+
 function apply_roi(whiskers,pad_pos)
 
     remove_whiskers=Array{Int64}(0)

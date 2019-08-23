@@ -127,6 +127,12 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     pad_menu_ = MenuItem("Whisker Pad")
     push!(extramenu,pad_menu_)
 
+    roi_menu_ = MenuItem("Region of Interest")
+    push!(extramenu,roi_menu_)
+
+    pole_menu_ = MenuItem("Pole")
+    push!(extramenu,pole_menu_)
+
     push!(mb,extraopts)
 
     grid[1,1] = mb
@@ -189,6 +195,22 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     #=
     ROI Menu Widgets
     =#
+    roi_grid=Grid()
+    roi_gen_button = CheckButton("Select ROI center")
+    roi_grid[1,1] = roi_gen_button
+    roi_height_button = SpinButton(20:150)
+    roi_grid[1,2] = roi_height_button
+    roi_grid[2,2] = Label("ROI Height")
+    roi_width_button = SpinButton(20:150)
+    roi_grid[1,3] = roi_width_button
+    roi_grid[2,3] = Label("ROI Width")
+    roi_tilt_button = SpinButton(-45:45)
+    roi_grid[1,4] = roi_tilt_button
+    roi_grid[2,4] = Label("ROI Tilt")
+    roi_win=Window(roi_grid)
+    Gtk.showall(roi_win)
+    visible(roi_win,false)
+    r_widgets=roi_widgets(roi_win,roi_gen_button,roi_height_button,roi_width_button,roi_tilt_button)
 
     #=
     Pole Menu Widgets
@@ -237,7 +259,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
-    false,1,DLC_Wrapper())
+    r_widgets,false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -272,6 +294,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     make_menu_callbacks(discrete_menu_,discrete_win)
     make_menu_callbacks(mask_menu_,mask_win)
     make_menu_callbacks(pad_menu_,pad_win)
+    make_menu_callbacks(roi_menu_,roi_win)
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
@@ -451,6 +474,8 @@ end
 function determine_viewers(han)
 
     han.view_pad=false
+    han.view_roi=false
+    han.view_pole=false
 
     nothing
 end

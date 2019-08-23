@@ -165,7 +165,15 @@ end
 
 mutable struct pad_widgets
     win::Gtk.GtkWindowLeaf
-    gen_button::Gtk.CheckButtonLeaf
+    gen_button::Gtk.GtkCheckButtonLeaf
+end
+
+mutable struct roi_widgets
+    win::Gtk.GtkWindowLeaf
+    gen_button::Gtk.GtkCheckButtonLeaf
+    height_button::Gtk.GtkSpinButtonLeaf
+    width_button::Gtk.GtkSpinButtonLeaf
+    tilt_button::Gtk.GtkSpinButtonLeaf
 end
 
 mutable struct DLC_Wrapper
@@ -250,7 +258,10 @@ mutable struct Tracker_Handles
     d_widgets::discrete_widgets
     mask_widgets::mask_widgets
     pad_widgets::pad_widgets
+    roi_widgets::roi_widgets
     view_pad::Bool
+    view_roi::Bool
+    view_pole::Bool
 
     selection_mode::Int64 #What the mouse will do when you click
 
