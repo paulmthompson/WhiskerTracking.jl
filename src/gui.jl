@@ -215,6 +215,23 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     #=
     Pole Menu Widgets
     =#
+    pole_grid=Grid()
+    pole_mode_button = CheckButtonLeaf("Find Location in Tracking?")
+    pole_grid[1,1] = pole_mode_button
+    pole_gen_button = CheckButton("Select Pole Location")
+    pole_grid[1,2] = pole_gen_button
+    pole_auto_button = CheckButton("Automatically Determine Pole Location")
+    pole_grid[1,3] = pole_auto_button
+    pole_touch_button = CheckButton("Show Touch Location")
+    pole_grid[1,4] = pole_touch_button
+
+    pole_grid[1,7] = Label("Check the top checkbox if you want the whisker tracker to \n also look for a pole in each frame")
+
+    pole_win = Window(pole_grid)
+    Gtk.showall(pole_win)
+    visible(pole_win,false)
+    pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button)
+
 
     #=
     Visual Display Widgets
@@ -259,7 +276,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
-    r_widgets,false,false,false,1,DLC_Wrapper())
+    r_widgets,pp_widgets,false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -295,6 +312,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     make_menu_callbacks(mask_menu_,mask_win)
     make_menu_callbacks(pad_menu_,pad_win)
     make_menu_callbacks(roi_menu_,roi_win)
+    make_menu_callbacks(pole_menu_,pole_win)
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))

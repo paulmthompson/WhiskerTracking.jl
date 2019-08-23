@@ -176,6 +176,14 @@ mutable struct roi_widgets
     tilt_button::Gtk.GtkSpinButtonLeaf
 end
 
+mutable struct pole_widgets
+    win::Gtk.GtkWindowLeaf
+    pole_mode_button::Gtk.GtkCheckButtonLeaf
+    gen_button::Gtk.GtkCheckButtonLeaf
+    auto_button::Gtk.GtkCheckButtonLeaf
+    touch_button::Gtk.GtkCheckButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     dlc_module::PyObject
     config_path::String
@@ -259,6 +267,8 @@ mutable struct Tracker_Handles
     mask_widgets::mask_widgets
     pad_widgets::pad_widgets
     roi_widgets::roi_widgets
+    pole_widgets::pole_widgets
+
     view_pad::Bool
     view_roi::Bool
     view_pole::Bool
