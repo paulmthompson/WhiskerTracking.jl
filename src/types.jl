@@ -192,6 +192,15 @@ mutable struct view_widgets
     pole_button::Gtk.GtkCheckButtonLeaf
 end
 
+mutable struct image_adj_widgets
+    win::Gtk.GtkWindowLeaf
+    hist_c::Gtk.GtkCanvasLeaf
+    contrast_min_slider::Gtk.GtkScaleLeaf
+    adj_contrast_min::Gtk.GtkAdjustmentLeaf
+    contrast_max_slider::Gtk.GtkScaleLeaf
+    adj_contrast_max::Gtk.GtkAdjustmentLeaf
+end
+
 mutable struct DLC_Wrapper
     dlc_module::PyObject
     config_path::String
@@ -211,7 +220,7 @@ mutable struct Tracker_Handles
     trace_button::Gtk.GtkButtonLeaf
 
     plot_frame::Array{UInt32,2}
-    hist_c::Gtk.GtkCanvasLeaf
+
     current_frame::Array{UInt8,2}
 
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
@@ -233,10 +242,7 @@ mutable struct Tracker_Handles
     partial::Whisker1
     background_button::Gtk.GtkCheckButtonLeaf
     background_mode::Bool
-    contrast_min_slider::Gtk.GtkScaleLeaf
-    adj_contrast_min::Gtk.GtkAdjustmentLeaf
-    contrast_max_slider::Gtk.GtkScaleLeaf
-    adj_contrast_max::Gtk.GtkAdjustmentLeaf
+
 
     start_frame::Int64
     cov1::Array{Int64,1}
@@ -275,6 +281,7 @@ mutable struct Tracker_Handles
     roi_widgets::roi_widgets
     pole_widgets::pole_widgets
     view_widgets::view_widgets
+    image_adj_widgets::image_adj_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}

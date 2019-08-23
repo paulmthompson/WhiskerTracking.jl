@@ -29,22 +29,6 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     control_grid=Grid()
 
-    hist_c = Canvas(200,200)
-
-    control_grid[1,1]=hist_c
-
-    contrast_min_slider = Scale(false,0,255,1)
-    adj_contrast_min=Adjustment(contrast_min_slider)
-    setproperty!(adj_contrast_min,:value,0)
-    control_grid[1,2]=contrast_min_slider
-    control_grid[2,2]=Label("Minimum")
-
-    contrast_max_slider = Scale(false,0,255,1)
-    adj_contrast_max=Adjustment(contrast_max_slider)
-    setproperty!(adj_contrast_max,:value,255)
-    control_grid[1,3]=contrast_max_slider
-    control_grid[2,3]=Label("Maximum")
-
     trace_button=Button("Trace")
     control_grid[1,4]=trace_button
 
@@ -133,6 +117,16 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     push!(extramenu,view_menu_)
 
     push!(mb,extraopts)
+
+    imageopts = MenuItem("_Image")
+    imagemenu = Menu(imageopts)
+    crop_menu_ = MenuItem("Crop")
+    push!(imagemenu,crop_menu_)
+
+    image_adjust_menu_ = MenuItem("Image Adjustment")
+    push!(imagemenu,image_adjust_menu_)
+
+    push!(mb,imageopts)
 
     grid[1,1] = mb
 
@@ -262,6 +256,26 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     #=
     Image adjustment window
     =#
+    image_adj_grid = Grid()
+    hist_c = Canvas(200,200)
+    image_adj_grid[1,1]=hist_c
+
+    contrast_min_slider = Scale(false,0,255,1)
+    adj_contrast_min=Adjustment(contrast_min_slider)
+    setproperty!(adj_contrast_min,:value,0)
+    image_adj_grid[1,2]=contrast_min_slider
+    image_adj_grid[2,2]=Label("Minimum")
+
+    contrast_max_slider = Scale(false,0,255,1)
+    adj_contrast_max=Adjustment(contrast_max_slider)
+    setproperty!(adj_contrast_max,:value,255)
+    image_adj_grid[1,3]=contrast_max_slider
+    image_adj_grid[2,3]=Label("Maximum")
+
+    image_adj_win = Window(image_adj_grid)
+    Gtk.showall(image_adj_win)
+    visible(image_adj_win,false)
+    ia_widgets = image_adj_widgets(image_adj_win,hist_c,contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max)
     #Grid
     #Histogram Canvas
     #Min slider
@@ -290,15 +304,14 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     sleep(5.0)
 
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    hist_c,vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
+    vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,zeros(Float64,size(vid,3),2),auto_button,false,erase_button,false,0,falses(size(vid,3)),
     delete_button,combine_button,0,Whisker1(),background_button,false,
-    contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
     start_frame,zeros(Int64,vid_length),sharpen_button,false,aniso_button,false,local_contrast_button,false,
     draw_button,false,connect_button,touch_button,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),janelia_seed_thres,
     janelia_seed_iterations,wt,5.0,false,false,auto_overwrite,false,false,2,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,v_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
+    r_widgets,pp_widgets,v_widgets,ia_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -336,6 +349,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     make_menu_callbacks(roi_menu_,roi_win)
     make_menu_callbacks(pole_menu_,pole_win)
     make_menu_callbacks(view_menu_,view_win)
+    make_menu_callbacks(image_adjust_menu_,image_adj_win)
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
@@ -861,8 +875,8 @@ function adjust_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.wt.contrast_min = getproperty(han.adj_contrast_min,:value,Int64)
-    han.wt.contrast_max = getproperty(han.adj_contrast_max,:value,Int64)
+    han.wt.contrast_min = getproperty(han.image_adj_widgets.adj_contrast_min,:value,Int64)
+    han.wt.contrast_max = getproperty(han.image_adj_widgets.adj_contrast_max,:value,Int64)
 
     adjust_contrast_gui(han)
 
