@@ -1081,6 +1081,12 @@ function plot_image(han,img)
         stroke(ctx)
     end
 
+    if han.view_roi
+        set_source_rgb(ctx,0,0,1)
+        arc(ctx, han.wt.pad_pos[1],han.wt.pad_pos[2], 100, 0, 2*pi);
+        stroke(ctx)
+    end
+
     if han.view_pole
         if han.pole_present[han.frame]
             set_source_rgb(ctx,0,0,1)
