@@ -192,6 +192,12 @@ mutable struct view_widgets
     pole_button::Gtk.GtkCheckButtonLeaf
 end
 
+mutable struct manual_widgets
+    win::Gtk.GtkWindowLeaf
+    connect_button::Gtk.GtkButtonLeaf
+    combine_button::Gtk.GtkToggleButtonLeaf
+end
+
 mutable struct image_adj_widgets
     win::Gtk.GtkWindowLeaf
     hist_c::Gtk.GtkCanvasLeaf
@@ -247,12 +253,11 @@ mutable struct Tracker_Handles
     tracked::BitArray{1} #Array of true/false to specify if corresponding frame has been tracked
 
     delete_button::Gtk.GtkButtonLeaf
-    combine_button::Gtk.GtkToggleButtonLeaf
+
     combine_mode::Int64
     partial::Whisker1
 
     background_mode::Bool
-
 
     start_frame::Int64
     cov1::Array{Int64,1}
@@ -263,7 +268,6 @@ mutable struct Tracker_Handles
 
     draw_button::Gtk.GtkToggleButtonLeaf
     draw_mode::Bool
-    connect_button::Gtk.GtkButtonLeaf
 
     touch_mode::Bool
     touch_mask::BitArray{2}
@@ -286,6 +290,7 @@ mutable struct Tracker_Handles
     roi_widgets::roi_widgets
     pole_widgets::pole_widgets
     view_widgets::view_widgets
+    manual_widgets::manual_widgets
     image_adj_widgets::image_adj_widgets
     janelia_widgets::janelia_widgets
 

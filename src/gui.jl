@@ -38,17 +38,11 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     draw_button=ToggleButton("Draw Mode")
     control_grid[1,7]=draw_button
 
-    connect_button=Button("Connect to Pad")
-    control_grid[2,7]=connect_button
-
     delete_button=Button("Delete Whisker")
     control_grid[1,8]=delete_button
 
-    combine_button=ToggleButton("Combine Segments")
-    control_grid[1,9]=combine_button
-
     touch_override = Button("Touch Override")
-    control_grid[2,10] = touch_override
+    control_grid[1,9] = touch_override
 
     grid[2,2]=control_grid
 
@@ -81,6 +75,9 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     view_menu_ = MenuItem("Viewer")
     push!(extramenu,view_menu_)
+
+    manual_menu_ = MenuItem("Tracing")
+    push!(extramenu,manual_menu_)
 
     push!(mb,extraopts)
 
@@ -223,6 +220,24 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     v_widgets=view_widgets(view_win,view_whisker_pad_button,view_roi_button,view_discrete_button,view_pole_button)
 
     #=
+    Manual Tracing Menu
+    =#
+
+    manual_grid=Grid()
+
+    connect_button=Button("Connect to Pad")
+    manual_grid[1,1]=connect_button
+
+    combine_button=ToggleButton("Combine Segments")
+    manual_grid[1,2]=combine_button
+
+    manual_win = Window(manual_grid)
+    Gtk.showall(manual_win)
+    visible(manual_win,false)
+    man_widgets=manual_widgets(manual_win,connect_button,combine_button)
+
+
+    #=
     Visual Display Widgets
     =#
 
@@ -300,12 +315,12 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
     0.0,0.0,zeros(Float64,size(vid,3),2),false,erase_button,false,0,falses(size(vid,3)),
-    delete_button,combine_button,0,Whisker1(),false,
+    delete_button,0,Whisker1(),false,
     start_frame,zeros(Int64,vid_length),false,false,false,
-    draw_button,false,connect_button,false,falses(480,640),touch_override,false,
+    draw_button,false,false,falses(480,640),touch_override,false,
     falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),
     wt,5.0,false,false,false,2,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,v_widgets,ia_widgets,j_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
+    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
@@ -330,6 +345,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     make_menu_callbacks(roi_menu_,roi_win)
     make_menu_callbacks(pole_menu_,pole_win)
     make_menu_callbacks(view_menu_,view_win)
+    make_menu_callbacks(manual_menu_,manual_win)
     make_menu_callbacks(image_adjust_menu_,image_adj_win)
     make_menu_callbacks(janelia_menu_,janelia_win)
 
@@ -954,7 +970,7 @@ function combine_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.combine_mode = getproperty(han.combine_button,:active,Bool)
+    han.combine_mode = getproperty(han.manual_widgets.combine_button,:active,Bool)
 
     nothing
 end
@@ -1338,10 +1354,6 @@ end
 
 
 function WT_constraints(han)
-
-    if (han.overwrite_mode)
-        han.tracked[han.frame]=false
-    end
 
     #get_follicle average
     (fx,fy)=get_follicle(han)
