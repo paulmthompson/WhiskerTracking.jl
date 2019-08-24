@@ -186,7 +186,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     pole_grid[1,1] = pole_mode_button
     pole_gen_button = CheckButton("Select Pole Location")
     pole_grid[1,2] = pole_gen_button
-    pole_auto_button = CheckButton("Automatically Determine Pole Location")
+    pole_auto_button = Button("Automatically Determine Pole Location")
     pole_grid[1,3] = pole_auto_button
     pole_touch_button = CheckButton("Show Touch Location")
     pole_grid[1,4] = pole_touch_button
@@ -372,6 +372,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     #Pole Callbacks
     signal_connect(pole_mode_cb,pole_mode_button,"clicked",Void,(),false,(handles,))
     signal_connect(pole_select_cb,pole_gen_button,"clicked",Void,(),false,(handles,))
+    signal_connect(pole_auto_cb,pole_auto_button,"clicked",Void,(),false,(handles,))
 
     #View Callbacks
     signal_connect(view_whisker_pad_cb,view_whisker_pad_button,"clicked",Void,(),false,(handles,))
@@ -579,6 +580,29 @@ function pole_select_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     else
         han.selection_mode = 1
         determine_viewers(han)
+    end
+
+    nothing
+end
+
+function pole_auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    pole_pos = dlc_extra_pole_location(han.dlc.dlc_module,string(han.wt.data_path,"0515_1/"))
+
+    println("Acquired Pole Positions")
+
+    for i=1:size(han.pole_present,1)
+
+        if isnan(pole_pos[i,1])
+
+        else
+            han.pole_present[i] = true
+            han.pole_loc[i,1] = convert(Float32,pole_pos[i,1])
+            han.pole_loc[i,2] = convert(Float32,pole_pos[i,2])
+        end
+
     end
 
     nothing

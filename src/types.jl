@@ -180,7 +180,7 @@ mutable struct pole_widgets
     win::Gtk.GtkWindowLeaf
     pole_mode_button::Gtk.GtkCheckButtonLeaf
     gen_button::Gtk.GtkCheckButtonLeaf
-    auto_button::Gtk.GtkCheckButtonLeaf
+    auto_button::Gtk.GtkButtonLeaf
     touch_button::Gtk.GtkCheckButtonLeaf
 end
 

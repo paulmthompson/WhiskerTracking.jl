@@ -40,6 +40,8 @@ function dlc_extra_pole_location(dlc_module::PyObject,data_path)
     for i in myfiles
         rm(string("./temp/",i))
     end
+
+    pole_pos
 end
 
 #=
