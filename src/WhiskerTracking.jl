@@ -4,14 +4,17 @@ module WhiskerTracking
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
 Pandas, HDF5, PyPlot, PyCall
 
-unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
-
 if VERSION > v"0.7-"
     using SharedArrays, Libdl
     const Void = Nothing
     const setproperty! = set_gtk_property!
     const getproperty = get_gtk_property
+    const unshift! = pushfirst!
+    const is_windows() = Sys.iswindows()
+    const is_unix() = Sys.isunix()
 end
+
+unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
 
 include("types.jl")
 include("gui.jl")

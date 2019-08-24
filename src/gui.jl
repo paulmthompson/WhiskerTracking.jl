@@ -191,12 +191,15 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     pole_touch_button = CheckButton("Show Touch Location")
     pole_grid[1,4] = pole_touch_button
 
+    pole_delete_button = Button("Delete Pole in Frame")
+    pole_grid[1,5] = pole_delete_button
+
     pole_grid[1,7] = Label("Check the top checkbox if you want the whisker tracker to \n also look for a pole in each frame")
 
     pole_win = Window(pole_grid)
     Gtk.showall(pole_win)
     visible(pole_win,false)
-    pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button)
+    pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button,pole_delete_button)
 
     #=
     View Window
@@ -373,6 +376,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     signal_connect(pole_mode_cb,pole_mode_button,"clicked",Void,(),false,(handles,))
     signal_connect(pole_select_cb,pole_gen_button,"clicked",Void,(),false,(handles,))
     signal_connect(pole_auto_cb,pole_auto_button,"clicked",Void,(),false,(handles,))
+    signal_connect(pole_delete_cb,pole_delete_button,"clicked",Void,(),false,(handles,))
 
     #View Callbacks
     signal_connect(view_whisker_pad_cb,view_whisker_pad_button,"clicked",Void,(),false,(handles,))
@@ -602,7 +606,6 @@ function pole_auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             han.pole_loc[i,1] = convert(Float32,pole_pos[i,1])
             han.pole_loc[i,2] = convert(Float32,pole_pos[i,2])
         end
-
     end
 
     nothing
@@ -615,6 +618,17 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han.touch_frames[han.frame] = !han.touch_frames[han.frame]
 
     draw_touch(han)
+
+    nothing
+end
+
+function pole_delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.pole_present[han.frame] = false
+
+    redraw_all(han)
 
     nothing
 end

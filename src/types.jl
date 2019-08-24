@@ -182,6 +182,7 @@ mutable struct pole_widgets
     gen_button::Gtk.GtkCheckButtonLeaf
     auto_button::Gtk.GtkButtonLeaf
     touch_button::Gtk.GtkCheckButtonLeaf
+    delete_button::Gtk.GtkButtonLeaf
 end
 
 mutable struct view_widgets

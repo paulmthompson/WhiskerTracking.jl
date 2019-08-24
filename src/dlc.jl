@@ -24,6 +24,7 @@ function dlc_extra_pole_location(dlc_module::PyObject,data_path)
 
     #make temp directory
     try mkdir("./temp")
+    catch
     end
 
     data_path_pole = string(data_path,"*.png")
