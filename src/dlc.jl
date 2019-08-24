@@ -19,6 +19,29 @@ function dlc_change_num_segments(dlc::DLC_Wrapper,num)
     dlc_py[:change_dlc_yaml](dlc.config_path,"bodyparts",whisker_body_parts)
 end
 
+function dlc_extra_pole_location(dlc_module::PyObject,data_path)
+    pole_tracker_config = "/home/wanglab/Documents/Analysis_Scripts/DeepLabCut/Pole Detection-PMT-2019-03-22/config.yaml"
+
+    #make temp directory
+    try mkdir("./temp")
+    end
+
+    data_path_pole = string(data_path,"*.png")
+
+    run(`ffmpeg -r 1 -pattern_type glob -i $(data_path_pole) -vcodec libx264 -pix_fmt yuv420p ./temp/pole_vid.mp4`)
+
+    dlc_module[:analyze_videos](pole_tracker_config,["./temp/pole_vid.mp4"],shuffle=1,save_as_csv=false,videotype=".mp4")
+
+    myfiles=readdir("./temp")
+    pole_path=string("./temp/",myfiles[find([endswith(i, ".h5") for i in myfiles])[1]])
+
+    pole_pos=WhiskerTracking.read_pole_hdf5(pole_path)
+
+    for i in myfiles
+        rm(string("./temp/",i))
+    end
+end
+
 #=
 When we load the DLC data, we try to remove outlier points by using the confidence of the estimate
 and the movement of individual points from some smoothed average.

@@ -300,6 +300,9 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
     visible(janelia_win,false)
     j_widgets=janelia_widgets(janelia_win,janelia_seed_thres,janelia_seed_iterations)
 
+    #=
+    Quick Buttons
+    =#
 
     win = Window(grid, "Whisker Tracker") |> showall
 
