@@ -1,19 +1,17 @@
 
 export make_gui
 
-function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
+function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=false)
 
-    vid_name = string(path,name)
+    vid_name = string(path,vid_title)
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
 
     if !image_stack
-        (vid,start_frame)=load_video(vid_name,frame_range)
+        (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
     else
-        (vid,start_frame)=load_image_stack(string(path,name))
+        (vid,start_frame,vid_length)=load_image_stack(string(path,name))
     end
-
-    vid_length=size(vid,3)
 
     c=Canvas(640,480)
 
@@ -21,7 +19,7 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     grid[1,2]=c
 
-    frame_slider = Scale(false, 1,size(vid,3),1)
+    frame_slider = Scale(false, 1,vid_length,1)
     adj_frame = Adjustment(frame_slider)
     setproperty!(adj_frame,:value,1)
 
@@ -318,15 +316,19 @@ function make_gui(path,name; frame_range = (false,0.0,0),image_stack=false)
 
     sleep(5.0)
 
-    handles = Tracker_Handles(1,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    vid[:,:,1],0,Array{Whisker1}(size(vid,3)),
-    0.0,0.0,zeros(Float64,size(vid,3),2),false,erase_button,false,0,falses(size(vid,3)),
+    yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
+    max_frames=parse(Int64,convert(String,yy[1:(end-1)]))
+
+    handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
+    vid[:,:,1],0,Array{Whisker1}(vid_length),
+    0.0,0.0,zeros(Float64,vid_length,2),false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,zeros(Int64,vid_length),false,false,false,
     draw_button,false,false,falses(480,640),touch_override,false,
-    falses(size(vid,3)),zeros(Float64,size(vid,3)),zeros(Float64,size(vid,3)),
+    falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,false,false,2,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,falses(size(vid,3)),zeros(Float32,size(vid,3),2),false,false,false,1,DLC_Wrapper())
+    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
+    falses(vid_length),zeros(Float32,vid_length,2),false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 

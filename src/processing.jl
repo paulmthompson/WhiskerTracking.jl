@@ -266,7 +266,7 @@ function load_video(vid_name,frame_range = (false,0.0,0))
 
     println("Video loaded.")
 
-    (vid,start_frame)
+    (vid,start_frame,vid_length)
 end
 
 function WT_length_constraint(whiskers,min_length)
@@ -378,7 +378,7 @@ function load_image_stack(path)
         end
     end
 
-    (vid,1)
+    (vid,1,count)
 end
 
 function make_tracking(path,name; frame_range = (false,0.0,0),image_stack=false)

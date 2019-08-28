@@ -8,6 +8,7 @@ end
 jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
 libwhisk = Libdl.dlopen(libwhisk_path)
 const ffmpeg_path = "/home/wanglab/Programs/ffmpeg/ffmpeg"
+const ffprobe_path = "/home/wanglab/Programs/ffmpeg/ffprobe"
 
 
 mutable struct WT_Image
@@ -230,6 +231,8 @@ end
 
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
+    kept_frames::Int64
+    max_frames::Int64
     win::Gtk.GtkWindowLeaf
     c::Gtk.GtkCanvasLeaf
     frame_slider::Gtk.GtkScaleLeaf
