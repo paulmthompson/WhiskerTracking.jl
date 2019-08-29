@@ -339,7 +339,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
 
     #plot_image(handles,vid[:,:,1]')
 
-    #signal_connect(frame_select, frame_slider, "value-changed", Void, (), false, (handles,))
+    signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
     signal_connect(trace_cb,trace_button, "clicked", Void, (), false, (handles,))
 
@@ -730,6 +730,32 @@ end
 #=
 Frame Drawing
 =#
+
+function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    frame_val = getproperty(han.adj_frame,:value,Int64)
+
+    #If equal to frame we already acquired, don't get it again
+    temp=zeros(UInt8,640,480)
+    frame_time = frame_val  /  25 #Number of frames in a second of video
+    try
+        load_single_frame(frame_time,temp,han.wt.vid_name)
+        han.current_frame=temp'
+        redraw_all(han)
+    catch
+    end
+
+    nothing
+end
+
+function load_single_frame(x,tt,vn)
+
+    xx=open(`$(ffmpeg_path) -loglevel panic -ss $(x) -i $(vn) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+    read!(xx[1],tt)
+
+end
 
 function draw_frame_list(han)
 
