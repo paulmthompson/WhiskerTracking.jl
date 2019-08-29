@@ -1,4 +1,4 @@
-__precompile__(false)
+__precompile__()
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
@@ -16,6 +16,7 @@ end
 
 unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
 
+include("config.jl")
 include("types.jl")
 include("gui.jl")
 include("janelia_tracker.jl")

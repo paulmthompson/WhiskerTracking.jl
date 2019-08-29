@@ -1,16 +1,4 @@
 
-if is_unix()
-    const libwhisk_path = "/home/wanglab/Programs/whisk/build/libwhisk.so"
-else
-    const libwhisk_path = "C:\\Program Files\\WhiskerTracking\\lib\\whisk.dll"
-end
-
-jt_parameters = "/home/wanglab/Programs/whisk/build/default.parameters"
-libwhisk = Libdl.dlopen(libwhisk_path)
-const ffmpeg_path = "/home/wanglab/Programs/ffmpeg/ffmpeg"
-const ffprobe_path = "/home/wanglab/Programs/ffmpeg/ffprobe"
-
-
 mutable struct WT_Image
     kind::Int32 #bytes per pixel
     width::Int32
