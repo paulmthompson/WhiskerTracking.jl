@@ -252,7 +252,6 @@ mutable struct Tracker_Handles
     background_mode::Bool
 
     start_frame::Int64
-    cov1::Array{Int64,1}
 
     sharpen_mode::Bool
     anisotropic_mode::Bool
@@ -262,7 +261,7 @@ mutable struct Tracker_Handles
     draw_mode::Bool
 
     touch_mode::Bool
-    touch_mask::BitArray{2}
+
     touch_override::Gtk.GtkButtonLeaf
     touch_override_mode::Bool
     touch_frames::BitArray{1}

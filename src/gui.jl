@@ -52,6 +52,9 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     touch_override = Button("Touch Override")
     control_grid[1,9] = touch_override
 
+    add_frame_button = Button("Add Frame To Tracking")
+    control_grid[1,10] = add_frame_button
+
     grid[2,2]=control_grid
 
     #Menus
@@ -330,8 +333,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     vid[:,:,1],0,Array{Whisker1}(vid_length),
     0.0,0.0,zeros(Float64,vid_length,2),false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
-    start_frame,zeros(Int64,vid_length),false,false,false,
-    draw_button,false,false,falses(480,640),touch_override,false,
+    start_frame,false,false,false,draw_button,false,false,touch_override,false,
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
@@ -352,6 +354,8 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
     signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
+
+    signal_connect(add_frame_cb,add_frame_button,"clicked",Void,(),false,(handles,))
 
     #File Menus
 
@@ -652,11 +656,6 @@ function detect_touch(han)
         for i=1:han.woi[han.frame].len
             xx=round(Int64,han.woi[han.frame].x[i])
             yy=round(Int64,han.woi[han.frame].y[i])
-
-            if han.touch_mask[yy,xx]
-                hit+=1
-            end
-
         end
 
         if hit>2
@@ -782,6 +781,45 @@ function draw_frame_list(han)
 
     reveal(han.ts_canvas)
 
+end
+
+function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    new_frame=han.displayed_frame
+
+    frame_location=findfirst(han.frame_list.>new_frame)
+
+    insert!(han.frame_list,frame_location,new_frame)
+
+    #Add new video frame to video array
+    #Change frame list spin button maximum number and current index
+
+    #add whisker WOI
+    #insert!(han.woi,frame_location,Whisker1())
+
+    #woi_follicle:
+    #insert!
+
+    #tracked array
+    #insert!(han.tracked,frame_location,false)
+
+    #touch_frames::BitArray{1}
+    #insert!(han.touch_frames,frame_location,false)
+
+    #woi_angle::Array{Float64,1}
+    #insert!(han.woi_angle,frame_location,0.0)
+
+    #woi_curv::Array{Float64,1}
+    #insert!(han.woi_curv,frame_location,0.0)
+
+    #pole present
+    #insert!(han.pole_present,frame_location,false)
+
+    #pole loc
+
+    nothing
 end
 
 #=
@@ -1109,12 +1147,6 @@ function plot_image(han,img)
     rectangle(ctx, 0, 0, w, h)
 
     fill(ctx)
-
-    if han.cov1[han.frame]>0
-        set_source_rgb(ctx,0,0,0)
-        rectangle(ctx,0,0,10,10)
-        fill(ctx)
-    end
 
     draw_touch(han)
 
