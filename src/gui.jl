@@ -14,13 +14,16 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
         (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
     end
 
+    yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
+    max_frames=parse(Int64,convert(String,yy[1:(end-1)]))
+
     c=Canvas(640,480)
 
     grid=Grid()
 
     grid[1,2]=c
 
-    frame_slider = Scale(false, 1,vid_length,1)
+    frame_slider = Scale(false, 1,max_frames,1)
     adj_frame = Adjustment(frame_slider)
     setproperty!(adj_frame,:value,1)
 
@@ -28,6 +31,9 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
 
     ts_canvas = Canvas(640,50)
     grid[1,4] = ts_canvas
+
+    frame_advance_sb = SpinButton(1:vid_length)
+    grid[2,4] = frame_advance_sb
 
     control_grid=Grid()
 
@@ -320,9 +326,6 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
 
     sleep(5.0)
 
-    yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
-    max_frames=parse(Int64,convert(String,yy[1:(end-1)]))
-
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],0,Array{Whisker1}(vid_length),
     0.0,0.0,zeros(Float64,vid_length,2),false,erase_button,false,0,falses(vid_length),
@@ -330,13 +333,14 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     start_frame,zeros(Int64,vid_length),false,false,false,
     draw_button,false,false,falses(480,640),touch_override,false,
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
-    wt,5.0,false,false,false,2,ts_canvas,frame_list,d_widgets,m_widgets,p_widgets,
+    wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),false,false,false,1,DLC_Wrapper())
 
     #plot_image(handles,vid[:,:,1]')
 
-    signal_connect(frame_select, frame_slider, "value-changed", Void, (), false, (handles,))
+    #signal_connect(frame_select, frame_slider, "value-changed", Void, (), false, (handles,))
+    signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
     signal_connect(trace_cb,trace_button, "clicked", Void, (), false, (handles,))
 
     signal_connect(erase_cb,erase_button, "clicked",Void,(),false,(handles,))
@@ -972,7 +976,9 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.frame = getproperty(han.adj_frame,:value,Int64)
+    #han.frame = getproperty(han.adj_frame,:value,Int64)
+    han.frame = getproperty(han.frame_advance_sb,:value,Int64)
+    setproperty!(han.adj_frame,:value,han.frame_list[han.frame])
 
     han.current_frame = han.wt.vid[:,:,han.frame]
 

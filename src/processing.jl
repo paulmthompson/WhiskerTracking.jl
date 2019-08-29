@@ -382,7 +382,7 @@ function load_image_stack(path)
         end
     end
 
-    (vid,1,count,frame_list)
+    (vid,1,count-1,frame_list)
 end
 
 function make_tracking(path,name; frame_range = (false,0.0,0),image_stack=false)
