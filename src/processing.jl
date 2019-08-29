@@ -230,13 +230,15 @@ function load_video(vid_name,frame_range = (false,0.0,0))
 
     if !frame_range[1]
 
-        xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
-
-        temp=zeros(UInt8,640,480)
-        yy=read(`mediainfo --Output="Video;%FrameCount%" $(vid_name)`)
+        yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
 
         #this isn"t always accurate. need a try catch block here
         vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
+
+        xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+
+        temp=zeros(UInt8,640,480)
+
 
         vid=SharedArray{UInt8}(480,640,vid_length)
         for i=1:vid_length
@@ -358,6 +360,7 @@ end
 function load_image_stack(path)
 
     myfiles=readdir(path)
+    frame_list=Array{Int64,1}()
 
     count=0
 
@@ -375,10 +378,11 @@ function load_image_stack(path)
         if (myfiles[i][1:3])=="img"
             vid[:,:,count]=reinterpret(UInt8,load(string(path,myfiles[i])))[1,:,:]
             count+=1
+            push!(frame_list,parse(Int64,myfiles[i][4:(end-4)]))
         end
     end
 
-    (vid,1,count)
+    (vid,1,count,frame_list)
 end
 
 function make_tracking(path,name; frame_range = (false,0.0,0),image_stack=false)

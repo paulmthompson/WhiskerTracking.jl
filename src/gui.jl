@@ -9,8 +9,9 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
 
     if !image_stack
         (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
+        frame_list=Array{Int64,1}()
     else
-        (vid,start_frame,vid_length)=load_image_stack(string(path,name))
+        (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
     end
 
     c=Canvas(640,480)
@@ -24,6 +25,9 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     setproperty!(adj_frame,:value,1)
 
     grid[1,3]=frame_slider
+
+    ts_canvas = Canvas(640,50)
+    grid[1,4] = ts_canvas
 
     control_grid=Grid()
 
@@ -326,7 +330,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     start_frame,zeros(Int64,vid_length),false,false,false,
     draw_button,false,false,falses(480,640),touch_override,false,
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
-    wt,5.0,false,false,false,2,d_widgets,m_widgets,p_widgets,
+    wt,5.0,false,false,false,2,ts_canvas,frame_list,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),false,false,false,1,DLC_Wrapper())
 
@@ -717,6 +721,35 @@ function view_discrete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han.discrete_draw = getproperty(han.view_widgets.discrete_button,:active,Bool)
     redraw_all(han)
     nothing
+end
+
+#=
+Frame Drawing
+=#
+
+function draw_frame_list(han)
+
+    ctx=Gtk.getgc(han.ts_canvas)
+
+    set_source_rgb(ctx,1,1,1)
+    paint(ctx)
+
+    w=width(ctx)
+    h=height(ctx)
+    set_source_rgb(ctx,0,0,1)
+
+    for i=1:length(han.frame_list)
+
+        x = han.frame_list[i] / han.max_frames * w
+
+        move_to(ctx,x,0)
+        line_to(ctx,x,h)
+        stroke(ctx)
+
+    end
+
+    reveal(han.ts_canvas)
+
 end
 
 #=

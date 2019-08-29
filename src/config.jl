@@ -6,8 +6,6 @@ else
     jt_parameters = "C:\\Program Files\\WhiskerTracking\\default.parameters"
 end
 
-
-
 libwhisk = Libdl.dlopen(libwhisk_path)
 
 if is_unix()

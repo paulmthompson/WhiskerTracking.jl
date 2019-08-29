@@ -276,6 +276,9 @@ mutable struct Tracker_Handles
     discrete_auto_calc::Bool
     d_spacing::Int64
 
+    ts_canvas::Gtk.GtkCanvasLeaf
+    frame_list::Array{Int64,1}
+
     d_widgets::discrete_widgets
     mask_widgets::mask_widgets
     pad_widgets::pad_widgets
