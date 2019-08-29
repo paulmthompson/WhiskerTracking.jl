@@ -333,7 +333,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     start_frame,zeros(Int64,vid_length),false,false,false,
     draw_button,false,false,falses(480,640),touch_override,false,
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
-    wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,d_widgets,m_widgets,p_widgets,
+    wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),false,false,false,1,DLC_Wrapper())
 
@@ -735,11 +735,13 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    frame_val = getproperty(han.adj_frame,:value,Int64)
+    han.displayed_frame = getproperty(han.adj_frame,:value,Int64)
+
+
 
     #If equal to frame we already acquired, don't get it again
     temp=zeros(UInt8,640,480)
-    frame_time = frame_val  /  25 #Number of frames in a second of video
+    frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
     try
         load_single_frame(frame_time,temp,han.wt.vid_name)
         han.current_frame=temp'
@@ -908,9 +910,11 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
     event = unsafe_load(param_tuple)
 
     if event.keyval == 0xff53 #Right arrow
-        setproperty!(han.adj_frame,:value,han.frame+1)
+        setproperty!(han.adj_frame,:value,han.displayed_frame+1) #This will call the slider callback
+        #han.displayed_frame += 1
     elseif event.keyval == 0xff51 #Left arrow
-        setproperty!(han.adj_frame,:value,han.frame-1)
+        setproperty!(han.adj_frame,:value,han.displayed_frame-1)
+        #han.displayed_frame -= 1
     end
 
     nothing
@@ -1005,6 +1009,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     #han.frame = getproperty(han.adj_frame,:value,Int64)
     han.frame = getproperty(han.frame_advance_sb,:value,Int64)
     setproperty!(han.adj_frame,:value,han.frame_list[han.frame])
+    han.displayed_frame = han.frame_list[han.frame]
 
     han.current_frame = han.wt.vid[:,:,han.frame]
 

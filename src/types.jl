@@ -279,6 +279,7 @@ mutable struct Tracker_Handles
     ts_canvas::Gtk.GtkCanvasLeaf
     frame_list::Array{Int64,1}
     frame_advance_sb::Gtk.GtkSpinButtonLeaf
+    displayed_frame::Int64
 
     d_widgets::discrete_widgets
     mask_widgets::mask_widgets
