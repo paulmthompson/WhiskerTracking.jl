@@ -826,6 +826,25 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    new_frame=han.displayed_frame
+
+    frame_id=find(han.frame_list.==new_frame)
+
+    if !isempty(frame_id)
+
+        frame_location=frame_id[1]
+
+        deleteat!(han.frame_list,frame_location)
+
+    end
+
+    nothing
+end
+
 #=
 Save Callbacks
 =#
