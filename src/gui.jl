@@ -55,6 +55,9 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     add_frame_button = Button("Add Frame To Tracking")
     control_grid[1,10] = add_frame_button
 
+    delete_frame_button = Button("Delete Frame From Tracking")
+    control_grid[1,11] = delete_frame_button
+
     grid[2,2]=control_grid
 
     #Menus
@@ -356,6 +359,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
 
     signal_connect(add_frame_cb,add_frame_button,"clicked",Void,(),false,(handles,))
+    signal_connect(delete_frame_cb,delete_frame_button,"clicked",Void,(),false(handles,))
 
     #File Menus
 
