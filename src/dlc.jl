@@ -5,21 +5,20 @@ export fit_poly_to_dlc
 Initialization Methods
 =#
 
-function dlc_init(dlc::DLC_Wrapper,dlc_module::PyObject,vid_name,vid_path)
+function dlc_init(dlc::DLC_Wrapper,vid_name,vid_path)
     dlc.config_path=dlc_module[:create_new_project](vid_name,"PMT",[vid_path],copy_videos=false)
 end
 
-function dlc_extract_frames(dlc::DLC_Wrapper,dlc_module::PyObject)
+function dlc_extract_frames(dlc::DLC_Wrapper)
     dlc_module[:extract_frames](dlc.config_path,"automatic","kmeans",userfeedback=false)
 end
 
 function dlc_change_num_segments(dlc::DLC_Wrapper,num)
-    dlc_py=pyimport("dlc_python")
     whisker_body_parts=[string(i) for i=1:num]
     dlc_py[:change_dlc_yaml](dlc.config_path,"bodyparts",whisker_body_parts)
 end
 
-function dlc_extra_pole_location(dlc_module::PyObject,data_path)
+function dlc_extra_pole_location(data_path)
     pole_tracker_config = "/home/wanglab/Documents/Analysis_Scripts/DeepLabCut/Pole Detection-PMT-2019-03-22/config.yaml"
 
     #make temp directory

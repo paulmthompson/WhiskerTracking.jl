@@ -622,7 +622,7 @@ function pole_auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    pole_pos = dlc_extra_pole_location(han.dlc.dlc_module,string(han.wt.data_path,"0515_1/"))
+    pole_pos = dlc_extra_pole_location(string(han.wt.data_path,"0515_1/"))
 
     println("Acquired Pole Positions")
 
@@ -772,7 +772,7 @@ function load_single_frame(x,tt,vn)
     else
         read!(xx[1],tt)
     end
-    
+
 
 end
 

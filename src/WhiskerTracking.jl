@@ -1,4 +1,4 @@
-#__precompile__()
+__precompile__()
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
@@ -14,7 +14,16 @@ if VERSION > v"0.7-"
     const is_unix() = Sys.isunix()
 end
 
-unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
+const dlc_module = PyNULL()
+const dlc_py = PyNULL()
+
+function __init__()
+    copy!(dlc_module, pyimport("deeplabcut"))
+
+    unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
+
+    copy!(dlc_py,pyimport("dlc_python"))
+end
 
 include("config.jl")
 include("types.jl")
