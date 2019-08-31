@@ -767,7 +767,12 @@ end
 function load_single_frame(x,tt,vn)
 
     xx=open(`$(ffmpeg_path) -loglevel panic -ss $(x) -i $(vn) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
-    read!(xx[1],tt)
+    if VERSION > v"0.7-"
+        read!(xx,tt)
+    else
+        read!(xx[1],tt)
+    end
+    
 
 end
 
