@@ -232,8 +232,11 @@ function load_video(vid_name,frame_range = (false,0.0,0))
 
         yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
 
-        #this isn"t always accurate. need a try catch block here
-        vid_length=parse(Int64,convert(String,yy[1:(end-1)]))
+        if is_windows()
+            vid_length=parse(Int64,String(yy[1:(end-2)]))
+        else
+            vid_length=parse(Int64,String(yy[1:(end-1)]))
+        end
 
         xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
 
@@ -376,7 +379,11 @@ function load_image_stack(path)
     for i=1:length(myfiles)
 
         if (myfiles[i][1:3])=="img"
-            vid[:,:,count]=reinterpret(UInt8,load(string(path,myfiles[i])))[1,:,:]
+            if VERSION > v"0.7-"
+                vid[:,:,count]=reinterpret(UInt8,load(string(path,myfiles[i])))[1:3:end,:]
+            else
+                vid[:,:,count]=reinterpret(UInt8,load(string(path,myfiles[i])))[1,:,:]
+            end
             count+=1
             push!(frame_list,parse(Int64,myfiles[i][4:(end-4)]))
         end

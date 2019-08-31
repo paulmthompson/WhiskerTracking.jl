@@ -15,3 +15,5 @@ else
     const ffmpeg_path = "C:\\Users\\Paul\\Documents\\ffmpeg\\bin\\ffmpeg"
     const ffprobe_path = "C:\\Users\\Paul\\Documents\\ffmpeg\\bin\\ffprobe"
 end
+
+const dlc_module = PyNULL()

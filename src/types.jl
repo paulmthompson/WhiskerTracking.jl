@@ -31,7 +31,7 @@ mutable struct Whisker1
     scores::Array{Float32,1}
 end
 
-Whisker1()=Whisker1(0,0,0,Array{Float32}(0),Array{Float32}(0),Array{Float32}(0),Array{Float32}(0))
+Whisker1()=Whisker1(0,0,0,Array{Float32,1}(),Array{Float32,1}(),Array{Float32,1}(),Array{Float32,1}())
 
 mutable struct Whisker2
     id::Int32
@@ -208,13 +208,11 @@ mutable struct janelia_widgets
 end
 
 mutable struct DLC_Wrapper
-    dlc_module::PyObject
     config_path::String
 end
 
 function DLC_Wrapper()
-    dlc_module=pyimport("deeplabcut")
-    DLC_Wrapper(dlc_module,"")
+    DLC_Wrapper("")
 end
 
 mutable struct Tracker_Handles

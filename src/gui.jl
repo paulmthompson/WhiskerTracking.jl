@@ -15,7 +15,12 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     end
 
     yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
-    max_frames=parse(Int64,convert(String,yy[1:(end-1)]))
+    if is_windows()
+        max_frames=parse(Int64,String(yy[1:(end-2)]))
+    else
+        max_frames=parse(Int64,String(yy[1:(end-1)]))
+    end
+
 
     c=Canvas(640,480)
 
@@ -321,19 +326,25 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     Quick Buttons
     =#
 
-    win = Window(grid, "Whisker Tracker") |> showall
+    win = Window(grid, "Whisker Tracker") |> Gtk.showall
 
-    all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
+    all_whiskers=[Array{Whisker1,1}() for i=1:vid_length]
 
     tracker_name = (vid_name)[1:(end-4)]
 
-    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1}(0),
+    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
     (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
 
     sleep(5.0)
 
+    if VERSION > v"0.7-"
+        woi_array = Array{Whisker1,1}(undef,vid_length)
+    else
+        woi_array = Array{Whisker1,1}(vid_length)
+    end
+
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    vid[:,:,1],0,Array{Whisker1}(vid_length),
+    vid[:,:,1],0,woi_array,
     0.0,0.0,zeros(Float64,vid_length,2),false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,false,
@@ -359,7 +370,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
 
     signal_connect(add_frame_cb,add_frame_button,"clicked",Void,(),false,(handles,))
-    signal_connect(delete_frame_cb,delete_frame_button,"clicked",Void,(),false(handles,))
+    signal_connect(delete_frame_cb,delete_frame_button,"clicked",Void,(),false,(handles,))
 
     #File Menus
 
@@ -740,8 +751,6 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han.displayed_frame = getproperty(han.adj_frame,:value,Int64)
 
-
-
     #If equal to frame we already acquired, don't get it again
     temp=zeros(UInt8,640,480)
     frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
@@ -1081,7 +1090,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     plot_image(han,han.current_frame')
 
     #Reset array of displayed whiskers
-    han.wt.whiskers=Array{Whisker1}(0)
+    han.wt.whiskers=Array{Whisker1,1}()
 
     #If whiskers were found previously, load them
     if length(han.wt.all_whiskers[han.frame])>0
