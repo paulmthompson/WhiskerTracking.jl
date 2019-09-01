@@ -345,7 +345,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
 
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],0,woi_array,
-    0.0,0.0,false,erase_button,false,0,falses(vid_length),
+    false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,false,
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
@@ -817,9 +817,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #add whisker WOI
     #insert!(han.woi,frame_location,Whisker1())
 
-    #woi_follicle:
-    #insert!
-
     #tracked array
     #insert!(han.tracked,frame_location,false)
 
@@ -1045,6 +1042,12 @@ function local_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+#=
+Adds points from current whisker of interest to
+follicle position from last frame.
+
+This is a weird special case and can probably be eliminated
+=#
 function connect_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -1113,14 +1116,6 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         #detect_touch(han)
     #end
-
-    #Load prior position of tracked whisker (if it exists)
-    if han.frame-1 != 0
-        if han.tracked[han.frame-1]
-            han.woi_x_f = han.woi[han.frame-1].x[end]
-            han.woi_y_f = han.woi[han.frame-1].y[end]
-        end
-    end
 
     nothing
 end
@@ -1246,8 +1241,6 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
                 if (m_x>han.wt.whiskers[i].x[j]-5.0)&(m_x<han.wt.whiskers[i].x[j]+5.0)
                     if (m_y>han.wt.whiskers[i].y[j]-5.0)&(m_y<han.wt.whiskers[i].y[j]+5.0)
                         han.woi_id = i
-                        #han.woi_x_f = han.whiskers[han.woi_id].x[end]
-                        #han.woi_y_f = han.whiskers[han.woi_id].y[end]
                         han.tracked[han.frame]=true
                         assign_woi(han)
                         break
