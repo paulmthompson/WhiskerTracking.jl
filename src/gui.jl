@@ -345,7 +345,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
 
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],0,woi_array,
-    0.0,0.0,zeros(Float64,vid_length,2),false,erase_button,false,0,falses(vid_length),
+    0.0,0.0,false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,false,
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),

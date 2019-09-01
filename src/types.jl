@@ -233,7 +233,6 @@ mutable struct Tracker_Handles
     woi::Array{Whisker1,1} #Array of properties for whisker of interest for every frame
     woi_x_f::Float64 #last frame whisker follicle position
     woi_y_f::Float64 #last frame whisker follicle position
-    woi_follicle::Array{Float64,2} #Array that stores manually curated points of follicle position
 
     auto_mode::Bool
     erase_button::Gtk.GtkToggleButtonLeaf
