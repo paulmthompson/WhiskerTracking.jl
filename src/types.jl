@@ -233,6 +233,7 @@ mutable struct Tracker_Handles
     woi::Array{Whisker1,1} #Array of properties for whisker of interest for every frame
     num_whiskers::Int64
     num_whiskers_sb::Gtk.GtkSpinButtonLeaf
+    sw::Int64 #Selected Whisker
 
     auto_mode::Bool
     erase_button::Gtk.GtkToggleButtonLeaf

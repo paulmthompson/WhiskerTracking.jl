@@ -348,7 +348,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     end
 
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    vid[:,:,1],0,woi_array,1,num_whiskers_sb,
+    vid[:,:,1],0,woi_array,1,num_whiskers_sb,1,
     false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,false,
@@ -815,6 +815,10 @@ function num_whiskers_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    #woi_array
+    #woi_angle
+    #woi_curv
+    #woi_id
 
     nothing
 end
@@ -1633,14 +1637,9 @@ function WT_constraints(han)
     end
     =#
 
-    #Check for overlapped whiskers
-
-
     if han.tracked[han.frame]
         detect_touch(han)
     end
-
-    #Find
 
     nothing
 end
