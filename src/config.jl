@@ -12,6 +12,6 @@ if is_unix()
     const ffmpeg_path = "/home/wanglab/Programs/ffmpeg/ffmpeg"
     const ffprobe_path = "/home/wanglab/Programs/ffmpeg/ffprobe"
 else
-    const ffmpeg_path = "C:\\Users\\Paul\\Documents\\ffmpeg\\bin\\ffmpeg"
-    const ffprobe_path = "C:\\Users\\Paul\\Documents\\ffmpeg\\bin\\ffprobe"
+    const ffmpeg_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffmpeg")
+    const ffprobe_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffprobe")
 end

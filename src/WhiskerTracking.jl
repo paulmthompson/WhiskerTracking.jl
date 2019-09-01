@@ -18,11 +18,15 @@ const dlc_module = PyNULL()
 const dlc_py = PyNULL()
 
 function __init__()
-    copy!(dlc_module, pyimport("deeplabcut"))
 
-    unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
+    if is_unix()
+        copy!(dlc_module, pyimport("deeplabcut"))
 
-    copy!(dlc_py,pyimport("dlc_python"))
+
+        unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
+
+        copy!(dlc_py,pyimport("dlc_python"))
+    end
 end
 
 include("config.jl")

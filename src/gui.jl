@@ -63,6 +63,10 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     delete_frame_button = Button("Delete Frame From Tracking")
     control_grid[1,11] = delete_frame_button
 
+    num_whiskers_sb = SpinButton(1:1:5)
+    control_grid[1,12] = num_whiskers_sb
+    control_grid[2,12] = Label("Number of Whiskers To Track")
+
     grid[2,2]=control_grid
 
     #Menus
@@ -344,7 +348,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     end
 
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    vid[:,:,1],0,woi_array,
+    vid[:,:,1],0,woi_array,1,num_whiskers_sb,
     false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,false,
@@ -371,6 +375,8 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
 
     signal_connect(add_frame_cb,add_frame_button,"clicked",Void,(),false,(handles,))
     signal_connect(delete_frame_cb,delete_frame_button,"clicked",Void,(),false,(handles,))
+
+    signal_connect(num_whiskers_cb,num_whiskers_sb,"value-changed",Void,(),false,(handles,))
 
     #File Menus
 
@@ -799,6 +805,18 @@ function draw_frame_list(han)
 
     reveal(han.ts_canvas)
 
+end
+
+#=
+Change the number of whiskers to track
+=#
+
+function num_whiskers_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+
+    nothing
 end
 
 function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
