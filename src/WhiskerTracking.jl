@@ -22,11 +22,38 @@ function __init__()
     if is_unix()
         copy!(dlc_module, pyimport("deeplabcut"))
 
-
         unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
 
         copy!(dlc_py,pyimport("dlc_python"))
+    else
+
+        #I have descended into darkness
+        myhome=homedir()
+        py"""
+        import os
+        def change_path(x):
+            os.environ["PATH"] += os.pathsep + x
+        """
+        py"change_path"(string(myhome,"\\.julia\\conda\\3"))
+        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Library\\mingw-w64\\bin"))
+        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Library\\usr\\bin"))
+        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Library\\bin"))
+        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Scripts"))
+        py"change_path"(string(myhome,"\\.julia\\conda\\3\\bin"))
+        py"change_path"(string(myhome,"\\.julia\\conda\\3\\condabin"))
+
+        py"""
+        import wx
+        """
+
+        copy!(dlc_module, pyimport("deeplabcut"))
+
+        unshift!(PyVector(pyimport("sys")["path"]), "$(myhome)\\Documents\\WhiskerTracking.jl\\src")
+
+        copy!(dlc_py,pyimport("dlc_python"))
+
     end
+
 end
 
 include("config.jl")
