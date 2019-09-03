@@ -3,7 +3,7 @@ const background_img = zeros(UInt8,640*480)
 
 const background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(background_img)))
 
-function JT_trace(iFrame,image_data::Array{UInt8,2})
+function JT_trace(iFrame,image_data)
 
     img=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(image_data)))
     #background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(zeros(UInt8,640*480))))
@@ -12,7 +12,7 @@ function JT_trace(iFrame,image_data::Array{UInt8,2})
 
     data=ccall((:find_segments,libwhisk_path),Ptr{Whisker2},(Int32,Ref{WT_Image},Ref{WT_Image},Ref{Int32}),iFrame,img,background,pnseg)
 
-    wts=Array{Whisker1}(0)
+    wts=Array{Whisker1,1}()
 
     for i=1:pnseg[]
         ww=Whisker1(unsafe_load(data,i))
@@ -173,9 +173,9 @@ function JT_find_segments(img,h,th,s,facemask)
         ydir=100.0f0 * convert(Float32,sin(th_j[i]))
 
         if xdir < 0.0f0
-            myangle = round(atan2(-1.0f0 * ydir, -1.0f0 * xdir) / pi_cycle) * pi_cycle
+            myangle = round(atan(-1.0f0 * ydir, -1.0f0 * xdir) / pi_cycle) * pi_cycle
         else
-            myangle = round(atan2(ydir,xdir) / 18.0f0) * pi_cycle
+            myangle = round(atan(ydir,xdir) / 18.0f0) * pi_cycle
         end
 
         width = 2.0f0

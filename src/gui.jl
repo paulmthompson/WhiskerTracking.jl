@@ -1,17 +1,32 @@
 
 export make_gui
 
-function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=false)
+function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
 
     vid_name = string(path,vid_title)
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
 
-    if !image_stack
-        (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
-        frame_list=Array{Int64,1}()
+    if (dynamic_load)
+        #load first frame
+        vid=zeros(UInt8,480,640,1)
+        temp=zeros(UInt8,640,480)
+        frame_time = 1  /  25 #Number of frames in a second of video
+        try
+            load_single_frame(frame_time,temp,vid_name)
+            vid[:,:,1] = temp'
+        catch
+        end
+        vid_length = 1
+        frame_list=[1]
+        start_frame=1
     else
-        (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
+        if !image_stack
+            (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
+            frame_list=Array{Int64,1}()
+        else
+            (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
+        end
     end
 
     yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
@@ -20,7 +35,6 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     else
         max_frames=parse(Int64,String(yy[1:(end-1)]))
     end
-
 
     c=Canvas(640,480)
 
@@ -355,7 +369,7 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
-    falses(vid_length),zeros(Float32,vid_length,2),false,false,false,1,DLC_Wrapper())
+    falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,DLC_Wrapper())
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
@@ -830,6 +844,9 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if isempty(findall(han.frame_list.==new_frame))
 
         frame_location=findfirst(han.frame_list.>new_frame)
+        if frame_location==nothing
+            frame_location = length(han.frame_list) + 1
+        end
 
         insert!(han.frame_list,frame_location,new_frame)
 
@@ -847,6 +864,8 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         #add whisker WOI
         insert!(han.woi,frame_location,Whisker1())
+
+        insert!(han.wt.all_whiskers,frame_location,Array{Whisker1,1}())
 
         #tracked array
         insert!(han.tracked,frame_location,false)
@@ -1565,7 +1584,8 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         myimg=convert(Array{Float64,2},han.current_frame)
         han.current_frame = round.(UInt8,anisodiff(myimg,20,20.0,0.05,1))
     end
-    han.wt.whiskers=WT_trace(han.frame,han.current_frame',han.wt.min_length,han.wt.pad_pos,han.wt.mask)
+    han.send_frame[:,:] = han.current_frame'
+    han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
     WT_constraints(han)
 

@@ -290,6 +290,7 @@ mutable struct Tracker_Handles
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}
+    send_frame::Array{UInt8,2}
 
     view_pad::Bool
     view_roi::Bool
@@ -299,5 +300,3 @@ mutable struct Tracker_Handles
 
     dlc::DLC_Wrapper
 end
-
-ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)

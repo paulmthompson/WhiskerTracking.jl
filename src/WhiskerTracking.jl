@@ -1,8 +1,13 @@
-__precompile__()
+if VERSION > v"0.7-"
+    __precompile__(false)
+else
+
+end
+
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot, PyCall
+Pandas, HDF5, PyPlot, PyCall, LinearAlgebra
 
 if VERSION > v"0.7-"
     using SharedArrays, Libdl
@@ -17,7 +22,11 @@ end
 const dlc_module = PyNULL()
 const dlc_py = PyNULL()
 
+include("config.jl")
+
 function __init__()
+
+    ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)
 
     if is_unix()
         copy!(dlc_module, pyimport("deeplabcut"))
@@ -56,7 +65,6 @@ function __init__()
 
 end
 
-include("config.jl")
 include("types.jl")
 include("gui.jl")
 include("janelia_tracker.jl")

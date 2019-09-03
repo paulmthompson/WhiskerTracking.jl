@@ -60,7 +60,7 @@ That ROI is a circle centered on the whisker pad of radius 100
 
 function apply_roi(whiskers,pad_pos)
 
-    remove_whiskers=Array{Int64}(0)
+    remove_whiskers=Array{Int64,1}()
 
     for i=1:length(whiskers)
 
@@ -163,7 +163,7 @@ end
 
 function calc_woi_angle(han,x,y)
 
-    this_angle=atan2(y[end-5] - y[end], x[end-5] - x[end])
+    this_angle=atan(y[end-5] - y[end], x[end-5] - x[end])
     han.woi_angle[han.frame]=rad2deg(this_angle)
     nothing
 end
@@ -281,7 +281,7 @@ end
 
 function WT_length_constraint(whiskers,min_length)
 
-    remove_whiskers=Array{Int64}(0)
+    remove_whiskers=Array{Int64,1}()
 
     #length constraint
     for i=1:length(whiskers)
@@ -297,10 +297,10 @@ end
 
 function apply_mask(whiskers,mask,min_length)
 
-    remove_whiskers=Array{Int64}(0)
+    remove_whiskers=Array{Int64,1}()
 
     for i=1:length(whiskers)
-        delete_points=Array{Int64}(0)
+        delete_points=Array{Int64,1}()
 
         #Start at the tip and work our way back to the follicle.
         #If the mask hits something, we should probably delete all points following
@@ -463,7 +463,7 @@ end
 
 function whisker_prev_frame(wt,iFrame,keep_thres=20.0)
 
-    keep=Array{Int64,1}(0)
+    keep=Array{Int64,1}()
 
     for i=1:length(wt.whiskers)
         w2=[wt.whiskers[i].x[(end-9):end] wt.whiskers[i].y[(end-9):end]]
