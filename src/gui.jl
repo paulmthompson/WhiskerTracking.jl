@@ -357,8 +357,6 @@ function make_gui(path,name,vid_title; frame_range = (false,0.0,0),image_stack=f
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),false,false,false,1,DLC_Wrapper())
 
-    #plot_image(handles,vid[:,:,1]')
-
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
     signal_connect(trace_cb,trace_button, "clicked", Void, (), false, (handles,))
@@ -829,32 +827,60 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     new_frame=han.displayed_frame
 
-    frame_location=findfirst(han.frame_list.>new_frame)
+    if isempty(findall(han.frame_list.==new_frame))
 
-    insert!(han.frame_list,frame_location,new_frame)
+        frame_location=findfirst(han.frame_list.>new_frame)
 
-    #Add new video frame to video array
-    #Change frame list spin button maximum number and current index
+        insert!(han.frame_list,frame_location,new_frame)
 
-    #add whisker WOI
-    #insert!(han.woi,frame_location,Whisker1())
+        #Add new video frame to video array
+        new_vid=zeros(UInt8,size(han.wt.vid,1),size(han.wt.vid,2),size(han.wt.vid,3)+1)
+        for i=1:size(han.wt.vid,3)
+            if i<frame_location
+                new_vid[:,:,i] = han.wt.vid[:,:,i]
+            else
+                new_vid[:,:,i+1] = han.wt.vid[:,:,i]
+            end
+        end
+        new_vid[:,:,frame_location] = han.current_frame
+        han.wt.vid = new_vid
 
-    #tracked array
-    #insert!(han.tracked,frame_location,false)
+        #add whisker WOI
+        insert!(han.woi,frame_location,Whisker1())
 
-    #touch_frames::BitArray{1}
-    #insert!(han.touch_frames,frame_location,false)
+        #tracked array
+        insert!(han.tracked,frame_location,false)
 
-    #woi_angle::Array{Float64,1}
-    #insert!(han.woi_angle,frame_location,0.0)
+        #touch_frames::BitArray{1}
+        insert!(han.touch_frames,frame_location,false)
 
-    #woi_curv::Array{Float64,1}
-    #insert!(han.woi_curv,frame_location,0.0)
+        #woi_angle::Array{Float64,1}
+        insert!(han.woi_angle,frame_location,0.0)
 
-    #pole present
-    #insert!(han.pole_present,frame_location,false)
+        #woi_curv::Array{Float64,1}
+        insert!(han.woi_curv,frame_location,0.0)
 
-    #pole loc
+        #pole present
+        insert!(han.pole_present,frame_location,false)
+
+        #pole loc
+        new_pole_loc=zeros(Float32,size(han.pole_loc,1)+1,2)
+        for i=1:size(han.pole_loc,1)
+            if i<frame_location
+                new_pole_loc[i,1] = han.pole_loc[i,1]
+                new_pole_loc[i,2] = han.pole_loc[i,2]
+            else
+                new_pole_loc[i+1,1] = han.pole_loc[i,1]
+                new_pole_loc[i+1,2] = han.pole_loc[i,2]
+            end
+        end
+        han.pole_loc = new_pole_loc
+
+        #Change frame list spin button maximum number and current index
+        Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
+        setproperty!(han.frame_advance_sb,:value,frame_location)
+
+    end
 
     nothing
 end
@@ -1106,7 +1132,6 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    #han.frame = getproperty(han.adj_frame,:value,Int64)
     han.frame = getproperty(han.frame_advance_sb,:value,Int64)
     setproperty!(han.adj_frame,:value,han.frame_list[han.frame])
     han.displayed_frame = han.frame_list[han.frame]

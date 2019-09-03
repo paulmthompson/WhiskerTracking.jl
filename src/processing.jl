@@ -78,8 +78,13 @@ function adjust_contrast(wt,iFrame)
 
     myimg = wt.vid[:,:,iFrame]
 
-    myimg[myimg.>wt.contrast_max]=255
-    myimg[myimg.<wt.contrast_min]=0
+    if VERSION > v"0.7-"
+        myimg[myimg.>wt.contrast_max] .= 255
+        myimg[myimg.<wt.contrast_min] .= 0
+    else
+        myimg[myimg.>wt.contrast_max]=255
+        myimg[myimg.<wt.contrast_min]=0
+    end
 
     myimg
 end
