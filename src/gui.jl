@@ -1248,10 +1248,6 @@ function plot_image(han,img)
 
     draw_touch(han)
 
-    if han.discrete_draw
-        draw_discrete(han)
-    end
-
     if han.view_pad
         set_source_rgb(ctx,0,0,1)
         arc(ctx, han.wt.pad_pos[1],han.wt.pad_pos[2], 10, 0, 2*pi);
@@ -1712,6 +1708,11 @@ function plot_whiskers(han::Tracker_Handles)
             line_to(ctx,han.woi[han.frame].x[i],han.woi[han.frame].y[i])
         end
         stroke(ctx)
+
+        if han.discrete_draw
+            draw_discrete(han)
+        end
+
     end
 
     reveal(han.c)
