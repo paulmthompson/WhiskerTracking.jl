@@ -769,6 +769,16 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han.displayed_frame = getproperty(han.adj_frame,:value,Int64)
 
+    #Reset array of displayed whiskers
+    han.wt.whiskers=Array{Whisker1,1}()
+
+    #If whiskers were found previously, load them
+    if (length(han.wt.all_whiskers[han.frame])>0)&(han.displayed_frame == han.frame_list[han.frame])
+        han.wt.whiskers=han.wt.all_whiskers[han.frame]
+        WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
+        plot_whiskers(han)
+    end
+
     #If equal to frame we already acquired, don't get it again
     temp=zeros(UInt8,640,480)
     frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
@@ -1160,28 +1170,6 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     adjust_contrast_gui(han)
 
     han.track_attempt=0 #Reset
-
-    plot_image(han,han.current_frame')
-
-    #Reset array of displayed whiskers
-    han.wt.whiskers=Array{Whisker1,1}()
-
-    #If whiskers were found previously, load them
-    if length(han.wt.all_whiskers[han.frame])>0
-        han.wt.whiskers=han.wt.all_whiskers[han.frame]
-        WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
-        plot_whiskers(han)
-    end
-
-    #Plot whisker if it has been previously tracked
-    #if han.tracked[han.frame]
-        #han.wt.whiskers=[han.woi[han.frame]]
-        #han.woi_id = 1
-        #plot_whiskers(han)
-
-
-        #detect_touch(han)
-    #end
 
     nothing
 end
@@ -1704,7 +1692,7 @@ function plot_whiskers(han::Tracker_Handles)
         stroke(ctx)
     end
 
-    if han.tracked[han.frame]
+    if (han.tracked[han.frame])&(han.frame_list[han.frame]==han.displayed_frame)
         set_source_rgb(ctx,1.0,0.0,0.0)
 
         move_to(ctx,han.woi[han.frame].x[1],han.woi[han.frame].y[1])
