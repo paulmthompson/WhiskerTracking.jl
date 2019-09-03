@@ -905,6 +905,18 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         end
         han.pole_loc = new_pole_loc
 
+        #Discrete points
+        new_wp = zeros(Float32,size(han.wt.w_p,1),size(han.wt.w_p,2)+1)
+        for i=1:size(han.wt.w_p,2)
+
+            if i<frame_location
+                new_wp[:,i] = han.wt.w_p[:,i]
+            else
+                new_wp[:,i+1] = han.wt.w_p[:,i]
+            end
+        end
+        han.wt.w_p = new_wp
+
         #Change frame list spin button maximum number and current index
         Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
         setproperty!(han.frame_advance_sb,:value,frame_location)
