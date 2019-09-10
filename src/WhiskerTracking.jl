@@ -17,6 +17,8 @@ if VERSION > v"0.7-"
     const unshift! = pushfirst!
     const is_windows() = Sys.iswindows()
     const is_unix() = Sys.isunix()
+    const find = findall
+    const indmax = argmax
 end
 
 const dlc_module = PyNULL()

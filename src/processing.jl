@@ -20,9 +20,13 @@ function generate_mask(wt,min_val,max_val,frame_id)
 
     myimg = wt.vid[:,:,frame_id]
 
-    myimg[myimg.>max_val]=255
-    myimg[myimg.<min_val]=0
-
+    if VERSION > v"0.7-"
+        myimg[myimg.>max_val] .= 255
+        myimg[myimg.<min_val] .= 0
+    else
+        myimg[myimg.>max_val] = 255
+        myimg[myimg.<min_val] = 0
+    end
     wt.mask=myimg.==0
 
     #Find connected Regions
