@@ -446,6 +446,8 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
     signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
 
+    save_single_image(handles,vid[:,:,1],1)
+
     handles
 end
 
@@ -923,6 +925,8 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         #Change frame list spin button maximum number and current index
         Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
         setproperty!(han.frame_advance_sb,:value,frame_location)
+
+        save_single_image(han,han.current_frame,new_frame)
 
     end
 

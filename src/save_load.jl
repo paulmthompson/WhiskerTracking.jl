@@ -122,3 +122,12 @@ function read_pole_and_whisker_hdf5(path,l_thres_in=0.5)
 
     (woi,p)
 end
+
+function save_single_image(han,img,num)
+
+    img_name = string(han.paths.images,"/img",num,".png")
+
+    Images.save(img_name, img)
+
+    nothing
+end
