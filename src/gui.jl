@@ -361,6 +361,9 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
         woi_array = Array{Whisker1,1}(vid_length)
     end
 
+    t_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
+    these_paths = Save_Paths(t_folder)
+
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],0,woi_array,1,num_whiskers_sb,1,
     false,erase_button,false,0,falses(vid_length),
@@ -369,7 +372,7 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
-    falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,DLC_Wrapper())
+    falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,DLC_Wrapper(),these_paths)
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))

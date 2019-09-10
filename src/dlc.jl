@@ -28,7 +28,7 @@ function dlc_extra_pole_location(data_path)
 
     data_path_pole = string(data_path,"*.png")
 
-    run(`ffmpeg -r 1 -pattern_type glob -i $(data_path_pole) -vcodec libx264 -pix_fmt yuv420p ./temp/pole_vid.mp4`)
+    run(`$(ffmpeg_path) -r 1 -pattern_type glob -i $(data_path_pole) -vcodec libx264 -pix_fmt yuv420p ./temp/pole_vid.mp4`)
 
     dlc_module[:analyze_videos](pole_tracker_config,["./temp/pole_vid.mp4"],shuffle=1,save_as_csv=false,videotype=".mp4")
 

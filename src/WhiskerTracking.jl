@@ -10,7 +10,7 @@ using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interp
 Pandas, HDF5, PyPlot, PyCall, LinearAlgebra
 
 if VERSION > v"0.7-"
-    using SharedArrays, Libdl
+    using SharedArrays, Libdl, Dates
     const Void = Nothing
     const setproperty! = set_gtk_property!
     const getproperty = get_gtk_property

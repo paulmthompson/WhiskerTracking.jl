@@ -215,6 +215,32 @@ function DLC_Wrapper()
     DLC_Wrapper("")
 end
 
+mutable struct Save_Paths
+    path::String
+    temp::String
+    images::String
+    backup::String
+    DLC::String
+end
+
+function Save_Paths(mypath)
+
+    mkdir(mypath)
+
+    if is_windows()
+        out=Save_Paths(mypath,string(mypath,"\\temp"),string(mypath,"\\images"),string(mypath,"\\backup"),string(mypath,"\\DLC"))
+    else
+        out=Save_Paths(mypath,string(mypath,"/temp"),string(mypath,"/images"),string(mypath,"/backup"),string(mypath,"/DLC"))
+    end
+
+    mkdir(out.temp)
+    mkdir(out.images)
+    mkdir(out.backup)
+    mkdir(out.DLC)
+
+    out
+end
+
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
     kept_frames::Int64
@@ -299,4 +325,5 @@ mutable struct Tracker_Handles
     selection_mode::Int64 #What the mouse will do when you click
 
     dlc::DLC_Wrapper
+    paths::Save_Paths
 end
