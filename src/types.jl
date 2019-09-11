@@ -218,10 +218,11 @@ end
 
 mutable struct DLC_Wrapper
     config_path::String
+    export_pole::Bool
 end
 
 function DLC_Wrapper()
-    DLC_Wrapper("")
+    DLC_Wrapper("",false)
 end
 
 mutable struct Save_Paths

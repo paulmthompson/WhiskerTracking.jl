@@ -474,6 +474,8 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
 
     #DLC Callbacks
     signal_connect(dlc_init_cb,dlc_create_button,"clicked",Void,(),false,(handles,))
+    signal_connect(dlc_export_cb,dlc_export_button,"clicked",Void,(),false,(handles,))
+    signal_connect(dlc_with_pole_cb,dlc_with_pole_button,"clicked",Void,(),false,(handles,))
 
     save_single_image(handles,vid[:,:,1],1)
 
@@ -529,6 +531,31 @@ function dlc_init_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     cd(han.paths.DLC)
     dlc_init(han.dlc,"WT",han.wt.vid_name)
     cd(my_wd)
+
+    nothing
+end
+
+function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    #Copy images to folder
+
+    #If extra pole
+    #Modify configuration file with right number of discrete points
+
+    #Create h5 and pickle file
+
+    #Put in new data values
+
+    nothing
+end
+
+function dlc_with_pole_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.dlc.extra_pole=getproperty(han.dlc_widgets,:active,Bool)
 
     nothing
 end
