@@ -207,6 +207,15 @@ mutable struct janelia_widgets
     jt_seed_iterations_button::Gtk.GtkSpinButtonLeaf
 end
 
+mutable struct dlc_widgets
+    win::Gtk.GtkWindowLeaf
+    create_button::Gtk.GtkButtonLeaf
+    export_button::Gtk.GtkButtonLeaf
+    with_pole_button::Gtk.GtkCheckButtonLeaf
+    train_button::Gtk.GtkButtonLeaf
+    analyze_button::Gtk.GtkButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     config_path::String
 end
@@ -315,6 +324,7 @@ mutable struct Tracker_Handles
     manual_widgets::manual_widgets
     image_adj_widgets::image_adj_widgets
     janelia_widgets::janelia_widgets
+    dlc_widgets::dlc_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}

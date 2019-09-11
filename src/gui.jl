@@ -132,6 +132,8 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     othermenu = Menu(otheropts)
     janelia_menu_ = MenuItem("Janelia Tracker")
     push!(othermenu,janelia_menu_)
+    dlc_menu_ = MenuItem("DeepLabCut")
+    push!(othermenu,dlc_menu_)
 
     push!(mb,otheropts)
 
@@ -340,6 +342,29 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     visible(janelia_win,false)
     j_widgets=janelia_widgets(janelia_win,janelia_seed_thres,janelia_seed_iterations)
 
+    dlc_grid=Grid()
+    dlc_grid[1,1]=Label("DeepLabCut")
+
+    dlc_create_button=Button("Initialize")
+    dlc_grid[1,2] = dlc_create_button
+
+    dlc_export_button=Button("Export")
+    dlc_grid[1,3] = dlc_export_button
+
+    dlc_with_pole_button=CheckButton("With Pole")
+    dlc_grid[2,3] = dlc_with_pole_button
+
+    dlc_train_button=Button("Train")
+    dlc_grid[1,4] = dlc_train_button
+
+    dlc_analyze_button=Button("Analyze")
+    dlc_grid[1,5] = dlc_analyze_button
+
+    dlc_win=Window(dlc_grid)
+    Gtk.showall(dlc_win)
+    visible(dlc_win,false)
+    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button)
+
     #=
     Quick Buttons
     =#
@@ -371,7 +396,7 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     start_frame,false,false,false,draw_button,false,false,touch_override,false,
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,
+    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,DLC_Wrapper(),these_paths)
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
@@ -404,6 +429,7 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     make_menu_callbacks(manual_menu_,manual_win)
     make_menu_callbacks(image_adjust_menu_,image_adj_win)
     make_menu_callbacks(janelia_menu_,janelia_win)
+    make_menu_callbacks(dlc_menu_,dlc_win)
 
     #File Callbacks
     signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
@@ -488,6 +514,10 @@ function jt_seed_iterations_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     nothing
 end
+
+#=
+DLC widgets
+=#
 
 #=
 Discrete Callbacks
