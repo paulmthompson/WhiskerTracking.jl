@@ -18,27 +18,25 @@ function dlc_change_num_segments(dlc::DLC_Wrapper,num)
     dlc_py[:change_dlc_yaml](dlc.config_path,"bodyparts",whisker_body_parts)
 end
 
-function dlc_extra_pole_location(data_path)
-    pole_tracker_config = "/home/wanglab/Documents/Analysis_Scripts/DeepLabCut/Pole Detection-PMT-2019-03-22/config.yaml"
+function dlc_extra_pole_location(han)
+    #pole_tracker_config = "/home/wanglab/Documents/Analysis_Scripts/DeepLabCut/Pole Detection-PMT-2019-03-22/config.yaml"
+    pole_tracker_config = "C:\\Users\\pmt11\\Desktop\\Pole-Detection-PMT-2019-03-22\\config.yaml"
 
-    #make temp directory
-    try mkdir("./temp")
-    catch
-    end
+    vid_path = string(han.paths.temp,"/pole_vid.mp4")
 
-    data_path_pole = string(data_path,"*.png")
+    #Only Unix can glob
+    data_path_pole = string(han.paths.images,"/*.png")
+    run(`$(ffmpeg_path) -r 1 -pattern_type glob -i $(data_path_pole) -vcodec libx264 -pix_fmt yuv420p $(vid_path)`)
+    
+    dlc_module[:analyze_videos](pole_tracker_config,[vid_path],shuffle=1,save_as_csv=false,videotype=".mp4")
 
-    run(`$(ffmpeg_path) -r 1 -pattern_type glob -i $(data_path_pole) -vcodec libx264 -pix_fmt yuv420p ./temp/pole_vid.mp4`)
-
-    dlc_module[:analyze_videos](pole_tracker_config,["./temp/pole_vid.mp4"],shuffle=1,save_as_csv=false,videotype=".mp4")
-
-    myfiles=readdir("./temp")
-    pole_path=string("./temp/",myfiles[find([endswith(i, ".h5") for i in myfiles])[1]])
+    myfiles=readdir(han.paths.temp)
+    pole_path=string(han.paths.temp,"/",myfiles[find([endswith(i, ".h5") for i in myfiles])[1]])
 
     pole_pos=WhiskerTracking.read_pole_hdf5(pole_path)
 
     for i in myfiles
-        rm(string("./temp/",i))
+        rm(string(han.paths.temp,"/",i))
     end
 
     pole_pos

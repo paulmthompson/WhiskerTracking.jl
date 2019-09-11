@@ -127,7 +127,9 @@ function save_single_image(han,img,num)
 
     img_name = string(han.paths.images,"/img",num,".png")
 
-    Images.save(img_name, img)
+    #I think deeplabcut expects 24-bit png
+    #You create 24 bit png files with ImageMagick as follows
+    Images.save(string("png24:",img_name), img)
 
     nothing
 end
