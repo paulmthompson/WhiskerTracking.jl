@@ -472,6 +472,9 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
     signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
 
+    #DLC Callbacks
+    signal_connect(dlc_init_cb,dlc_create_button,"clicked",Void,(),false,(handles,))
+
     save_single_image(handles,vid[:,:,1],1)
 
     handles
@@ -518,6 +521,17 @@ end
 #=
 DLC widgets
 =#
+
+function dlc_init_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+    my_wd=pwd()
+    cd(han.paths.DLC)
+    dlc_init(han.dlc,"WT",han.wt.vid_name)
+    cd(my_wd)
+
+    nothing
+end
 
 #=
 Discrete Callbacks
