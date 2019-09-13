@@ -41,7 +41,9 @@ function savitsky_golay(x::Vector, windowSize::Integer, polyOrder::Integer; deri
 
 end
 
-
+#=
+Outlier removal
+=#
 
 function outlier_removal_min(cov1,min_ex,ind_range=(1,length(cov1)))
 
