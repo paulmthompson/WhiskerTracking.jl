@@ -6,11 +6,12 @@ using the Hilbert Transform
 
 Kleinfeld and Deschenes 2011
 =#
-function get_phase(aa)
-    responsetype = Bandpass(8.0,30.0; fs=500.0)
+function get_phase(aa;bp_l=8.0,bp_h=30.0,sampling_rate=500.0)
+    responsetype = Bandpass(bp_l,bp_h; fs=sampling_rate)
     designmethod=Butterworth(4)
     df1=digitalfilter(responsetype,designmethod)
-    #myfilter=DF2TFilter(df1)
+
+    #Zero lag filtering to make sure there is no phase shift.
     filter_aa=filtfilt(df1,aa)
 
     hh=hilbert(filter_aa)
