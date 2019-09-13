@@ -85,19 +85,18 @@ function dlc_smooth_liklihood(xx,yy,kernel_size,ll,dist_thres)
     nothing
 end
 
-function convert_whisker_points_to_janelia(xx,yy,ll)
+function convert_whisker_points_to_janelia(xx,yy,tracked)
 
-    woi=[WhiskerTracking.Whisker1() for i=1:size(xx,2)]
+    woi=[WhiskerTracking.Whisker1() for i=1:length(xx)]
 
     #Assuming is stored such that first data point centered on the follicle,
     #But Janelia assumes that the last point in the array is on the follicle, so we flip here
     #To take on the Janelia convention
     #Should probably be a flag for this
-    for i=1:size(xx,2)
-        inds=find(ll[:,i].==true)
-        num_points=length(inds)
+    for i=1:length(xx)
+        num_points=length(xx[i])
 
-        w=WhiskerTracking.Whisker1(0,i,num_points,reverse(xx[inds,i]),reverse(yy[inds,i]),ones(Float64,num_points),ones(Float64,num_points))
+        w=WhiskerTracking.Whisker1(0,i,num_points,xx[i],yy[i],ones(Float64,num_points),ones(Float64,num_points))
         woi[i]=w
     end
 

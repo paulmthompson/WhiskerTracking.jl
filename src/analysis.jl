@@ -19,27 +19,28 @@ function get_phase(aa;bp_l=8.0,bp_h=30.0,sampling_rate=500.0)
     angle.(hh)
 end
 
-
-function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
+#=
+Takes an array of Janelia whiskers and finds the angle and curvature using
+their method
+woi is array of whiskers
+tracked specifies if a frame should be included or not
+=#
+function get_curv_and_angle(woi,tracked=trues(length(woi)),follicle=(400.0f0,50.0f0))
     curv=zeros(Float64,length(woi))
     aa=zeros(Float64,length(woi))
-    tracked=falses(length(woi))
-
 
     #Get angle and curvature from Janelia
     for i=1:length(woi)
 
-        if length(woi[i].x)>3
+        if (length(woi[i].x)>3)&(tracked[i])
             mymeas=JT_measure(woi[i],follicle[1],follicle[2])
             curv[i]=unsafe_wrap(Array,mymeas.data,8)[4]
             aa[i]=unsafe_wrap(Array,mymeas.data,8)[3]
 
             if isnan(curv[i])|isnan(aa[i])
-            else
-                tracked[i]=true
+                tracked[i]=false
             end
         end
-
     end
 
     #Interpolate missing data points
@@ -51,11 +52,10 @@ function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
 
     for i=1:length(woi)
 
-        if !tracked[i]
+        if (!tracked[i])&((i>A_x[1])&(A_x[end]>i))
             curv[i]=itp_c(i)
             aa[i]=itp_a(i)
         end
-
     end
 
     for i=1:length(woi)
@@ -65,10 +65,9 @@ function get_curv_and_angle(woi,follicle=(400.0f0,50.0f0))
         if isnan(aa[i])
             aa[i]=itp_a(i)
         end
-
     end
 
-    (curv,aa,tracked)
+    (curv,aa)
 end
 
 function culm_dist(x,y,thres)
@@ -89,13 +88,18 @@ end
 #=
 Get curvature of just particular segment of whisker (almost certainly a faster
 not janelia way to do this)
+-xx is array of x positions for each whisker
+-yy is array of y positions for each whisker
+-woi is the janelia array of whiskers
+-tracked specifies of the whisker should be included or not.
+  this variable will be modified to false if the curvature of the high SNR segment cannot be determined
 =#
-function get_ip_curv_array(xx,yy,woi,tracked)
+function get_ip_curv_array(xx,yy,woi,tracked,p1,p2)
 
     c_ip=zeros(Float64,length(xx))
     for i=1:length(xx)
         if tracked[i]
-            c_ip[i]=get_ip_curv(xx[i],yy[i],woi[i])
+            c_ip[i]=get_ip_curv(xx[i],yy[i],woi[i],p1,p2)
             if isnan(c_ip[i])
                 tracked[i]=false
                 c_ip[i]=0.0
@@ -105,10 +109,10 @@ function get_ip_curv_array(xx,yy,woi,tracked)
     c_ip
 end
 
-function get_ip_curv(xx,yy,woi)
+function get_ip_curv(xx,yy,woi,p1,p2)
 
-    ip_1=WhiskerTracking.culm_dist(xx,yy,30.0)
-    ip_2=WhiskerTracking.culm_dist(xx,yy,70.0)
+    ip_1=WhiskerTracking.culm_dist(xx,yy,p1)
+    ip_2=WhiskerTracking.culm_dist(xx,yy,p2)
 
     new_wx=xx[ip_2:ip_1]
     new_wy=yy[ip_2:ip_1]
