@@ -85,11 +85,7 @@ function dlc_smooth_liklihood(xx,yy,kernel_size,ll,dist_thres)
     nothing
 end
 
-function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
-
-    (xx,yy,ll)=dlc_hd5_to_array(path,w_inds,l_thres)
-
-    dlc_smooth_liklihood(xx,yy,15,ll,50.0)
+function convert_whisker_points_to_janelia(xx,yy,ll)
 
     woi=[WhiskerTracking.Whisker1() for i=1:size(xx,2)]
 
@@ -106,6 +102,15 @@ function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
     end
 
     woi
+end
+
+function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
+
+    (xx,yy,ll)=dlc_hd5_to_array(path,w_inds,l_thres)
+
+    dlc_smooth_liklihood(xx,yy,15,ll,50.0)
+
+    convert_whisker_points_to_janelia(xx,yy,ll)
 end
 
 function read_pole_hdf5(path,col_pos=1)
