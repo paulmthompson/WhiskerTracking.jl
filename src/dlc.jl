@@ -27,7 +27,7 @@ function dlc_extra_pole_location(han)
     #Only Unix can glob
     data_path_pole = string(han.paths.images,"/*.png")
     run(`$(ffmpeg_path) -r 1 -pattern_type glob -i $(data_path_pole) -vcodec libx264 -pix_fmt yuv420p $(vid_path)`)
-    
+
     dlc_module[:analyze_videos](pole_tracker_config,[vid_path],shuffle=1,save_as_csv=false,videotype=".mp4")
 
     myfiles=readdir(han.paths.temp)
@@ -96,14 +96,12 @@ function dlc_remove_bad_whiskers(xx,yy,thres,tracked)
 end
 
 #=
-Fit polynomial to points to get whisker traces
-
+Interpolate between DLC points for array of whiskers
 =#
-
 function fit_poly_to_dlc(whiskers,tracked,bad_whisker_thres=40.0)
-    #Fit polynomial to DLC points and generate line of values spaced 1 unit apart (for better visualization)
-    wx=[Array{Float64}(0) for i=1:length(whiskers)]
-    wy=[Array{Float64}(0) for i=1:length(whiskers)]
+    #Interpolate DLC points and generate line of values spaced 1 unit apart (for better visualization)
+    wx=[Array{Float64,1}() for i=1:length(whiskers)]
+    wy=[Array{Float64,1}() for i=1:length(whiskers)]
 
     for i=1:length(whiskers)
         if length(whiskers[i].x)>2
@@ -117,69 +115,29 @@ function fit_poly_to_dlc(whiskers,tracked,bad_whisker_thres=40.0)
     (wx,wy)
 end
 
-
+#=
+Take discrete points along the whisker and interpolate between with 1.0 pixel spacing
+=#
 function get_woi_x_y(w,w_id,follicle=(400.0f0,50.0f0))
 
-    #We need to center the follicle on 0,0 for good fitting
-    cent_x=w[w_id].x[end]
-    cent_y=w[w_id].y[end]
+    w_x = w[w_id].y
+    w_y = w[w_id].y
 
-    #Determine the best axis for whisker fitting by calculating a vector from follicle to tip
-    v_x=w[w_id].x[1]-w[w_id].x[end]
-    v_y=w[w_id].y[1]-w[w_id].y[end]
-
-    skip=false
-
-    if allequal_1(sign.(diff(w[w_id].y))) #Check if y dimension is monotonically increasing or decreasing
-
-        #3rd order polynomial fit
-
-        if length(w[w_id].y)>3
-            mypoly=polyfit(w[w_id].y-cent_y,w[w_id].x-cent_x,3)
-        elseif length(w[w_id].y)>2
-            mypoly=polyfit(w[w_id].y-cent_y,w[w_id].x-cent_x,2)
-        else
-            skip=true
-        end
-
-        if skip
-            yy=w[w_id].y
-            xx=w[w_id].x
-        else
-            if w[w_id].y[1]<w[w_id].y[end]
-                yy = collect(w[w_id].y[1]:w[w_id].y[end])
-            else
-                yy = collect(w[w_id].y[end]:w[w_id].y[1])
-            end
-            xx=mypoly(yy-cent_y)+cent_x
-        end
-
-    else
-
-        #3rd order polynomial fit
-        if length(w[w_id].x)>3
-            mypoly=polyfit(w[w_id].x-cent_x,w[w_id].y-cent_y,3)
-        elseif length(w[w_id].x)>2
-            mypoly=polyfit(w[w_id].x-cent_x,w[w_id].y-cent_y,2)
-        else
-            skip=true
-        end
-
-        if skip
-            yy=w[w_id].y
-            xx=w[w_id].x
-        else
-            if w[w_id].x[1]<w[w_id].x[end]
-                xx = collect(w[w_id].x[1]:w[w_id].x[end])
-            else
-                xx = collect(w[w_id].x[end]:w[w_id].x[1])
-            end
-            yy=mypoly(xx-cent_x)+cent_y
-        end
+    my_range = zeros(Float64,length(w_x))
+    for i=2:length(my_range)
+        my_range[i] = sqrt((w_x[i]-w_x[i-1])^2 + (w_y[i]-w_y[i-1])^2) + my_range[i-1]
     end
+    t = my_range
 
-    #Flip to make sure the right side is near the follicle
+    itp_xx=sp.interpolate.PchipInterpolator(t,w_x)
+    itp_yy=sp.interpolate.PchipInterpolator(t,w_y)
 
+    new_t=0.0:1.0:my_range[end]
+
+    xx=itp_xx(new_t)
+    yy=itp_yy(new_t)
+
+    #Flip to make sure the correct side is near the follicle
     dist_1=sqrt((xx[1]-follicle[1])^2+(yy[1]-follicle[2])^2)
     dist_2=sqrt((xx[end]-follicle[1])^2+(yy[end]-follicle[2])^2)
 
