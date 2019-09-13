@@ -3,7 +3,10 @@
 DLC import Methods
 =#
 
-function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
+#=
+Read data table and return julia arrays for x position, y position, and liklihood for each whisker point
+=#
+function dlc_hd5_to_array(path,w_inds,l_thres)
 
     #deeplabcut stores points as pandas dataframe
     #Assuming a whisker is labeled as a discrete set of points
@@ -16,8 +19,6 @@ function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
     #Each datapoint in an image of the pandas array is represented by values in 3 columns:
     #x,y and liklihood.
     #w_inds specifices the first index of each data point of interest
-
-
     xx=zeros(Float64,length(w_inds),length(mytable))
     yy=zeros(Float64,length(w_inds),length(mytable))
     ll=falses(length(w_inds),length(mytable))
@@ -50,6 +51,15 @@ function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
 
     close(file)
 
+    (xx,yy,ll)
+end
+
+#=
+Updates liklihood matrix to false if points jump past
+distance threshold from smoothed temporal traces
+=#
+function dlc_smooth_liklihood(xx,yy,kernel_size,ll,dist_thres)
+
     #outlier removal
     #smooth with gaussian kernel
     #calculate residual distance threshold and set Threshold
@@ -57,14 +67,12 @@ function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
     y_smooth=zeros(Float64,size(yy))
 
     for i=1:size(xx,1)
-        x_smooth[i,:]=smooth(xx[i,:],15)
-        y_smooth[i,:]=smooth(yy[i,:],15)
+        x_smooth[i,:]=smooth(xx[i,:],kernel_size)
+        y_smooth[i,:]=smooth(yy[i,:],kernel_size)
     end
 
-    dist_thres=50.0
-
     for i=1:size(xx,2)
-        for j=1:length(w_inds)
+        for j=1:size(xx,1)
             mydist=sqrt((xx[j,i]-x_smooth[j,i])^2+(yy[j,i]-y_smooth[j,i])^2)
 
             if mydist>dist_thres
@@ -73,6 +81,15 @@ function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
 
         end
     end
+
+    nothing
+end
+
+function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
+
+    (xx,yy,ll)=dlc_hd5_to_array(path,w_inds,l_thres)
+
+    dlc_smooth_liklihood(xx,yy,15,ll,50.0)
 
     woi=[WhiskerTracking.Whisker1() for i=1:size(xx,2)]
 
@@ -134,6 +151,13 @@ function save_single_image(han,img,num)
     Images.save(string("png24:",img_name), img)
 
     cd(my_wd)
+
+    nothing
+end
+
+function load_whisker_into_gui(han,whiskers::Array{Float64,2})
+
+    han.tracked_whiskers = whiskers
 
     nothing
 end

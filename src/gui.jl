@@ -253,13 +253,15 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     view_grid[1,3] = view_discrete_button
     view_pole_button = CheckButtonLeaf("Pole")
     view_grid[1,4] = view_pole_button
+    view_tracked_button = CheckButtonLeaf("Tracked Whiskers")
+    view_grid[1,5] = view_tracked_button
 
     view_grid[1,7] = Label("Select which items are always displayed for each frame")
 
     view_win = Window(view_grid)
     Gtk.showall(view_win)
     visible(view_win,false)
-    v_widgets=view_widgets(view_win,view_whisker_pad_button,view_roi_button,view_discrete_button,view_pole_button)
+    v_widgets=view_widgets(view_win,view_whisker_pad_button,view_roi_button,view_discrete_button,view_pole_button,view_tracked_button)
 
     #=
     Manual Tracing Menu
@@ -397,7 +399,8 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,
-    falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,DLC_Wrapper(),these_paths)
+    falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
+    false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),DLC_Wrapper(),these_paths)
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
@@ -459,6 +462,7 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     signal_connect(view_roi_cb,view_roi_button,"clicked",Void,(),false,(handles,))
     signal_connect(view_pole_cb,view_pole_button,"clicked",Void,(),false,(handles,))
     signal_connect(view_discrete_cb,view_discrete_button,"clicked",Void,(),false,(handles,))
+    signal_connect(view_whiskers_cb,view_tracked_button,"clicked",Void,(),false,(handles,))
 
     #Image Adjustment Callbacks
     signal_connect(adjust_contrast_cb,contrast_min_slider,"value-changed",Void,(),false,(handles,))
@@ -831,6 +835,14 @@ function view_discrete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
     han.discrete_draw = getproperty(han.view_widgets.discrete_button,:active,Bool)
+    redraw_all(han)
+    nothing
+end
+
+function view_whiskers_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+    han.show_tracked = getproperty(han.view_widgets.tracked_button,:active,Bool)
     redraw_all(han)
     nothing
 end
@@ -1791,6 +1803,10 @@ function plot_whiskers(han::Tracker_Handles)
             draw_discrete(han)
         end
 
+    end
+
+    if han.show_tracked
+        draw_tracked_whisker(han)
     end
 
     reveal(han.c)

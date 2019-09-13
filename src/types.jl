@@ -180,6 +180,7 @@ mutable struct view_widgets
     roi_button::Gtk.GtkCheckButtonLeaf
     discrete_button::Gtk.GtkCheckButtonLeaf
     pole_button::Gtk.GtkCheckButtonLeaf
+    tracked_button::Gtk.GtkCheckButtonLeaf
 end
 
 mutable struct manual_widgets
@@ -336,6 +337,11 @@ mutable struct Tracker_Handles
     view_pole::Bool
 
     selection_mode::Int64 #What the mouse will do when you click
+
+    show_tracked::Bool
+    tracked_whiskers_x::Array{Float64,2}
+    tracked_whiskers_y::Array{Float64,2}
+    tracked_whiskers_l::BitArray{2}
 
     dlc::DLC_Wrapper
     paths::Save_Paths

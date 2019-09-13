@@ -23,6 +23,7 @@ end
 
 const dlc_module = PyNULL()
 const dlc_py = PyNULL()
+const sp = PyNULL()
 
 include("config.jl")
 
@@ -36,6 +37,7 @@ function __init__()
         unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
 
         copy!(dlc_py,pyimport("dlc_python"))
+        copy!(sp,pyimport("scipy"))
     else
 
         #I have descended into darkness
@@ -62,6 +64,7 @@ function __init__()
         unshift!(PyVector(pyimport("sys")["path"]), "$(myhome)\\Documents\\WhiskerTracking.jl\\src")
 
         copy!(dlc_py,pyimport("dlc_python"))
+        copy!(sp,pyimport("scipy"))
 
     end
 
