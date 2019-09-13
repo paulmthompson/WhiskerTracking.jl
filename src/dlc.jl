@@ -97,31 +97,36 @@ end
 
 #=
 Interpolate between DLC points for array of whiskers
+w_x_in and w_y_in are both 2D arrays of points
+l is the liklihood for each point
+inds is the range of indexes to interpolate between
+interp_res is the desired interpixel distance for interpolation
 =#
-function fit_poly_to_dlc(whiskers,tracked,bad_whisker_thres=40.0)
-    #Interpolate DLC points and generate line of values spaced 1 unit apart (for better visualization)
-    wx=[Array{Float64,1}() for i=1:length(whiskers)]
-    wy=[Array{Float64,1}() for i=1:length(whiskers)]
+function interpolate_dlc(w_x_in,w_y_in,l,inds,interp_res)
 
-    for i=1:length(whiskers)
-        if length(whiskers[i].x)>2
-            (wx[i],wy[i]) = get_woi_x_y(whiskers,i)
+    #Interpolate DLC points and generate line of values spaced 1 unit apart (for better visualization)
+    wx=[Array{Float64,1}() for i=1:size(w_x_in,2)]
+    wy=[Array{Float64,1}() for i=1:size(w_x_in,2)]
+    tracked=trues(size(w_x_in,2))
+
+    for i=1:size(w_x_in,2)
+        if (sum(l[:,i])>2)&((i>=inds[1])&(i<=inds[2])) #Need to have at least 3 points with super-threshold liklihood to be worth fitting
+            (wx[i],wy[i]) = get_woi_x_y(w_x_in[l[:,i],i],w_y_in[l[:,i],i],interp_res)
+        else
+            tracked[i]=false
         end
     end
 
     #Now remove any fits that appear to be very bad (high SNR region moves beyond some threshold)
-    dlc_remove_bad_whiskers(wx,wy,bad_whisker_thres,tracked)
+    #dlc_remove_bad_whiskers(wx,wy,bad_whisker_thres,tracked)
 
-    (wx,wy)
+    (wx,wy,tracked)
 end
 
 #=
 Take discrete points along the whisker and interpolate between with 1.0 pixel spacing
 =#
-function get_woi_x_y(w,w_id,follicle=(400.0f0,50.0f0))
-
-    w_x = w[w_id].y
-    w_y = w[w_id].y
+function get_woi_x_y(w_x,w_y,interp_res,follicle=(400.0f0,50.0f0))
 
     my_range = zeros(Float64,length(w_x))
     for i=2:length(my_range)
@@ -132,19 +137,18 @@ function get_woi_x_y(w,w_id,follicle=(400.0f0,50.0f0))
     itp_xx=sp.interpolate.PchipInterpolator(t,w_x)
     itp_yy=sp.interpolate.PchipInterpolator(t,w_y)
 
-    new_t=0.0:1.0:my_range[end]
+    #Make sure the correct side (end of array) is near the follicle
+    dist_1=sqrt((w_x[1]-follicle[1])^2+(w_y[1]-follicle[2])^2)
+    dist_2=sqrt((w_x[end]-follicle[1])^2+(w_y[end]-follicle[2])^2)
+
+    if dist_1 > dist_2
+        new_t=0.0:interp_res:my_range[end]
+    else
+        new_t=my_range[end]:(-1*interp_res):0.0
+    end
 
     xx=itp_xx(new_t)
     yy=itp_yy(new_t)
-
-    #Flip to make sure the correct side is near the follicle
-    dist_1=sqrt((xx[1]-follicle[1])^2+(yy[1]-follicle[2])^2)
-    dist_2=sqrt((xx[end]-follicle[1])^2+(yy[end]-follicle[2])^2)
-
-    if dist_1 < dist_2
-        reverse!(xx)
-        reverse!(yy)
-    end
 
     (xx,yy)
 end
