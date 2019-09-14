@@ -94,6 +94,10 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     push!(sortmenu,save_whisk_)
     load_whisk_ = MenuItem("Load Whiskers")
     push!(sortmenu,load_whisk_)
+    save_contact_ = MenuItem("Save Contact Detection")
+    push!(sortmenu,save_contact_)
+    load_contact_ = MenuItem("Load Contact Detection")
+    push!(sortmenu,load_contact_)
     push!(mb,sortopts)
 
     extraopts = MenuItem("_Extra")
@@ -441,6 +445,8 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     #File Callbacks
     signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
+    signal_connect(save_contact_cb,save_contact_,"activate",Void,(),false,(handles,))
+    signal_connect(load_contact_cb,load_contact_,"activate",Void,(),false,(handles,))
 
     #Discrete Callbacks
     signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
@@ -1160,6 +1166,50 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     nothing
 end
+
+function save_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = save_dialog("Save Contact Data",han.win)
+
+    if filepath != ""
+        if filepath[end-3:end]==".mat"
+        else
+            filepath=string(filepath,".mat")
+        end
+
+        file=matopen(filepath,"w")
+        write(file,"Touch_Inds",han.touch_frames_i)
+        write(file,"Touch",convert(Array{Int64,1},han.touch_frames))
+        close(file)
+    end
+
+    nothing
+end
+
+function load_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = open_dialog("Load Contact Data",han.win)
+
+    if filepath != ""
+        file = matopen(filepath,"r")
+        if MAT.exists(file,"Touch_Inds")
+            touch_inds = read(file,"Touch_Inds")
+            han.touch_frames_i = touch_inds
+        end
+        if MAT.exists(file,"Touch")
+            touch = read(file,"Touch")
+            han.touch_frames = convert(BitArray{1},touch)
+        end
+        close(file)
+    end
+
+    nothing
+end
+
 
 function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
 
