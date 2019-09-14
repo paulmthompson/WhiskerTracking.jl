@@ -123,6 +123,7 @@ function draw_tracked_whisker(han)
     new_x=itp_xx(new_t)
     new_y=itp_yy(new_t)
 
+    set_source_rgb(ctx,1,0,0)
     move_to(ctx,new_x[1],new_y[1])
     for i=2:length(new_t)
         line_to(ctx,new_x[i],new_y[i])

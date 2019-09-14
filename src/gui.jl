@@ -1395,6 +1395,13 @@ function plot_image(han,img)
 
     draw_touch(han)
 
+    #If this frame is in the frame list, draw a box around the display
+    if !isempty(find(han.frame_list.==han.displayed_frame))
+        set_source_rgb(ctx,0,1,0)
+        rectangle(ctx, 0, 0, w, h)
+        stroke(ctx)
+    end
+
     if han.view_pad
         set_source_rgb(ctx,0,0,1)
         arc(ctx, han.wt.pad_pos[1],han.wt.pad_pos[2], 10, 0, 2*pi);
@@ -1413,13 +1420,6 @@ function plot_image(han,img)
             arc(ctx,han.pole_loc[han.frame,1],han.pole_loc[han.frame,2],10,0,2*pi)
             stroke(ctx)
         end
-    end
-
-    #If this frame is in the frame list, draw a box around the display
-    if !isempty(find(han.frame_list.==han.displayed_frame))
-        set_source_rgb(ctx,0,1,0)
-        rectangle(ctx, 0, 0, w, h)
-        stroke(ctx)
     end
 
     reveal(han.c)
