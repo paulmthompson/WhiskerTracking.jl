@@ -1087,6 +1087,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         write(file,"Frames_Tracked",han.tracked)
         write(file,"Start_Frame", han.start_frame)
         write(file,"Touch",han.touch_frames)
+        write(file,"Touch_Inds",han.touch_frames_i)
         write(file,"Angles",han.woi_angle)
         write(file,"Curvature",han.woi_curv)
         write(file,"all_whiskers",han.wt.all_whiskers)
@@ -1126,6 +1127,9 @@ function load_whisker_data(han,filepath)
         end
         if JLD.exists(file,"Touch")
             han.touch_frames=read(file,"Touch")
+        end
+        if JLD.exists(file,"Touch_Inds")
+            han.touch_frames_i=read(file,"Touch_Inds")
         end
         if JLD.exists(file,"Angles")
             han.woi_angle=read(file,"Angles")
