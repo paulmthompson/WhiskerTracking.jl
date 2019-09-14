@@ -300,8 +300,10 @@ mutable struct Tracker_Handles
     touch_mode::Bool
 
     touch_override::Gtk.GtkButtonLeaf
+    touch_no_contact::Gtk.GtkButtonLeaf
     touch_override_mode::Bool
     touch_frames::BitArray{1}
+    touch_frames_i::Array{Int64,1}
     woi_angle::Array{Float64,1}
     woi_curv::Array{Float64,1}
     wt::Tracker

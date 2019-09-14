@@ -68,18 +68,21 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     delete_button=Button("Delete Whisker")
     control_grid[1,8]=delete_button
 
-    touch_override = Button("Touch Override")
+    touch_override = Button("Mark Contact")
     control_grid[1,9] = touch_override
 
+    touch_no_contact = Button("Mark No Contact")
+    control_grid[1,10] = touch_no_contact
+
     add_frame_button = Button("Add Frame To Tracking")
-    control_grid[1,10] = add_frame_button
+    control_grid[1,11] = add_frame_button
 
     delete_frame_button = Button("Delete Frame From Tracking")
-    control_grid[1,11] = delete_frame_button
+    control_grid[1,12] = delete_frame_button
 
     num_whiskers_sb = SpinButton(1:1:5)
-    control_grid[1,12] = num_whiskers_sb
-    control_grid[2,12] = Label("Number of Whiskers To Track")
+    control_grid[1,13] = num_whiskers_sb
+    control_grid[2,13] = Label("Number of Whiskers To Track")
 
     grid[2,2]=control_grid
 
@@ -395,8 +398,8 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     vid[:,:,1],0,woi_array,1,num_whiskers_sb,1,
     false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
-    start_frame,false,false,false,draw_button,false,false,touch_override,false,
-    falses(vid_length),zeros(Float64,vid_length),zeros(Float64,vid_length),
+    start_frame,false,false,false,draw_button,false,false,touch_override,touch_no_contact,false,
+    falses(0),Array{Int64,1}(),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
@@ -414,7 +417,8 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
     signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
-    signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,))
+    signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,1))
+    signal_connect(touch_override_cb,touch_no_contact,"clicked",Void,(),false,(handles,0))
 
     signal_connect(add_frame_cb,add_frame_button,"clicked",Void,(),false,(handles,))
     signal_connect(delete_frame_cb,delete_frame_button,"clicked",Void,(),false,(handles,))
@@ -738,11 +742,23 @@ function pole_auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
 
-    han, = user_data
+    han, contact = user_data
 
-    han.touch_frames[han.frame] = !han.touch_frames[han.frame]
+    #Check if this frame is already in the contact list
+    if isempty(find(han.touch_frames_i.==han.displayed_frame))
+
+        push!(han.touch_frames_i,han.displayed_frame)
+        push!(han.touch_frames,contact)
+
+        #Do we need to sort these here?
+
+    else #Change existing entry
+
+        ind=find(han.touch_frames_i.==han.displayed_frame)[1]
+        han.touch_frames[ind] = contact
+    end
 
     draw_touch(han)
 
@@ -762,25 +778,6 @@ end
 
 function detect_touch(han)
 
-    if han.tracked[han.frame]
-
-        hit=0
-
-        for i=1:han.woi[han.frame].len
-            xx=round(Int64,han.woi[han.frame].x[i])
-            yy=round(Int64,han.woi[han.frame].y[i])
-        end
-
-        if hit>2
-            han.touch_frames[han.frame]=true
-        end
-
-        if han.touch_override_mode
-            han.touch_frames[han.frame]=true
-        end
-
-    end
-    nothing
 end
 
 #=
@@ -789,16 +786,23 @@ Draw marker to indicate that touch has occured
 
 function draw_touch(han::Tracker_Handles)
 
-    ctx=Gtk.getgc(han.c)
+    if !isempty(find(han.touch_frames_i.==han.displayed_frame))
 
-    if han.touch_frames[han.frame]
-        set_source_rgb(ctx,0,1,0)
-    else
-        set_source_rgb(ctx,1,0,0)
+        ctx=Gtk.getgc(han.c)
+
+        ind=find(han.touch_frames_i.==han.displayed_frame)[1]
+
+        if han.touch_frames[ind]
+            set_source_rgb(ctx,1,0,0)
+        else
+            set_source_rgb(ctx,1,1,1)
+        end
+
+        rectangle(ctx,600,0,20,20)
+        fill(ctx)
+
+        reveal(han.c)
     end
-
-    rectangle(ctx,600,0,20,20)
-    fill(ctx)
 
     nothing
 end
@@ -967,9 +971,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         #tracked array
         insert!(han.tracked,frame_location,false)
-
-        #touch_frames::BitArray{1}
-        insert!(han.touch_frames,frame_location,false)
 
         #woi_angle::Array{Float64,1}
         insert!(han.woi_angle,frame_location,0.0)
