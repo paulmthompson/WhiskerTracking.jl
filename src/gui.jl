@@ -1011,6 +1011,8 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         save_single_image(han,han.current_frame,new_frame)
 
+        redraw_all(han)
+
     end
 
     nothing
@@ -1356,6 +1358,13 @@ function plot_image(han,img)
             arc(ctx,han.pole_loc[han.frame,1],han.pole_loc[han.frame,2],10,0,2*pi)
             stroke(ctx)
         end
+    end
+
+    #If this frame is in the frame list, draw a box around the display
+    if !isempty(find(han.frame_list.==han.displayed_frame))
+        set_source_rgb(ctx,0,1,0)
+        rectangle(ctx, 0, 0, w, h)
+        stroke(ctx)
     end
 
     reveal(han.c)
