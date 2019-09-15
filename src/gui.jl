@@ -613,7 +613,7 @@ function dlc_with_pole_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.dlc.extra_pole=getproperty(han.dlc_widgets.with_pole_button,:active,Bool)
+    han.dlc.export_pole=getproperty(han.dlc_widgets.with_pole_button,:active,Bool)
 
     nothing
 end
