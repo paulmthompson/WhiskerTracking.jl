@@ -7,15 +7,15 @@ SNR (Point P)
 
 =#
 
-function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0)
+function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0; I_p = 1.0, E=1.0)
     #x, y - whisker coordinates
     #theta_f - whisker angle
     #curv - whisker curvature
     #ii - index of contact
     #i_p - index of high SNR point - we should use the second DLC point for this (as long as it isn't past pole)
+    # E - Elastic Modulus of Whisker
+    # I_p - Moment of inertia of whisker at point p I_p = 1.0
 
-    E = 1.0 #Elastic Modulus of Whisker
-    I_p = 1.0 #Moment of inertia of whisker at point p
     #curv_0 intrinsic curvature of the whisker
     delta_kappa = curv - curv_0 #Change in curvature
 
@@ -137,7 +137,7 @@ function get_force_signs(xx,yy,tracked,p,F_t,t_c,aa,c)
     (F_lat_sign,F_ax_sign)
 end
 
-function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
+function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)); i_p_loc=50.0,E_in=1.0,moment_of_inertia_p=1.0)
 
     F_ax=zeros(Float64,length(c))
     F_lat=zeros(Float64,length(c))
@@ -150,16 +150,16 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)))
         if ((c[i])&(length(xx[i])>1))&(tracked[i])
 
             #ii - index of contact
-            ii=WhiskerTracking.calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
+            ii=calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
 
             #i_p - index of high SNR point
             #We can use 50 units of length from whisker follicle
             #This is only accurate if the fit up to 50 units is accurate
-            i_p=culm_dist(xx[i],yy[i],50.0)
+            i_p=culm_dist(xx[i],yy[i],i_p_loc)
 
             if (i_p>ii) #Don't want our high SNR point past the point of contact
                 try
-                    (M[i],F_ax[i],F_lat[i],F_t[i],theta_c[i])=WhiskerTracking.calc_force(xx[i],yy[i],aa[i],curv[i],ii,i_p)
+                    (M[i],F_ax[i],F_lat[i],F_t[i],theta_c[i])=calc_force(xx[i],yy[i],aa[i],curv[i],ii,i_p,E=E_in,I_p=moment_of_inertia_p)
                     F_calc[i]=true
                 catch
                 end
