@@ -13,9 +13,16 @@ function dlc_extract_frames(dlc::DLC_Wrapper)
     dlc_module[:extract_frames](dlc.config_path,"automatic","kmeans",userfeedback=false)
 end
 
-function dlc_change_num_segments(dlc::DLC_Wrapper,num)
-    whisker_body_parts=[string(i) for i=1:num]
+function dlc_change_num_segments(dlc::DLC_Wrapper,num,pole=true)
+        whisker_body_parts=[string(i) for i=1:num]
+    if pole
+        push!(whisker_body_parts,"Pole")
+    end
     dlc_py[:change_dlc_yaml](dlc.config_path,"bodyparts",whisker_body_parts)
+end
+
+function dlc_create_label_file(dlc::DLC_Wrapper,label_path)
+    dlc_py[:create_label_hdf5](dlc.config_path,label_path)
 end
 
 function dlc_extra_pole_location(han)

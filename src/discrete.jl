@@ -78,11 +78,7 @@ function draw_discrete(han)
     circ_rad=5.0
 
     ctx=Gtk.getgc(han.c)
-
-    if han.touch_frames[han.frame]
-        set_source_rgb(ctx,0,1,0)
-    end
-
+    set_source_rgb(ctx,0,1,0)
     num_points = div(size(han.wt.w_p,1),2)
 
     for i=1:num_points

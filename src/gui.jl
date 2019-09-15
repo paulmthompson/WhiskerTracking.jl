@@ -553,16 +553,40 @@ function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    my_working=pwd()
+
     #Copy images to folder
+    #list of images
+    vid_folder_path=copy_images_to_dlc(han)
 
     #If extra pole
     #Modify configuration file with right number of discrete points
+    num_segments=div(size(han.wt.w_p,1),2)
+    dlc_change_num_segments(han.dlc,num_segments,han.dlc.export_pole)
 
-    #Create h5 and pickle file
+    #Create h5 label_file
+    dlc_create_label_file(han.dlc,vid_folder_path)
 
     #Put in new data values
 
     nothing
+end
+
+function copy_images_to_dlc(han)
+
+    #Copy images to folder
+    #list of images
+    image_paths=readdir(han.paths.images)
+
+    dlc_path = readdir(han.paths.DLC)[1]
+    labeled_data_path=string(han.paths.DLC,"/",dlc_path,"/labeled-data")
+    vid_folder_path=string(labeled_data_path,"/",readdir(labeled_data_path)[1])
+
+    for img in image_paths
+        cp(string(han.paths.images,"/",img),string(vid_folder_path,"/",img),force=true)
+    end
+
+    vid_folder_path
 end
 
 function dlc_with_pole_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
