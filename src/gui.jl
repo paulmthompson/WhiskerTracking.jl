@@ -559,7 +559,6 @@ function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #list of images
     vid_folder_path=copy_images_to_dlc(han)
 
-    #If extra pole
     #Modify configuration file with right number of discrete points
     num_segments=div(size(han.wt.w_p,1),2)
     dlc_change_num_segments(han.dlc,num_segments,han.dlc.export_pole)
@@ -568,6 +567,27 @@ function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     dlc_create_label_file(han.dlc,vid_folder_path)
 
     #Put in new data values
+    if han.dlc.export_pole
+        out_val_x = zeros(Float64,num_segments+1,length(han.frame_list))
+        out_val_y = zeros(Float64,num_segments+1,length(han.frame_list))
+    else
+        out_val_x = zeros(Float64,num_segments,length(han.frame_list))
+        out_val_y = zeros(Float64,num_segments,length(han.frame_list))
+    end
+
+    ind=1
+    for i=1:num_segments
+        out_val_x[i,:] = han.wt.w_p[ind,:]
+        out_val_y[i,:] = han.wt.w_p[ind+1,:]
+        ind+=2
+    end
+
+    if han.dlc.export_pole
+        out_val_x[end,:] = han.pole_loc[:,1]
+        out_val_y[end,:] = han.pole_loc[:,2]
+    end
+
+    dlc_replace_discrete_points(han.dlc,vid_folder_path,num_segments,han.dlc.export_pole,out_val_x,out_val_y)
 
     nothing
 end

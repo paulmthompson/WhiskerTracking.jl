@@ -14,7 +14,7 @@ function dlc_extract_frames(dlc::DLC_Wrapper)
 end
 
 function dlc_change_num_segments(dlc::DLC_Wrapper,num,pole=true)
-        whisker_body_parts=[string(i) for i=1:num]
+    whisker_body_parts=[string(i) for i=1:num]
     if pole
         push!(whisker_body_parts,"Pole")
     end
@@ -23,6 +23,15 @@ end
 
 function dlc_create_label_file(dlc::DLC_Wrapper,label_path)
     dlc_py[:create_label_hdf5](dlc.config_path,label_path)
+end
+
+function dlc_replace_discrete_points(dlc::DLC_Wrapper,label_path,num,pole,pointx,pointy)
+
+    whisker_body_parts=[string(i) for i=1:num]
+    if pole
+        push!(whisker_body_parts,"Pole")
+    end
+    dlc_py[:replace_dlc_points](dlc.config_path,label_path,whisker_body_parts,pointx,pointy)
 end
 
 function dlc_extra_pole_location(han)

@@ -46,3 +46,21 @@ def create_label_hdf5(config_path,dir):
 
     dataFrame.to_csv(os.path.join(dir,"CollectedData_" + scorer + ".csv"))
     dataFrame.to_hdf(os.path.join(dir,"CollectedData_" + scorer + '.h5'),'df_with_missing',format='table', mode='w')
+
+def replace_dlc_points(config_path,hdf5_datafile_path,my_w,pointx,pointy):
+
+    cfg = dlc.auxiliaryfunctions.read_config(config_path)
+    scorer = cfg['scorer']
+
+    hdf5_datafile = os.path.join(hdf5_datafile_path,"CollectedData_" + scorer + '.h5')
+
+    myd=pd.read_hdf(hdf5_datafile,'df_with_missing')
+
+    for i in range(0,len(my_w)):
+        mask = myd['PMT'][my_w[i]]['x'] == i
+        myd.loc[:,('PMT',my_w[i],'x')] = pointx[i,:]
+        myd.loc[:,('PMT',my_w[i],'y')] = pointy[i,:]
+
+    myd.to_hdf(hdf5_datafile,'df_with_missing',format='table', mode='w')
+    myd.to_csv(os.path.join(hdf5_datafile_path,"CollectedData_" + scorer + ".csv"))
+    
