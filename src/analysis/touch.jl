@@ -37,8 +37,8 @@ function get_p_pos(p,new_thres=50.0)
     pos_labels=zeros(Int64,size(p,1))
 
     num_labels=0
-    pos_x=Array{Float64}(0)
-    pos_y=Array{Float64}(0)
+    pos_x=Array{Float64,1}()
+    pos_y=Array{Float64,1}()
 
     for i=1:size(p,1)
         if !isnan(p[i,1])
@@ -69,7 +69,7 @@ function get_p_pos(p,new_thres=50.0)
 
     for i=1:num_labels
         if length(find(pos_labels.==i))<1000
-            pos_labels[pos_labels.==i] = 0
+            pos_labels[pos_labels.==i] .= 0
         end
     end
 
@@ -103,7 +103,7 @@ function get_p_pos(p,new_thres=50.0)
 
         if max_in_a_row < 500
 
-            pos_labels[pos_labels.==i] = 0
+            pos_labels[pos_labels.==i] .= 0
 
         end
     end

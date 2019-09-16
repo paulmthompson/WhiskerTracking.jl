@@ -1072,6 +1072,9 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+#=
+This needs totally redone
+=#
 function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data

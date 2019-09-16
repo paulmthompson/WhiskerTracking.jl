@@ -35,10 +35,10 @@ function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0; I_p = 1.0, E=1.0)
 
     theta_contact = contact_angle(x,y,ii)#Angle that the whisker is pointing at point of contact
 
-    theta_0 = atan2((y_c - y_f),(x_c - x_f)) #
+    theta_0 = atan((y_c - y_f),(x_c - x_f)) #
     r_0 = sqrt((x_c - x_f)^2 + (y_c - y_f)^2)
 
-    theta_p = atan2((y_c - y_p),(x_c - x_p))
+    theta_p = atan((y_c - y_p),(x_c - x_p))
     r_p = sqrt((x_c - x_p)^2 + (y_c - y_p)^2)
 
     #Contact force magnitude
@@ -57,7 +57,7 @@ function contact_angle(x,y,ii)
     #y whisker coordinates
     #ii index of whisker contact
 
-    atan2((y[ii]-y[ii+1]),(x[ii]-x[ii+1]))
+    atan((y[ii]-y[ii+1]),(x[ii]-x[ii+1]))
 end
 
 #Decompose force into x and y components
@@ -103,7 +103,7 @@ function get_ax_lat_angles(aa,t_n)
     #Project the force vector onto the axial component and subtract from the force vector to get the lateral component
     n_a_x = dot([n_x; n_y],[cosd(theta_ax); sind(theta_ax)]) .* [a_x; a_y]
 
-    theta_lat=atan2(n_y-n_a_x[2],n_x-n_a_x[1])
+    theta_lat=atan(n_y-n_a_x[2],n_x-n_a_x[1])
 
     (theta_lat/pi * 180, theta_ax)
 end
@@ -179,11 +179,11 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)); i_p_lo
     for i=1:length(c)
 
         if (c[i])&(!F_calc[i])
-            F_ax[i]=itp_fx[i]
-            F_lat[i]=itp_fy[i]
-            M[i]=itp_m[i]
-            F_t[i]=itp_ft[i]
-            theta_c[i]=itp_tc[i]
+            F_ax[i]=itp_fx(i)
+            F_lat[i]=itp_fy(i)
+            M[i]=itp_m(i)
+            F_t[i]=itp_ft(i)
+            theta_c[i]=itp_tc(i)
         end
     end
 
