@@ -587,6 +587,9 @@ function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         out_val_y[end,:] = han.pole_loc[:,2]
     end
 
+    out_val_x[out_val_x .== 0] .= NaN
+    out_val_y[out_val_y .== 0] .= NaN
+
     dlc_replace_discrete_points(han.dlc,vid_folder_path,num_segments,han.dlc.export_pole,out_val_x,out_val_y)
 
     nothing
