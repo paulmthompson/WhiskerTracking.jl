@@ -148,7 +148,9 @@ function save_single_image(han,img,num)
 
     my_wd=pwd()
     cd(han.paths.images)
-    img_name = string("img",num,".png")
+    #Deeplabcut needs left padded zeros
+    max_dig=length(digits(han.max_frames))
+    img_name = string("img",lpad(num,max_dig,"0"),".png")
 
     #I think deeplabcut expects 24-bit png
     #You create 24 bit png files with ImageMagick as follows
