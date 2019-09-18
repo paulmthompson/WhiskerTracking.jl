@@ -6,12 +6,20 @@ DLC import Methods
 #=
 Read data table and return julia arrays for x position, y position, and liklihood for each whisker point
 =#
-function dlc_hd5_to_array(path,w_inds,l_thres)
+function dlc_hd5_to_array(path,l_thres,pole=true)
 
     #deeplabcut stores points as pandas dataframe
     #Assuming a whisker is labeled as a discrete set of points
     file=h5open(path)
     mytable=read(file,"df_with_missing")["table"];
+
+
+    w_ind_length=length(mytable[1].data[2])
+    if pole
+        w_inds=collect(1:3:w_ind_length-3)
+    else
+        w_inds=collect(1:3:w_ind_length)
+    end
 
     t1=1
     t2=length(mytable)
@@ -103,19 +111,22 @@ function convert_whisker_points_to_janelia(xx,yy,tracked)
     woi
 end
 
-function read_whisker_hdf5(path; w_inds=[1,4,7,10,13],l_thres=0.5)
+function read_whisker_hdf5(path;l_thres=0.5,pole=true)
 
-    (xx,yy,ll)=dlc_hd5_to_array(path,w_inds,l_thres)
+    (xx,yy,ll)=dlc_hd5_to_array(path,l_thres,pole)
 
     dlc_smooth_liklihood(xx,yy,15,ll,50.0)
 
     convert_whisker_points_to_janelia(xx,yy,ll)
 end
 
-function read_pole_hdf5(path,col_pos=1)
+function read_pole_hdf5(path)
 
     file=h5open(path)
     mytable=read(file,"df_with_missing")["table"];
+
+    #Assumple pole is at the end of the array
+    col_pos=length(mytable[1].data[2]) - 2
 
     p=zeros(Float64,length(mytable),2)
 

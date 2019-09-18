@@ -1738,7 +1738,7 @@ function erase_move(han, x,y,ctxcopy)
     end
 
     if length(find(keep.==false))>0
-        keep[1:findfirst(keep.==false)]=false
+        keep[1:findfirst(keep.==false)] .= false
     end
 
     han.wt.whiskers[han.woi_id].x=han.wt.whiskers[han.woi_id].x[keep]
