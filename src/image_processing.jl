@@ -26,8 +26,6 @@ function image_preprocessing(vid,i)
     nothing
 end
 
-
-
 function anisodiff(im,niter,kappa,lambda,option)
     diff=zeros(Float64,size(im))
     anisodiff!(im,niter,kappa,lambda,option,diff)
@@ -146,9 +144,9 @@ end
 
 function local_contrast_enhance(img)
 
-    img2 = img./255
+    img2 = img ./ 255
 
-    img2 = Images.clahe(img2,256,xblocks=30,yblocks=30,clip=15)*255
+    img2 = Images.clahe(img2,256,xblocks=30,yblocks=30,clip=15) .* 255
 
     img2
 end
@@ -167,9 +165,9 @@ end
 function sharpen_image(han)
 
     imgl = imfilter(han.current_frame, Kernel.Laplacian());
-    newimg=imgl-minimum(imgl)
-    newimg = newimg / maximum(newimg)
-    han.current_frame = 255-round.(UInt8,newimg .* 255)
+    newimg= imgl .- minimum(imgl)
+    newimg = newimg ./ maximum(newimg)
+    han.current_frame = 255 .- round.(UInt8,newimg .* 255)
 
     nothing
 end

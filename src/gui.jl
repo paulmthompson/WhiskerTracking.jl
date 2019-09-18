@@ -1323,7 +1323,7 @@ function local_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.local_contrast_mode = getproperty(han.image_adj_widgets,local_contrast_button,:active,Bool)
+    han.local_contrast_mode = getproperty(han.image_adj_widgets.local_contrast_button,:active,Bool)
 
     nothing
 end
@@ -1787,7 +1787,8 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han.send_frame[:,:] = han.current_frame'
     han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
-    WT_constraints(han)
+    plot_image(han,han.current_frame')
+    #WT_constraints(han)
 
     plot_whiskers(han)
 
