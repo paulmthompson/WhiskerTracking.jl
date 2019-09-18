@@ -267,6 +267,7 @@ mutable struct Tracker_Handles
     plot_frame::Array{UInt32,2}
 
     current_frame::Array{UInt8,2}
+    current_frame2::Array{UInt8,2}
 
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
     woi::Array{Whisker1,1} #Array of properties for whisker of interest for every frame

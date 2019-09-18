@@ -399,7 +399,7 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     these_paths = Save_Paths(t_folder)
 
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    vid[:,:,1],0,woi_array,1,num_whiskers_sb,1,
+    vid[:,:,1],zeros(UInt8,640,480),0,woi_array,1,num_whiskers_sb,1,
     false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,touch_no_contact,false,
@@ -930,6 +930,7 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     try
         load_single_frame(frame_time,temp,han.wt.vid_name)
         han.current_frame=temp'
+        han.current_frame2=deepcopy(han.current_frame)
         redraw_all(han)
     catch
     end
@@ -1014,7 +1015,7 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
                 new_vid[:,:,i+1] = han.wt.vid[:,:,i]
             end
         end
-        new_vid[:,:,frame_location] = han.current_frame
+        new_vid[:,:,frame_location] = han.current_frame2
         han.wt.vid = new_vid
 
         #add whisker WOI
@@ -1063,7 +1064,7 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
         setproperty!(han.frame_advance_sb,:value,frame_location)
 
-        save_single_image(han,han.current_frame,new_frame)
+        save_single_image(han,han.current_frame2,new_frame)
 
         redraw_all(han)
 
