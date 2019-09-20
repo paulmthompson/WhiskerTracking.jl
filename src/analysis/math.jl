@@ -53,7 +53,7 @@ function outlier_removal_min(cov1,min_ex,ind_range=(1,length(cov1)))
 
     itp_out = interpolate((find(.!outlier_inds),), cov2[.!outlier_inds], Gridded(Linear()))
 
-    for i in find(outlier_inds)
+    for i in find(outlier_inds)[2:(end-1)]
         cov2[i] = itp_out[i]
     end
 
@@ -69,7 +69,7 @@ function outlier_removal_max(cov1,max_ex,ind_range=(1,length(cov1)))
 
     itp_out = interpolate((find(.!outlier_inds),), cov2[.!outlier_inds], Gridded(Linear()))
 
-    for i in find(outlier_inds)
+    for i in find(outlier_inds)[2:(end-1)]
         cov2[i] = itp_out[i]
     end
 
@@ -87,7 +87,7 @@ function outlier_removal_twosided(cov1,min_ex,max_ex,ind_range=(1,length(cov1)))
 
     itp_out = interpolate((find(.!outlier_inds),), cov2[.!outlier_inds], Gridded(Linear()))
 
-    for i in find(outlier_inds)
+    for i in find(outlier_inds)[2:(end-1)]
         cov2[i] = itp_out[i]
     end
 

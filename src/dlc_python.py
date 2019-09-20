@@ -44,6 +44,13 @@ def create_label_hdf5(config_path,dir):
         frame = pd.DataFrame(a, columns = index, index = relativeimagenames)
         dataFrame = pd.concat([dataFrame, frame],axis=1)
 
+    #Sometimes it seems this messes up the label positions.
+    #We should replace here
+    #for i in range(0,len(myd.index.values)):
+    #    old_name=dataFrame.index.values[i]
+    #    new_name = dataFrame.index.values[i].replace('/','\\')
+    #    dataFrame.rename(index={old_name: new_name},inplace=True)
+
     dataFrame.to_csv(os.path.join(dir,"CollectedData_" + scorer + ".csv"))
     dataFrame.to_hdf(os.path.join(dir,"CollectedData_" + scorer + '.h5'),'df_with_missing',format='table', mode='w')
 
@@ -63,4 +70,3 @@ def replace_dlc_points(config_path,hdf5_datafile_path,my_w,pointx,pointy):
 
     myd.to_hdf(hdf5_datafile,'df_with_missing',format='table', mode='w')
     myd.to_csv(os.path.join(hdf5_datafile_path,"CollectedData_" + scorer + ".csv"))
-    

@@ -178,7 +178,7 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)); i_p_lo
 
     for i=1:length(c)
 
-        if (c[i])&(!F_calc[i])
+        if ((c[i])&(!F_calc[i]))&((i>A_x[1])&(A_x[end]>i))
             F_ax[i]=itp_fx(i)
             F_lat[i]=itp_fy(i)
             M[i]=itp_m(i)
