@@ -139,14 +139,15 @@ function draw_tracked_whisker(han)
     if han.show_contact
 
         #Draw Pole
-        set_source_rgb(ctx,0,0,1)
+        if han.tracked_contact[ii] #Contact Present
+            set_source_rgb(ctx,0,1,1)
+        else
+            set_source_rgb(ctx,0,0,1)
+        end
         move_to(ctx,han.tracked_pole[ii,1],han.tracked_pole[ii,2])
         arc(ctx,han.tracked_pole[ii,1],han.tracked_pole[ii,2],5,0,2*pi)
         stroke(ctx)
 
-        #if han.tracked_contact[ii] #Contact Present
-
-        #end
     end
 
     reveal(han.c)
