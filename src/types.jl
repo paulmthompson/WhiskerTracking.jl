@@ -346,6 +346,10 @@ mutable struct Tracker_Handles
     tracked_whiskers_y::Array{Float64,2}
     tracked_whiskers_l::BitArray{2}
 
+    show_contact::Bool
+    tracked_contact::BitArray{1}
+    tracked_pole::Array{Float64,2}
+
     dlc::DLC_Wrapper
     paths::Save_Paths
 end

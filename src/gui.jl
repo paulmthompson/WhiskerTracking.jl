@@ -407,7 +407,7 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
-    false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),DLC_Wrapper(),these_paths)
+    false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),zeros(Float64,1,1),DLC_Wrapper(),these_paths)
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
