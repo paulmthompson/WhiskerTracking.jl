@@ -997,77 +997,83 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     new_frame=han.displayed_frame
 
-    if isempty(findall(han.frame_list.==new_frame))
+    try
 
-        frame_location=findfirst(han.frame_list.>new_frame)
-        if frame_location==nothing
-            frame_location = length(han.frame_list) + 1
-        end
+        if isempty(findall(han.frame_list.==new_frame))
 
-        insert!(han.frame_list,frame_location,new_frame)
-
-        #Add new video frame to video array
-        new_vid=zeros(UInt8,size(han.wt.vid,1),size(han.wt.vid,2),size(han.wt.vid,3)+1)
-        for i=1:size(han.wt.vid,3)
-            if i<frame_location
-                new_vid[:,:,i] = han.wt.vid[:,:,i]
-            else
-                new_vid[:,:,i+1] = han.wt.vid[:,:,i]
+            frame_location=findfirst(han.frame_list.>new_frame)
+            if frame_location==nothing
+                frame_location = length(han.frame_list) + 1
             end
-        end
-        new_vid[:,:,frame_location] = han.current_frame2
-        han.wt.vid = new_vid
 
-        #add whisker WOI
-        insert!(han.woi,frame_location,Whisker1())
+            insert!(han.frame_list,frame_location,new_frame)
 
-        insert!(han.wt.all_whiskers,frame_location,Array{Whisker1,1}())
-
-        #tracked array
-        insert!(han.tracked,frame_location,false)
-
-        #woi_angle::Array{Float64,1}
-        insert!(han.woi_angle,frame_location,0.0)
-
-        #woi_curv::Array{Float64,1}
-        insert!(han.woi_curv,frame_location,0.0)
-
-        #pole present
-        insert!(han.pole_present,frame_location,false)
-
-        #pole loc
-        new_pole_loc=zeros(Float32,size(han.pole_loc,1)+1,2)
-        for i=1:size(han.pole_loc,1)
-            if i<frame_location
-                new_pole_loc[i,1] = han.pole_loc[i,1]
-                new_pole_loc[i,2] = han.pole_loc[i,2]
-            else
-                new_pole_loc[i+1,1] = han.pole_loc[i,1]
-                new_pole_loc[i+1,2] = han.pole_loc[i,2]
+            #Add new video frame to video array
+            new_vid=zeros(UInt8,size(han.wt.vid,1),size(han.wt.vid,2),size(han.wt.vid,3)+1)
+            for i=1:size(han.wt.vid,3)
+                if i<frame_location
+                    new_vid[:,:,i] = han.wt.vid[:,:,i]
+                else
+                    new_vid[:,:,i+1] = han.wt.vid[:,:,i]
+                end
             end
-        end
-        han.pole_loc = new_pole_loc
+            new_vid[:,:,frame_location] = han.current_frame2
+            han.wt.vid = new_vid
 
-        #Discrete points
-        new_wp = zeros(Float32,size(han.wt.w_p,1),size(han.wt.w_p,2)+1)
-        for i=1:size(han.wt.w_p,2)
+            #add whisker WOI
+            insert!(han.woi,frame_location,Whisker1())
 
-            if i<frame_location
-                new_wp[:,i] = han.wt.w_p[:,i]
-            else
-                new_wp[:,i+1] = han.wt.w_p[:,i]
+            insert!(han.wt.all_whiskers,frame_location,Array{Whisker1,1}())
+
+            #tracked array
+            insert!(han.tracked,frame_location,false)
+
+            #woi_angle::Array{Float64,1}
+            insert!(han.woi_angle,frame_location,0.0)
+
+            #woi_curv::Array{Float64,1}
+            insert!(han.woi_curv,frame_location,0.0)
+
+            #pole present
+            insert!(han.pole_present,frame_location,false)
+
+            #pole loc
+            new_pole_loc=zeros(Float32,size(han.pole_loc,1)+1,2)
+            for i=1:size(han.pole_loc,1)
+                if i<frame_location
+                    new_pole_loc[i,1] = han.pole_loc[i,1]
+                    new_pole_loc[i,2] = han.pole_loc[i,2]
+                else
+                    new_pole_loc[i+1,1] = han.pole_loc[i,1]
+                    new_pole_loc[i+1,2] = han.pole_loc[i,2]
+                end
             end
+            han.pole_loc = new_pole_loc
+
+            #Discrete points
+            new_wp = zeros(Float32,size(han.wt.w_p,1),size(han.wt.w_p,2)+1)
+            for i=1:size(han.wt.w_p,2)
+
+                if i<frame_location
+                    new_wp[:,i] = han.wt.w_p[:,i]
+                else
+                    new_wp[:,i+1] = han.wt.w_p[:,i]
+                end
+            end
+            han.wt.w_p = new_wp
+
+            #Change frame list spin button maximum number and current index
+            Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
+            setproperty!(han.frame_advance_sb,:value,frame_location)
+
+            save_single_image(han,han.current_frame2,new_frame)
+
+            redraw_all(han)
+
         end
-        han.wt.w_p = new_wp
 
-        #Change frame list spin button maximum number and current index
-        Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
-        setproperty!(han.frame_advance_sb,:value,frame_location)
-
-        save_single_image(han,han.current_frame2,new_frame)
-
-        redraw_all(han)
-
+    catch
+        println("Could not add frame")
     end
 
     nothing
@@ -1082,14 +1088,20 @@ function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     new_frame=han.displayed_frame
 
-    frame_id=find(han.frame_list.==new_frame)
+    try
 
-    if !isempty(frame_id)
+        frame_id=find(han.frame_list.==new_frame)
 
-        frame_location=frame_id[1]
+        if !isempty(frame_id)
 
-        deleteat!(han.frame_list,frame_location)
+            frame_location=frame_id[1]
 
+            deleteat!(han.frame_list,frame_location)
+
+        end
+
+    catch
+        println("Could not delete frame")
     end
 
     nothing
@@ -1283,12 +1295,18 @@ function adjust_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.wt.contrast_min = getproperty(han.image_adj_widgets.adj_contrast_min,:value,Int64)
-    han.wt.contrast_max = getproperty(han.image_adj_widgets.adj_contrast_max,:value,Int64)
+    try
 
-    adjust_contrast_gui(han)
+        han.wt.contrast_min = getproperty(han.image_adj_widgets.adj_contrast_min,:value,Int64)
+        han.wt.contrast_max = getproperty(han.image_adj_widgets.adj_contrast_max,:value,Int64)
 
-    plot_image(han,han.current_frame')
+        adjust_contrast_gui(han)
+
+        plot_image(han,han.current_frame')
+
+    catch
+        println("Error while adjusting contrast")
+    end
 
     nothing
 end
