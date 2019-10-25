@@ -1090,16 +1090,16 @@ function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     try
 
-        frame_id=find(han.frame_list.==new_frame)
+        #frame_id=find(han.frame_list.==new_frame)
 
-        if !isempty(frame_id)
+        #if !isempty(frame_id)
 
-            frame_location=frame_id[1]
+            #frame_location=frame_id[1]
 
-            deleteat!(han.frame_list,frame_location)
+            #deleteat!(han.frame_list,frame_location)
 
-        end
-
+        #end
+        println("Deleting frames is not available right now")
     catch
         println("Could not delete frame")
     end
@@ -1357,30 +1357,36 @@ function connect_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    if han.tracked[han.frame-1]
-        x_1=han.woi[han.frame-1].x[end]
-        y_1=han.woi[han.frame-1].y[end]
-        thick_1=han.woi[han.frame-1].thick[end]
-        scores_1=han.woi[han.frame-1].scores[end]
+    try
+
+        if han.tracked[han.frame-1]
+            x_1=han.woi[han.frame-1].x[end]
+            y_1=han.woi[han.frame-1].y[end]
+            thick_1=han.woi[han.frame-1].thick[end]
+            scores_1=han.woi[han.frame-1].scores[end]
+        end
+
+        dist=round(Int64,sqrt((han.wt.whiskers[han.woi_id].x[end]-x_1)^2+(han.wt.whiskers[han.woi_id].y[end]-y_1)^2))
+
+        xs=linspace(han.wt.whiskers[han.woi_id].x[end],x_1,dist)
+        ys=linspace(han.wt.whiskers[han.woi_id].y[end],y_1,dist)
+
+        for i=2:length(xs)
+            push!(han.wt.whiskers[han.woi_id].x,xs[i])
+            push!(han.wt.whiskers[han.woi_id].y,ys[i])
+            push!(han.wt.whiskers[han.woi_id].thick,thick_1)
+            push!(han.wt.whiskers[han.woi_id].scores,scores_1)
+        end
+
+        han.wt.whiskers[han.woi_id].len=length(han.wt.whiskers[han.woi_id].x)
+
+        plot_whiskers(han)
+
+        assign_woi(han)
+
+    catch
+        println("Could not connect to pad")
     end
-
-    dist=round(Int64,sqrt((han.wt.whiskers[han.woi_id].x[end]-x_1)^2+(han.wt.whiskers[han.woi_id].y[end]-y_1)^2))
-
-    xs=linspace(han.wt.whiskers[han.woi_id].x[end],x_1,dist)
-    ys=linspace(han.wt.whiskers[han.woi_id].y[end],y_1,dist)
-
-    for i=2:length(xs)
-        push!(han.wt.whiskers[han.woi_id].x,xs[i])
-        push!(han.wt.whiskers[han.woi_id].y,ys[i])
-        push!(han.wt.whiskers[han.woi_id].thick,thick_1)
-        push!(han.wt.whiskers[han.woi_id].scores,scores_1)
-    end
-
-    han.wt.whiskers[han.woi_id].len=length(han.wt.whiskers[han.woi_id].x)
-
-    plot_whiskers(han)
-
-    assign_woi(han)
 
     nothing
 end
@@ -1536,11 +1542,19 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     end
 
     if han.selection_mode == 10 #whisker pad select
-        select_whisker_pad(han,m_x,m_y)
-        redraw_all(han)
+        try
+            select_whisker_pad(han,m_x,m_y)
+            redraw_all(han)
+        catch
+            println("Could not select whisker pad")
+        end
     elseif han.selection_mode == 12
-        select_pole_location(han,m_x,m_y)
-        redraw_all(han)
+        try
+            select_pole_location(han,m_x,m_y)
+            redraw_all(han)
+        catch
+            println("Could not select pole")
+        end
     end
 
     if han.erase_mode
@@ -1548,10 +1562,14 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     elseif han.draw_mode
         draw_start(han,m_x,m_y)
     elseif han.combine_mode>0
-        if han.combine_mode == 1
-            combine_start(han,m_x,m_y)
-        else
-            combine_end(han,m_x,m_y)
+        try
+            if han.combine_mode == 1
+                combine_start(han,m_x,m_y)
+            else
+                combine_end(han,m_x,m_y)
+            end
+        catch
+            println("Could not combine whiskers")
         end
     else
         #plot_whiskers(han)
@@ -1790,26 +1808,32 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    if han.background_mode
-        subtract_background(han)
-    end
-    if han.sharpen_mode
-        sharpen_image(han)
-    end
-    if han.local_contrast_mode
-        han.current_frame = round.(UInt8,local_contrast_enhance(han.current_frame))
-    end
-    if han.anisotropic_mode
-        myimg=convert(Array{Float64,2},han.current_frame)
-        han.current_frame = round.(UInt8,anisodiff(myimg,20,20.0,0.05,1))
-    end
-    han.send_frame[:,:] = han.current_frame'
-    han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
+    try
 
-    plot_image(han,han.current_frame')
-    #WT_constraints(han)
+        if han.background_mode
+            subtract_background(han)
+        end
+        if han.sharpen_mode
+            sharpen_image(han)
+        end
+        if han.local_contrast_mode
+            han.current_frame = round.(UInt8,local_contrast_enhance(han.current_frame))
+        end
+        if han.anisotropic_mode
+            myimg=convert(Array{Float64,2},han.current_frame)
+            han.current_frame = round.(UInt8,anisodiff(myimg,20,20.0,0.05,1))
+        end
+        han.send_frame[:,:] = han.current_frame'
+        han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
-    plot_whiskers(han)
+        plot_image(han,han.current_frame')
+        #WT_constraints(han)
+
+        plot_whiskers(han)
+
+    catch
+        println("Could not perform tracing")
+    end
 
     nothing
 end
