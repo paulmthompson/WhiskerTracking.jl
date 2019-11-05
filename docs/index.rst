@@ -12,6 +12,7 @@ Welcome to WhiskerTracking.jl's documentation!
 
    Getting_Started.rst
    Contact_Detection.rst
+   Whisker_Tracking.rst
 
 
 
