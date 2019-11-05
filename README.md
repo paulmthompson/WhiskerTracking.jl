@@ -16,6 +16,10 @@ There is also a collection of analysis methods for whiskers. These include
 
 I have used this on both Windows and Linux. In both cases, you will need to install 1) the Janelia Whisker Tracker, 2) FFMPEG (https://ffmpeg.org/) to decode videos, and 3) Deeplabcut. These filepaths are hardcoded in the src/config.jl file and should be changed to the locations of the files on your computer.
 
+## Documentation
+
+https://whiskertrackingjl.readthedocs.io/en/latest/
+
 ## Future Directions
 
 I would love for the Janelia methods to be in pure Julia to no longer rely on their library. My impression is that it should run just as fast in pure julia, and would not be too tedious of a code migration. 
