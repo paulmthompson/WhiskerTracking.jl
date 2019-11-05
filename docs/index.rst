@@ -10,9 +10,9 @@ Welcome to WhiskerTracking.jl's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   Getting_Started.rst
-   Contact_Detection.rst
    Whisker_Tracking.rst
+   Contact_Detection.rst
+   
 
 
 
