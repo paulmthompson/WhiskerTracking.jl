@@ -14,7 +14,7 @@ There is also a collection of analysis methods for whiskers. These include
 
 ## Installation
 
-I have only used this on Linux. If you want to use the janelia methods, you will need to probably compile the tracker from source to get a .so (or DLL on Windows, but I haven't tried this), and change the hard coded library path in the code to the appropriate folder on your computer. I am also relying on FFMPEG (https://ffmpeg.org/) to decode videos, and have the filepath location hard coded.
+I have used this on both Windows and Linux. In both cases, you will need to install 1) the Janelia Whisker Tracker, 2) FFMPEG (https://ffmpeg.org/) to decode videos, and 3) Deeplabcut. These filepaths are hardcoded in the src/config.jl file and should be changed to the locations of the files on your computer.
 
 ## Future Directions
 
