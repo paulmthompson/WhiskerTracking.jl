@@ -27,6 +27,9 @@ To begin, follow these steps:
   .. code-block:: julia
 
     using WhiskerTracking
+    data_path="/home/wanglab/Programs/WhiskerTask/Test_2019-11-12/" #Name of video folder
+    video_name = "output.mp4" #Name of video
+    myhandles=make_gui(data_path,video_name);
 
 #. Change "data_path" to name of folder for video analysis
 #. Run the cells

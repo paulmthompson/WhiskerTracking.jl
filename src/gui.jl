@@ -1,6 +1,10 @@
 
 export make_gui
 
+function make_gui(path,vid_title;frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
+    make_gui(path,vid_title,""; frame_range = frame_range, image_stack=image_stack, dynamic_load=dynamic_load)
+end
+
 function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
 
     vid_name = string(path,vid_title)
