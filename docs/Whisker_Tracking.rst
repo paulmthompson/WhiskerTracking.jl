@@ -14,7 +14,7 @@ To begin, follow these steps:
 
 #. Open Jupyter Notebook Navigator. You can do this one of several always
   * Open Julia. In the Julia terminal type:
-  .. highlight:: julia
+  .. code-block:: julia
 
     using IJulia
     notebook()
@@ -24,9 +24,9 @@ To begin, follow these steps:
 #. Create a new notebook for WhiskerTracking, or load the default.
   * The default is located at ~/Documents/Analysis_Scripts/Whisker_Tracking_new.ipynb
   * Alternatively, you can copy the following code into a new notebook:
-  .. highlight:: julia
+  .. code-block:: julia
 
-  using WhiskerTracking
+    using WhiskerTracking
 
 #. Change "data_path" to name of folder for video analysis
 #. Run the cells
