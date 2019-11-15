@@ -22,7 +22,7 @@ function _make_janelia_gui()
     j_widgets=janelia_widgets(janelia_win,janelia_seed_thres,janelia_seed_iterations)
 end
 
-function add_janelia_callbacks(w,handles)
+function add_janelia_callbacks(w::janelia_widgets,handles::Tracker_Handles)
 
     signal_connect(jt_seed_thres_cb,w.jt_seed_thres_button,"value-changed",Void,(),false,(handles,))
     signal_connect(jt_seed_iterations_cb,w.jt_seed_iterations_button,"value-changed",Void,(),false,(handles,))

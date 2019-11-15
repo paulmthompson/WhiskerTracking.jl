@@ -449,7 +449,7 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function load_single_frame(x,tt,vn)
+function load_single_frame(x::Float64,tt::AbstractArray{UInt8,2},vn::String)
 
     xx=open(`$(ffmpeg_path) -loglevel panic -ss $(x) -i $(vn) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
     if VERSION > v"0.7-"
@@ -461,7 +461,7 @@ function load_single_frame(x,tt,vn)
 
 end
 
-function draw_frame_list(han)
+function draw_frame_list(han::Tracker_Handles)
 
     ctx=Gtk.getgc(han.ts_canvas)
 
@@ -851,7 +851,7 @@ function draw_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 end
 
 
-function plot_image(han,img)
+function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
 
    ctx=Gtk.getgc(han.c)
 

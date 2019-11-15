@@ -23,7 +23,7 @@ function _make_pole_gui()
     pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button,pole_delete_button)
 end
 
-function add_pole_callbacks(w,handles)
+function add_pole_callbacks(w::pole_widgets,handles::Tracker_Handles)
 
     signal_connect(pole_mode_cb,w.pole_mode_button,"clicked",Void,(),false,(handles,))
     signal_connect(pole_select_cb,w.gen_button,"clicked",Void,(),false,(handles,))

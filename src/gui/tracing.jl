@@ -17,7 +17,7 @@ function _make_tracing_gui()
     man_widgets=manual_widgets(manual_win,connect_button,combine_button)
 end
 
-function add_tracing_callbacks(w,handles)
+function add_tracing_callbacks(w::manual_widgets,handles::Tracker_Handles)
 
     signal_connect(combine_cb,w.combine_button,"clicked",Void,(),false,(handles,))
     signal_connect(connect_cb,w.connect_button,"clicked",Void,(),false,(handles,))

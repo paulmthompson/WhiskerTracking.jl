@@ -22,7 +22,7 @@ function _make_view_gui()
     v_widgets=view_widgets(view_win,view_whisker_pad_button,view_roi_button,view_discrete_button,view_pole_button,view_tracked_button)
 end
 
-function add_view_callbacks(w,handles)
+function add_view_callbacks(w::view_widgets,handles::Tracker_Handles)
 
     signal_connect(view_whisker_pad_cb,w.whisker_pad_button,"clicked",Void,(),false,(handles,))
     signal_connect(view_roi_cb,w.roi_button,"clicked",Void,(),false,(handles,))

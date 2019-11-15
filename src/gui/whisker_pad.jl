@@ -13,7 +13,7 @@ function _make_pad_gui()
     p_widgets=pad_widgets(pad_win,pad_gen_button)
 end
 
-function add_pad_callbacks(w,handles)
+function add_pad_callbacks(w::pad_widgets,handles::Tracker_Handles)
 
     signal_connect(pad_gen_cb,w.gen_button,"clicked",Void,(),false,(handles,))
     nothing

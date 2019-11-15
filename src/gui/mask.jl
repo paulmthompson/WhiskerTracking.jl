@@ -18,7 +18,7 @@ function _make_mask_gui()
     m_widgets=mask_widgets(mask_win,mask_gen_button,mask_min_button,mask_max_button)
 end
 
-function add_mask_callbacks(w,handles)
+function add_mask_callbacks(w::mask_widgets,handles::Tracker_Handles)
 
     signal_connect(mask_min_cb,w.min_button,"value-changed",Void,(),false,(handles,))
     signal_connect(mask_max_cb,w.max_button,"value-changed",Void,(),false,(handles,))
