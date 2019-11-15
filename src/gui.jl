@@ -150,237 +150,36 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
 
     grid[1,1] = mb
 
+    #Menu for discrete points
+    d_widgets = _make_discrete_gui()
 
-    #=
-    Menu for discrete points
-    =#
-    discrete_grid = Grid()
-    discrete_space_button = SpinButton(2:100)
-    discrete_grid[1,1] = discrete_space_button
-    discrete_grid[2,1] = Label("Space Between Points")
+    #Mask Menu Widgets
+    m_widgets = _make_mask_gui()
 
-    discrete_max_points_button = SpinButton(4:20)
-    discrete_grid[1,2] = discrete_max_points_button
-    discrete_grid[2,2] = Label("Max number of Points")
+    #Pad Menu Widgets
+    p_widgets=_make_pad_gui()
 
-    discrete_auto_calc = CheckButton("Auto Calculate")
-    discrete_grid[1,3] = discrete_auto_calc
+    #ROI Menu Widgets
+    r_widgets =  _make_roi_gui()
 
-    discrete_win=Window(discrete_grid)
-    Gtk.showall(discrete_win)
-    visible(discrete_win,false)
+    #Pole Menu Widgets
+    pp_widgets = _make_pole_gui()
 
-    d_widgets=discrete_widgets(discrete_win,discrete_space_button,discrete_max_points_button,discrete_auto_calc)
+    #View Window
+    v_widgets = _make_view_gui()
 
-    #=
-    Mask Menu Widgets
-    =#
+    #Manual Tracing Menu
+    man_widgets = _make_tracing_gui()
 
-    mask_grid = Grid()
-    mask_gen_button = CheckButton("Create Mask")
-    mask_grid[1,1] = mask_gen_button
-    mask_min_button = SpinButton(0:255)
-    mask_grid[1,2] = mask_min_button
-    mask_grid[2,2] = Label("Minimum Intensity")
-    mask_max_button = SpinButton(0:255)
-    mask_grid[1,3] = mask_max_button
-    mask_grid[2,3] = Label("Maximum Intensity")
+    #Image adjustment window
+    ia_widgets = _make_image_gui()
 
-    mask_win=Window(mask_grid)
-    Gtk.showall(mask_win)
-    visible(mask_win,false)
+    #Menu for Janelia Tracker Parameter Tweaking
+    j_widgets = _make_janelia_gui()
 
-    m_widgets=mask_widgets(mask_win,mask_gen_button,mask_min_button,mask_max_button)
+    #DeepLabCut options
+    deep_widgets = _make_dlc_gui()
 
-    #=
-    Pad Menu Widgets
-    =#
-    pad_grid=Grid()
-    pad_gen_button = CheckButton("Select Whisker Pad")
-    pad_grid[1,1] = pad_gen_button
-    pad_grid[1,2] = Label("Select the location of the whisker pad when box is checked")
-    pad_grid[1,3] = Label("Whiskers will be oriented so that the root is nearest the pad location")
-    pad_win=Window(pad_grid)
-    Gtk.showall(pad_win)
-    visible(pad_win,false)
-    p_widgets=pad_widgets(pad_win,pad_gen_button)
-
-    #=
-    ROI Menu Widgets
-    =#
-    roi_grid=Grid()
-    roi_gen_button = CheckButton("Select ROI center")
-    roi_grid[1,1] = roi_gen_button
-    roi_height_button = SpinButton(20:150)
-    roi_grid[1,2] = roi_height_button
-    roi_grid[2,2] = Label("ROI Height")
-    roi_width_button = SpinButton(20:150)
-    roi_grid[1,3] = roi_width_button
-    roi_grid[2,3] = Label("ROI Width")
-    roi_tilt_button = SpinButton(-45:45)
-    roi_grid[1,4] = roi_tilt_button
-    roi_grid[2,4] = Label("ROI Tilt")
-
-    roi_grid[1,7] = Label("When candidate whisker traces are detected in the image, \n only whiskers with bases inside the ROI are kept.")
-
-    roi_win=Window(roi_grid)
-    Gtk.showall(roi_win)
-    visible(roi_win,false)
-    r_widgets=roi_widgets(roi_win,roi_gen_button,roi_height_button,roi_width_button,roi_tilt_button)
-
-    #=
-    Pole Menu Widgets
-    =#
-    pole_grid=Grid()
-    pole_mode_button = CheckButtonLeaf("Find Location in Tracking?")
-    pole_grid[1,1] = pole_mode_button
-    pole_gen_button = CheckButton("Select Pole Location")
-    pole_grid[1,2] = pole_gen_button
-    pole_auto_button = Button("Automatically Determine Pole Location")
-    pole_grid[1,3] = pole_auto_button
-    pole_touch_button = CheckButton("Show Touch Location")
-    pole_grid[1,4] = pole_touch_button
-
-    pole_delete_button = Button("Delete Pole in Frame")
-    pole_grid[1,5] = pole_delete_button
-
-    pole_grid[1,7] = Label("Check the top checkbox if you want the whisker tracker to \n also look for a pole in each frame")
-
-    pole_win = Window(pole_grid)
-    Gtk.showall(pole_win)
-    visible(pole_win,false)
-    pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button,pole_delete_button)
-
-    #=
-    View Window
-    =#
-
-    view_grid=Grid()
-    view_whisker_pad_button = CheckButtonLeaf("Whisker Pad")
-    view_grid[1,1] = view_whisker_pad_button
-    view_roi_button = CheckButtonLeaf("Region of Interest")
-    view_grid[1,2] = view_roi_button
-    view_discrete_button = CheckButtonLeaf("Discrete Points")
-    view_grid[1,3] = view_discrete_button
-    view_pole_button = CheckButtonLeaf("Pole")
-    view_grid[1,4] = view_pole_button
-    view_tracked_button = CheckButtonLeaf("Tracked Whiskers")
-    view_grid[1,5] = view_tracked_button
-
-    view_grid[1,7] = Label("Select which items are always displayed for each frame")
-
-    view_win = Window(view_grid)
-    Gtk.showall(view_win)
-    visible(view_win,false)
-    v_widgets=view_widgets(view_win,view_whisker_pad_button,view_roi_button,view_discrete_button,view_pole_button,view_tracked_button)
-
-    #=
-    Manual Tracing Menu
-    =#
-
-    manual_grid=Grid()
-
-    connect_button=Button("Connect to Pad")
-    manual_grid[1,1]=connect_button
-
-    combine_button=ToggleButton("Combine Segments")
-    manual_grid[1,2]=combine_button
-
-    manual_win = Window(manual_grid)
-    Gtk.showall(manual_win)
-    visible(manual_win,false)
-    man_widgets=manual_widgets(manual_win,connect_button,combine_button)
-
-
-    #=
-    Visual Display Widgets
-    =#
-
-    #=
-    Image adjustment window
-    =#
-    image_adj_grid = Grid()
-    hist_c = Canvas(200,200)
-    image_adj_grid[1,1]=hist_c
-
-    contrast_min_slider = Scale(false,0,255,1)
-    adj_contrast_min=Adjustment(contrast_min_slider)
-    setproperty!(adj_contrast_min,:value,0)
-    image_adj_grid[1,2]=contrast_min_slider
-    image_adj_grid[2,2]=Label("Minimum")
-
-    contrast_max_slider = Scale(false,0,255,1)
-    adj_contrast_max=Adjustment(contrast_max_slider)
-    setproperty!(adj_contrast_max,:value,255)
-    image_adj_grid[1,3]=contrast_max_slider
-    image_adj_grid[2,3]=Label("Maximum")
-
-    background_button = CheckButton("Subtract Background")
-    image_adj_grid[1,4]=background_button
-
-    sharpen_button = CheckButton("Sharpen Image")
-    image_adj_grid[1,5]=sharpen_button
-
-    aniso_button = CheckButton("Anisotropic Diffusion")
-    image_adj_grid[1,6]=aniso_button
-
-    local_contrast_button = CheckButton("Local Contrast Enhancement")
-    image_adj_grid[1,7]=local_contrast_button
-
-    image_adj_win = Window(image_adj_grid)
-    Gtk.showall(image_adj_win)
-    visible(image_adj_win,false)
-    ia_widgets = image_adj_widgets(image_adj_win,hist_c,contrast_min_slider,adj_contrast_min,contrast_max_slider,adj_contrast_max,
-    background_button,sharpen_button,aniso_button,local_contrast_button)
-
-    #=
-    Menu for Janelia Tracker Parameter Tweaking
-    =#
-    janelia_grid=Grid()
-    janelia_label=Label("Janelia Parameters")
-    janelia_grid[1,1]=janelia_label
-
-    janelia_seed_thres=SpinButton(0.01:.01:1.0)
-    setproperty!(janelia_seed_thres,:value,0.99)
-    janelia_grid[1,2]=janelia_seed_thres
-    janelia_grid[2,2]=Label("Seed Threshold")
-
-    janelia_seed_iterations=SpinButton(1:1:10)
-    setproperty!(janelia_seed_iterations,:value,1)
-    janelia_grid[1,3]=janelia_seed_iterations
-    janelia_grid[1,3]=Label("Seed Iterations")
-
-    janelia_win=Window(janelia_grid)
-    Gtk.showall(janelia_win)
-    visible(janelia_win,false)
-    j_widgets=janelia_widgets(janelia_win,janelia_seed_thres,janelia_seed_iterations)
-
-    dlc_grid=Grid()
-    dlc_grid[1,1]=Label("DeepLabCut")
-
-    dlc_create_button=Button("Initialize")
-    dlc_grid[1,2] = dlc_create_button
-
-    dlc_export_button=Button("Export")
-    dlc_grid[1,3] = dlc_export_button
-
-    dlc_with_pole_button=CheckButton("With Pole")
-    dlc_grid[2,3] = dlc_with_pole_button
-
-    dlc_train_button=Button("Train")
-    dlc_grid[1,4] = dlc_train_button
-
-    dlc_analyze_button=Button("Analyze")
-    dlc_grid[1,5] = dlc_analyze_button
-
-    dlc_win=Window(dlc_grid)
-    Gtk.showall(dlc_win)
-    visible(dlc_win,false)
-    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button)
-
-    #=
-    Quick Buttons
-    =#
 
     win = Window(grid, "Whisker Tracker") |> Gtk.showall
 
@@ -420,11 +219,11 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     signal_connect(erase_cb,erase_button, "clicked",Void,(),false,(handles,))
     signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
-    signal_connect(combine_cb,combine_button,"clicked",Void,(),false,(handles,))
+
 
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
-    signal_connect(connect_cb,connect_button,"clicked",Void,(),false,(handles,))
+
     signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,1))
     signal_connect(touch_override_cb,touch_no_contact,"clicked",Void,(),false,(handles,0))
 
@@ -433,19 +232,6 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
 
     signal_connect(num_whiskers_cb,num_whiskers_sb,"value-changed",Void,(),false,(handles,))
 
-    #File Menus
-
-    make_menu_callbacks(discrete_menu_,discrete_win)
-    make_menu_callbacks(mask_menu_,mask_win)
-    make_menu_callbacks(pad_menu_,pad_win)
-    make_menu_callbacks(roi_menu_,roi_win)
-    make_menu_callbacks(pole_menu_,pole_win)
-    make_menu_callbacks(view_menu_,view_win)
-    make_menu_callbacks(manual_menu_,manual_win)
-    make_menu_callbacks(image_adjust_menu_,image_adj_win)
-    make_menu_callbacks(janelia_menu_,janelia_win)
-    make_menu_callbacks(dlc_menu_,dlc_win)
-
     #File Callbacks
     signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
@@ -453,56 +239,48 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     signal_connect(load_contact_cb,load_contact_,"activate",Void,(),false,(handles,))
 
     #Discrete Callbacks
-    signal_connect(discrete_distance_cb,discrete_space_button,"value-changed",Void,(),false,(handles,))
-    signal_connect(discrete_points_cb,discrete_max_points_button,"value-changed",Void,(),false,(handles,))
-    signal_connect(discrete_auto_cb,discrete_auto_calc,"clicked",Void,(),false,(handles,))
+    make_menu_callbacks(discrete_menu_,d_widgets.win)
+    add_discrete_callbacks(d_widgets,handles)
 
     #Mask Callbacks
-    signal_connect(mask_min_cb,mask_min_button,"value-changed",Void,(),false,(handles,))
-    signal_connect(mask_max_cb,mask_max_button,"value-changed",Void,(),false,(handles,))
-    signal_connect(mask_gen_cb,mask_gen_button,"clicked",Void,(),false,(handles,))
+    make_menu_callbacks(mask_menu_,m_widgets.win)
+    add_mask_callbacks(m_widgets,handles)
 
     #Pad Callbacks
-    signal_connect(pad_gen_cb,pad_gen_button,"clicked",Void,(),false,(handles,))
+    make_menu_callbacks(pad_menu_,p_widgets.win)
+    add_pad_callbacks(p_widgets,handles)
+
+    #ROI Callbacks
+    make_menu_callbacks(roi_menu_,r_widgets.win)
 
     #Pole Callbacks
-    signal_connect(pole_mode_cb,pole_mode_button,"clicked",Void,(),false,(handles,))
-    signal_connect(pole_select_cb,pole_gen_button,"clicked",Void,(),false,(handles,))
-    signal_connect(pole_auto_cb,pole_auto_button,"clicked",Void,(),false,(handles,))
-    signal_connect(pole_delete_cb,pole_delete_button,"clicked",Void,(),false,(handles,))
+    make_menu_callbacks(pole_menu_,pp_widgets.win)
+    add_pole_callbacks(pp_widgets,handles)
 
     #View Callbacks
-    signal_connect(view_whisker_pad_cb,view_whisker_pad_button,"clicked",Void,(),false,(handles,))
-    signal_connect(view_roi_cb,view_roi_button,"clicked",Void,(),false,(handles,))
-    signal_connect(view_pole_cb,view_pole_button,"clicked",Void,(),false,(handles,))
-    signal_connect(view_discrete_cb,view_discrete_button,"clicked",Void,(),false,(handles,))
-    signal_connect(view_whiskers_cb,view_tracked_button,"clicked",Void,(),false,(handles,))
+    make_menu_callbacks(view_menu_,v_widgets.win)
+    add_view_callbacks(v_widgets,handles)
+
+    #Tracing Callbacks
+    make_menu_callbacks(manual_menu_,man_widgets.win)
+    add_tracing_callbacks(man_widgets,handles)
 
     #Image Adjustment Callbacks
-    signal_connect(adjust_contrast_cb,contrast_min_slider,"value-changed",Void,(),false,(handles,))
-    signal_connect(adjust_contrast_cb,contrast_max_slider,"value-changed",Void,(),false,(handles,))
-    signal_connect(background_cb,background_button,"clicked",Void,(),false,(handles,))
-    signal_connect(sharpen_cb,sharpen_button,"clicked",Void,(),false,(handles,))
-    signal_connect(aniso_cb,aniso_button,"clicked",Void,(),false,(handles,))
-    signal_connect(local_contrast_cb,local_contrast_button,"clicked",Void,(),false,(handles,))
+    make_menu_callbacks(image_adjust_menu_,ia_widgets.win)
+    add_image_callbacks(ia_widgets,handles)
 
     #Janelia Tweaking Callbacks
-    signal_connect(jt_seed_thres_cb,janelia_seed_thres,"value-changed",Void,(),false,(handles,))
-    signal_connect(jt_seed_iterations_cb,janelia_seed_iterations,"value-changed",Void,(),false,(handles,))
+    make_menu_callbacks(janelia_menu_,j_widgets.win)
+    add_janelia_callbacks(j_widgets,handles)
 
     #DLC Callbacks
-    signal_connect(dlc_init_cb,dlc_create_button,"clicked",Void,(),false,(handles,))
-    signal_connect(dlc_export_cb,dlc_export_button,"clicked",Void,(),false,(handles,))
-    signal_connect(dlc_with_pole_cb,dlc_with_pole_button,"clicked",Void,(),false,(handles,))
+    make_menu_callbacks(dlc_menu_,deep_widgets.win)
+    add_dlc_callbacks(deep_widgets,handles)
 
     save_single_image(handles,vid[:,:,1],1)
 
     handles
 end
-
-#=
-Menu Buttons
-=#
 
 function make_menu_callbacks(menu,win)
 
@@ -513,230 +291,9 @@ function make_menu_callbacks(menu,win)
     end
 end
 
-#=
-Janelia Callbacks
-=#
-function jt_seed_thres_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    thres=getproperty(han.janelia_widgets.jt_seed_thres_button,:value,Float64)
-
-    change_JT_param(:paramSEED_THRESH,convert(Float32,thres))
-
-    nothing
-end
-
-function jt_seed_iterations_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    iterations=getproperty(han.janelia_widgets.jt_seed_iterations_button,:value,Int64)
-
-    change_JT_param(:paramSEED_ITERATIONS,convert(Int32,iterations))
-
-    nothing
-end
-
-#=
-DLC widgets
-=#
-
-function dlc_init_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-    my_wd=pwd()
-    cd(han.paths.DLC)
-    dlc_init(han.dlc,"WT",han.wt.vid_name)
-    cd(my_wd)
-
-    nothing
-end
-
-function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    my_working=pwd()
-
-    #Copy images to folder
-    #list of images
-    vid_folder_path=copy_images_to_dlc(han)
-
-    #Modify configuration file with right number of discrete points
-    num_segments=div(size(han.wt.w_p,1),2)
-    dlc_change_num_segments(han.dlc,num_segments,han.dlc.export_pole)
-
-    #Create h5 label_file
-    dlc_create_label_file(han.dlc,vid_folder_path)
-
-    #Put in new data values
-    if han.dlc.export_pole
-        out_val_x = zeros(Float64,num_segments+1,length(han.frame_list))
-        out_val_y = zeros(Float64,num_segments+1,length(han.frame_list))
-    else
-        out_val_x = zeros(Float64,num_segments,length(han.frame_list))
-        out_val_y = zeros(Float64,num_segments,length(han.frame_list))
-    end
-
-    ind=1
-    for i=1:num_segments
-        out_val_x[i,:] = han.wt.w_p[ind,:]
-        out_val_y[i,:] = han.wt.w_p[ind+1,:]
-        ind+=2
-    end
-
-    if han.dlc.export_pole
-        out_val_x[end,:] = han.pole_loc[:,1]
-        out_val_y[end,:] = han.pole_loc[:,2]
-    end
-
-    out_val_x[out_val_x .== 0] .= NaN
-    out_val_y[out_val_y .== 0] .= NaN
-
-    dlc_replace_discrete_points(han.dlc,vid_folder_path,num_segments,han.dlc.export_pole,out_val_x,out_val_y)
-
-    nothing
-end
-
-function copy_images_to_dlc(han)
-
-    #Copy images to folder
-    #list of images
-    image_paths=readdir(han.paths.images)
-
-    dlc_path = readdir(han.paths.DLC)[1]
-    labeled_data_path=string(han.paths.DLC,"/",dlc_path,"/labeled-data")
-    vid_folder_path=string(labeled_data_path,"/",readdir(labeled_data_path)[1])
-
-    for img in image_paths
-        cp(string(han.paths.images,"/",img),string(vid_folder_path,"/",img),force=true)
-    end
-
-    vid_folder_path
-end
-
-function dlc_with_pole_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.dlc.export_pole=getproperty(han.dlc_widgets.with_pole_button,:active,Bool)
-
-    nothing
-end
-
-#=
-Discrete Callbacks
-=#
-
 function redraw_all(han)
     plot_image(han,han.current_frame')
     plot_whiskers(han)
-end
-
-function discrete_distance_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    num_dist=getproperty(han.d_widgets.space_button,:value,Int)
-
-    han.d_spacing = num_dist
-
-    make_discrete_woi(han.wt,han.woi,han.tracked,num_dist)
-
-    redraw_all(han)
-
-    nothing
-end
-
-function discrete_points_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    num_points=getproperty(han.d_widgets.points_button,:value,Int)
-    num_dist=getproperty(han.d_widgets.space_button,:value,Int)
-
-    change_discrete_size(han.wt,num_points)
-    make_discrete_woi(han.wt,han.woi,han.tracked,num_dist)
-
-    redraw_all(han)
-
-    nothing
-
-end
-
-function discrete_auto_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.discrete_auto_calc=getproperty(han.d_widgets.calc_button,:active,Bool)
-
-    nothing
-end
-
-#=
-Mask Callbacks
-=#
-
-function mask_gen_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    redraw_all(han)
-    plot_mask(han)
-
-    nothing
-end
-
-function mask_min_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    mymin=getproperty(han.mask_widgets.min_button,:value,Int)
-    mymax=getproperty(han.mask_widgets.max_button,:value,Int)
-
-    generate_mask(han.wt,mymin,mymax,han.frame)
-
-    redraw_all(han)
-    plot_mask(han)
-
-    nothing
-end
-
-function mask_max_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    mymin=getproperty(han.mask_widgets.min_button,:value,Int)
-    mymax=getproperty(han.mask_widgets.max_button,:value,Int)
-
-    redraw_all(han)
-    generate_mask(han.wt,mymin,mymax,han.frame)
-
-    plot_mask(han)
-
-    nothing
-end
-
-#=
-Whisker Pad
-=#
-
-function pad_gen_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    if getproperty(han.pad_widgets.gen_button,:active,Bool)
-        han.selection_mode = 10
-        han.view_pad = true
-    else
-        han.selection_mode = 1
-        determine_viewers(han)
-    end
-
-    redraw_all(han)
-
-    nothing
 end
 
 function determine_viewers(han)
@@ -752,52 +309,6 @@ end
 #=
 Touch Functions
 =#
-
-function pole_mode_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    #Update DLC parameter file
-
-    nothing
-end
-
-function pole_select_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    if getproperty(han.pole_widgets.gen_button,:active,Bool)
-        han.selection_mode = 12
-        han.view_pole = true
-    else
-        han.selection_mode = 1
-        determine_viewers(han)
-    end
-
-    nothing
-end
-
-function pole_auto_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    pole_pos = dlc_extra_pole_location(han)
-
-    println("Acquired Pole Positions")
-
-    for i=1:size(han.pole_present,1)
-
-        if isnan(pole_pos[i,1])
-
-        else
-            han.pole_present[i] = true
-            han.pole_loc[i,1] = convert(Float32,pole_pos[i,1])
-            han.pole_loc[i,2] = convert(Float32,pole_pos[i,2])
-        end
-    end
-
-    nothing
-end
 
 function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
 
@@ -818,17 +329,6 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
     end
 
     draw_touch(han)
-
-    nothing
-end
-
-function pole_delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.pole_present[han.frame] = false
-
-    redraw_all(han)
 
     nothing
 end
@@ -865,53 +365,8 @@ function draw_touch(han::Tracker_Handles)
 end
 
 #=
-View Callbacks
-=#
-
-function view_whisker_pad_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-    han.view_pad = getproperty(han.view_widgets.whisker_pad_button,:active,Bool)
-    redraw_all(han)
-    nothing
-end
-
-function view_roi_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-    han.view_roi = getproperty(han.view_widgets.roi_button,:active,Bool)
-    redraw_all(han)
-    nothing
-end
-
-function view_pole_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-    han.view_pole = getproperty(han.view_widgets.pole_button,:active,Bool)
-    redraw_all(han)
-    nothing
-end
-
-function view_discrete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-    han.discrete_draw = getproperty(han.view_widgets.discrete_button,:active,Bool)
-    redraw_all(han)
-    nothing
-end
-
-function view_whiskers_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-    han.show_tracked = getproperty(han.view_widgets.tracked_button,:active,Bool)
-    redraw_all(han)
-    nothing
-end
-
-#=
 Frame Drawing
 =#
-
 function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -1295,105 +750,7 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function adjust_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
-    han, = user_data
-
-    try
-
-        han.wt.contrast_min = getproperty(han.image_adj_widgets.adj_contrast_min,:value,Int64)
-        han.wt.contrast_max = getproperty(han.image_adj_widgets.adj_contrast_max,:value,Int64)
-
-        adjust_contrast_gui(han)
-
-        plot_image(han,han.current_frame')
-
-    catch
-        println("Error while adjusting contrast")
-    end
-
-    nothing
-end
-
-function background_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.background_mode = getproperty(han.image_adj_widgets.background_button,:active,Bool)
-
-    nothing
-end
-
-function sharpen_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.sharpen_mode = getproperty(han.image_adj_widgets.sharpen_button,:active,Bool)
-
-    nothing
-end
-
-function aniso_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.anisotropic_mode = getproperty(han.image_adj_widgets.anisotropic_button,:active,Bool)
-
-    nothing
-end
-
-function local_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.local_contrast_mode = getproperty(han.image_adj_widgets.local_contrast_button,:active,Bool)
-
-    nothing
-end
-
-#=
-Adds points from current whisker of interest to
-follicle position from last frame.
-
-This is a weird special case and can probably be eliminated
-=#
-function connect_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    try
-
-        if han.tracked[han.frame-1]
-            x_1=han.woi[han.frame-1].x[end]
-            y_1=han.woi[han.frame-1].y[end]
-            thick_1=han.woi[han.frame-1].thick[end]
-            scores_1=han.woi[han.frame-1].scores[end]
-        end
-
-        dist=round(Int64,sqrt((han.wt.whiskers[han.woi_id].x[end]-x_1)^2+(han.wt.whiskers[han.woi_id].y[end]-y_1)^2))
-
-        xs=linspace(han.wt.whiskers[han.woi_id].x[end],x_1,dist)
-        ys=linspace(han.wt.whiskers[han.woi_id].y[end],y_1,dist)
-
-        for i=2:length(xs)
-            push!(han.wt.whiskers[han.woi_id].x,xs[i])
-            push!(han.wt.whiskers[han.woi_id].y,ys[i])
-            push!(han.wt.whiskers[han.woi_id].thick,thick_1)
-            push!(han.wt.whiskers[han.woi_id].scores,scores_1)
-        end
-
-        han.wt.whiskers[han.woi_id].len=length(han.wt.whiskers[han.woi_id].x)
-
-        plot_whiskers(han)
-
-        assign_woi(han)
-
-    catch
-        println("Could not connect to pad")
-    end
-
-    nothing
-end
 
 function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
@@ -1441,14 +798,6 @@ function draw_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function combine_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.combine_mode = getproperty(han.manual_widgets.combine_button,:active,Bool)
-
-    nothing
-end
 
 function plot_image(han,img)
 
@@ -1600,76 +949,6 @@ function select_pole_location(han,x,y)
     redraw_all(han)
 end
 
-function combine_start(han,x,y)
-
-    println("start")
-    han.partial = deepcopy(han.wt.whiskers[han.woi_id])
-    han.combine_mode = 2
-
-    nothing
-end
-
-ccw(x1,x2,x3,y1,y2,y3)=(y3-y1) * (x2-x1) > (y2-y1) * (x3-x1)
-
-function intersect(x1,x2,x3,x4,y1,y2,y3,y4)
-    (ccw(x1,x3,x4,y1,y3,y4) != ccw(x2,x3,x4,y2,y3,y4))&&(ccw(x1,x2,x3,y1,y2,y3) != ccw(x1,x2,x4,y1,y2,y4))
-end
-
-function combine_end(han,x,y)
-
-    out1=1
-    out2=1
-
-    for i=2:han.partial.len
-        for j=2:han.wt.whiskers[han.woi_id].len
-            if intersect(han.partial.x[i-1],han.partial.x[i],han.wt.whiskers[han.woi_id].x[j-1],
-            han.wt.whiskers[han.woi_id].x[j],han.partial.y[i-1],han.partial.y[i],
-            han.wt.whiskers[han.woi_id].y[j-1],han.wt.whiskers[han.woi_id].y[j])
-                out1=i
-                out2=j
-                break
-            end
-        end
-    end
-
-    if out1==1
-        println("No intersection found, looking for closest match")
-
-        for i=2:han.partial.len
-            for j=2:han.wt.whiskers[han.woi_id].len
-                if sqrt((han.partial.x[i]-han.wt.whiskers[han.woi_id].x[j]).^2+(han.partial.y[i]-han.wt.whiskers[han.woi_id].y[j]).^2)<2.0
-                    out1=i
-                    out2=j
-                    break
-                end
-            end
-        end
-    end
-
-    if out1>1
-        println("Segments combined")
-        new_x = [han.wt.whiskers[han.woi_id].x[1:out2]; han.partial.x[out1:end]]
-        new_y = [han.wt.whiskers[han.woi_id].y[1:out2]; han.partial.y[out1:end]]
-        new_scores = [han.wt.whiskers[han.woi_id].scores[1:out2]; han.partial.scores[out1:end]]
-        new_thick = [han.wt.whiskers[han.woi_id].thick[1:out2]; han.partial.thick[out1:end]]
-        han.woi[han.frame].x=new_x
-        han.woi[han.frame].y=new_y
-        han.woi[han.frame].thick=new_thick
-        han.woi[han.frame].scores=new_scores
-        han.woi[han.frame].len = length(new_thick)
-
-        if han.discrete_auto_calc
-            make_discrete(han.wt.w_p,han.frame,han.woi[han.frame],han.d_spacing)
-        end
-    else
-        println("No intersection found")
-    end
-
-    han.combine_mode = 1
-    redraw_all(han)
-
-    nothing
-end
 
 function draw_start(han,x,y)
 
