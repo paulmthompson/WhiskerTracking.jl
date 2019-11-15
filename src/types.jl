@@ -234,9 +234,11 @@ mutable struct Save_Paths
     DLC::String
 end
 
-function Save_Paths(mypath)
+function Save_Paths(mypath,make_dirs=true)
 
-    mkdir(mypath)
+    if make_dirs
+        mkdir(mypath)
+    end
 
     if is_windows()
         mypath=string(".\\",mypath)
@@ -246,10 +248,12 @@ function Save_Paths(mypath)
         out=Save_Paths(mypath,string(mypath,"/temp"),string(mypath,"/images"),string(mypath,"/backup"),string(mypath,"/DLC"))
     end
 
-    mkdir(out.temp)
-    mkdir(out.images)
-    mkdir(out.backup)
-    mkdir(out.DLC)
+    if make_dirs
+        mkdir(out.temp)
+        mkdir(out.images)
+        mkdir(out.backup)
+        mkdir(out.DLC)
+    end
 
     out
 end

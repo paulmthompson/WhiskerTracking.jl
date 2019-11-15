@@ -1,12 +1,9 @@
 
 export make_gui
 
-function make_gui(path,vid_title;frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
-    make_gui(path,vid_title,""; frame_range = frame_range, image_stack=image_stack, dynamic_load=dynamic_load)
-end
+function load_video_to_gui(path,vid_title,handles,;frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
 
-function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
-
+    name=""
     vid_name = string(path,vid_title)
     whisk_path = string(path,name,".whiskers")
     meas_path = string(path,name,".measurements")
@@ -33,12 +30,41 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
         end
     end
 
-    yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
-    if is_windows()
-        max_frames=parse(Int64,String(yy[1:(end-2)]))
-    else
-        max_frames=parse(Int64,String(yy[1:(end-1)]))
-    end
+    handles.max_frames = get_max_frames(vid_name)
+
+    #Adjust Frame Slider Scale
+    Gtk.GAccessor.range(handles.frame_slider,1,handles.max_frames)
+
+    all_whiskers=[Array{Whisker1,1}() for i=1:vid_length]
+
+    tracker_name = (vid_name)[1:(end-4)]
+
+    handles.wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
+    (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
+
+    #Update these paths
+    t_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
+    these_paths = Save_Paths(t_folder)
+    handles.paths = these_paths
+
+    save_single_image(handles,vid[:,:,1],1)
+
+    nothing
+end
+
+function make_gui()
+
+    name=""
+    path=""
+    vid_name = ""
+    whisk_path = ""
+    meas_path = ""
+
+    max_frames = 2
+    vid_length = 1
+    vid=zeros(UInt8,480,640,1)
+    frame_list = [1]
+    start_frame = 1
 
     c=Canvas(640,480)
 
@@ -190,16 +216,13 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
     (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
 
-    sleep(5.0)
-
     if VERSION > v"0.7-"
         woi_array = Array{Whisker1,1}(undef,vid_length)
     else
         woi_array = Array{Whisker1,1}(vid_length)
     end
 
-    t_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-    these_paths = Save_Paths(t_folder)
+    these_paths = Save_Paths("",false)
 
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
     vid[:,:,1],zeros(UInt8,640,480),0,woi_array,1,num_whiskers_sb,1,
@@ -277,8 +300,6 @@ function make_gui(path,vid_title,name; frame_range = (false,0.0,0),image_stack=f
     make_menu_callbacks(dlc_menu_,deep_widgets.win)
     add_dlc_callbacks(deep_widgets,handles)
 
-    save_single_image(handles,vid[:,:,1],1)
-
     handles
 end
 
@@ -304,6 +325,18 @@ function determine_viewers(han)
     han.discrete_draw = getproperty(han.view_widgets.discrete_button,:active,Bool)
 
     nothing
+end
+
+function get_max_frames(vid_name)
+
+    yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
+    if is_windows()
+        max_frames=parse(Int64,String(yy[1:(end-2)]))
+    else
+        max_frames=parse(Int64,String(yy[1:(end-1)]))
+    end
+
+    max_frames
 end
 
 #=
