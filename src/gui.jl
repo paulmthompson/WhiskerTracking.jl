@@ -73,6 +73,9 @@ function make_gui()
     load_video_ = MenuItem("Load Video")
     push!(sortmenu,load_video_)
 
+    load_dlc_whiskers_ = MenuItem("Load DLC Tracked Whiskers")
+    push!(sortmenu,load_dlc_whiskers_)
+
     save_whisk_ = MenuItem("Save Whiskers")
     push!(sortmenu,save_whisk_)
     load_whisk_ = MenuItem("Load Whiskers")
@@ -210,6 +213,7 @@ function make_gui()
 
     #File Callbacks
     signal_connect(load_video_cb, load_video_, "activate",Void,(),false,(handles,))
+    signal_connect(load_dlc_tracked_cb,load_dlc_whiskers_,"activate",Void,(),false,(handles,))
     signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(save_contact_cb,save_contact_,"activate",Void,(),false,(handles,))
@@ -342,6 +346,23 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     handles.paths = these_paths
 
     save_single_image(handles,vid[:,:,1],1)
+
+    nothing
+end
+
+function load_dlc_tracked_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = open_dialog("Load DLC Whisker File",han.win)
+
+    if filepath != ""
+        (xxx,yyy,lll)=dlc_hd5_to_array(filepath,0.2,true);
+        dlc_smooth_liklihood(xxx,yyy,15,lll,50.0)
+        han.tracked_whiskers_x=xxx
+        han.tracked_whiskers_y=yyy
+        han.tracked_whiskers_l=lll;
+    end
 
     nothing
 end

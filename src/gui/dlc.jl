@@ -26,7 +26,7 @@ function _make_dlc_gui()
     Gtk.showall(dlc_win)
     visible(dlc_win,false)
 
-    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button,check_labels_button)
+    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button,dlc_check_labels_button)
 end
 
 function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
@@ -91,6 +91,15 @@ function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     out_val_y[out_val_y .== 0] .= NaN
 
     dlc_replace_discrete_points(han.dlc,vid_folder_path,num_segments,han.dlc.export_pole,out_val_x,out_val_y)
+
+    nothing
+end
+
+function dlc_check_labels_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    dlc_check_labels(han.dlc)
 
     nothing
 end
