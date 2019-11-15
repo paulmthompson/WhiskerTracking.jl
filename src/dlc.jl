@@ -26,7 +26,8 @@ function dlc_create_label_file(dlc::DLC_Wrapper,label_path)
 end
 
 function dlc_check_labels(dlc::DLC_Wrapper)
-    dlc_py[:label_frames](dlc.config_path)
+    #This doesn't work
+    #dlc_module[:label_frames](dlc.config_path)
 end
 
 function dlc_replace_discrete_points(dlc::DLC_Wrapper,label_path,num,pole,pointx,pointy)
