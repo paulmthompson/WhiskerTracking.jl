@@ -27,14 +27,11 @@ To begin, follow these steps:
   .. code-block:: julia
 
     using WhiskerTracking
-    data_path="/home/wanglab/Programs/WhiskerTask/Test_2019-11-12/" #Name of video folder
-    video_name = "output.mp4" #Name of video
-    myhandles=make_gui(data_path,video_name);
+    myhandles=make_gui();
 
-#. Change "data_path" to name of folder for video analysis
 #. Run the cells
 #. The GUI will appear. Wait until the notebook shows it has stopped running to proceed
-#. Use the arrow keys right and left to load the first image
+#. Click on File --> Load Video and navigate to your video file. Your video should load and the first frame will appear.
 
 **********************
 1. Define Whisker Pad
