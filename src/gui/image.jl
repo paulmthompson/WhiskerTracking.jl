@@ -37,7 +37,7 @@ function _make_image_gui()
     background_button,sharpen_button,aniso_button,local_contrast_button)
 end
 
-function add_image_callbacks(w,handles)
+function add_image_callbacks(w::image_adj_widgets,handles::Tracker_Handles)
 
     signal_connect(adjust_contrast_cb,w.contrast_min_slider,"value-changed",Void,(),false,(handles,))
     signal_connect(adjust_contrast_cb,w.contrast_max_slider,"value-changed",Void,(),false,(handles,))

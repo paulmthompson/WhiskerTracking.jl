@@ -1,57 +1,6 @@
 
 export make_gui
 
-function load_video_to_gui(path,vid_title,handles,;frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
-
-    name=""
-    vid_name = string(path,vid_title)
-    whisk_path = string(path,name,".whiskers")
-    meas_path = string(path,name,".measurements")
-
-    if (dynamic_load)
-        #load first frame
-        vid=zeros(UInt8,480,640,1)
-        temp=zeros(UInt8,640,480)
-        frame_time = 1  /  25 #Number of frames in a second of video
-        try
-            load_single_frame(frame_time,temp,vid_name)
-            vid[:,:,1] = temp'
-        catch
-        end
-        vid_length = 1
-        frame_list=[1]
-        start_frame=1
-    else
-        if !image_stack
-            (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
-            frame_list=Array{Int64,1}()
-        else
-            (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
-        end
-    end
-
-    handles.max_frames = get_max_frames(vid_name)
-
-    #Adjust Frame Slider Scale
-    Gtk.GAccessor.range(handles.frame_slider,1,handles.max_frames)
-
-    all_whiskers=[Array{Whisker1,1}() for i=1:vid_length]
-
-    tracker_name = (vid_name)[1:(end-4)]
-
-    handles.wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
-    (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
-
-    #Update these paths
-    t_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
-    these_paths = Save_Paths(t_folder)
-    handles.paths = these_paths
-
-    save_single_image(handles,vid[:,:,1],1)
-
-    nothing
-end
-
 function make_gui()
 
     name=""
@@ -120,6 +69,10 @@ function make_gui()
     mb = MenuBar()
     sortopts = MenuItem("_File")
     sortmenu = Menu(sortopts)
+
+    load_video_ = MenuItem("Load Video")
+    push!(sortmenu,load_video_)
+
     save_whisk_ = MenuItem("Save Whiskers")
     push!(sortmenu,save_whisk_)
     load_whisk_ = MenuItem("Load Whiskers")
@@ -256,6 +209,7 @@ function make_gui()
     signal_connect(num_whiskers_cb,num_whiskers_sb,"value-changed",Void,(),false,(handles,))
 
     #File Callbacks
+    signal_connect(load_video_cb, load_video_, "activate",Void,(),false,(handles,))
     signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(save_contact_cb,save_contact_,"activate",Void,(),false,(handles,))
@@ -312,12 +266,12 @@ function make_menu_callbacks(menu,win)
     end
 end
 
-function redraw_all(han)
+function redraw_all(han::Tracker_Handles)
     plot_image(han,han.current_frame')
     plot_whiskers(han)
 end
 
-function determine_viewers(han)
+function determine_viewers(han::Tracker_Handles)
 
     han.view_pad = getproperty(han.view_widgets.whisker_pad_button,:active,Bool)
     han.view_roi = getproperty(han.view_widgets.roi_button,:active,Bool)
@@ -327,7 +281,72 @@ function determine_viewers(han)
     nothing
 end
 
-function get_max_frames(vid_name)
+function load_video_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = open_dialog("Load Whisker Tracking",han.win)
+
+    if filepath != ""
+
+        (path,vid_title) = splitdir(filepath)
+        load_video_to_gui(string(path,"/"),vid_title,han)
+    end
+    nothing
+end
+
+function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handles;frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
+
+    name=""
+    vid_name = string(path,vid_title)
+    whisk_path = string(path,name,".whiskers")
+    meas_path = string(path,name,".measurements")
+
+    if (dynamic_load)
+        #load first frame
+        vid=zeros(UInt8,480,640,1)
+        temp=zeros(UInt8,640,480)
+        frame_time = 1  /  25 #Number of frames in a second of video
+        try
+            load_single_frame(frame_time,temp,vid_name)
+            vid[:,:,1] = temp'
+        catch
+        end
+        vid_length = 1
+        frame_list=[1]
+        start_frame=1
+    else
+        if !image_stack
+            (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
+            frame_list=Array{Int64,1}()
+        else
+            (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
+        end
+    end
+
+    handles.max_frames = get_max_frames(vid_name)
+
+    #Adjust Frame Slider Scale
+    Gtk.GAccessor.range(handles.frame_slider,1,handles.max_frames)
+
+    all_whiskers=[Array{Whisker1,1}() for i=1:vid_length]
+
+    tracker_name = (vid_name)[1:(end-4)]
+
+    handles.wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
+    (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
+
+    #Update these paths
+    t_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
+    these_paths = Save_Paths(t_folder)
+    handles.paths = these_paths
+
+    save_single_image(handles,vid[:,:,1],1)
+
+    nothing
+end
+
+function get_max_frames(vid_name::String)
 
     yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
     if is_windows()

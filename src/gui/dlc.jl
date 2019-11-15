@@ -26,7 +26,7 @@ function _make_dlc_gui()
     deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button)
 end
 
-function add_dlc_callbacks(w,handles)
+function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
 
     signal_connect(dlc_init_cb,w.create_button,"clicked",Void,(),false,(handles,))
     signal_connect(dlc_export_cb,w.export_button,"clicked",Void,(),false,(handles,))
@@ -91,7 +91,7 @@ function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function copy_images_to_dlc(han)
+function copy_images_to_dlc(han::Tracker_Handles)
 
     #Copy images to folder
     #list of images

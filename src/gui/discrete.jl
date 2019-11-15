@@ -20,7 +20,7 @@ function _make_discrete_gui()
     d_widgets=discrete_widgets(discrete_win,discrete_space_button,discrete_max_points_button,discrete_auto_calc)
 end
 
-function add_discrete_callbacks(w,handles)
+function add_discrete_callbacks(w::discrete_widgets,handles::Tracker_Handles)
 
     signal_connect(discrete_distance_cb,w.space_button,"value-changed",Void,(),false,(handles,))
     signal_connect(discrete_points_cb,w.points_button,"value-changed",Void,(),false,(handles,))
