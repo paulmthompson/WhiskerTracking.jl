@@ -13,17 +13,20 @@ function _make_dlc_gui()
     dlc_with_pole_button=CheckButton("With Pole")
     dlc_grid[2,3] = dlc_with_pole_button
 
+    dlc_check_labels_button=Button("Check Labels")
+    dlc_grid[1,4] = dlc_check_labels_button
+
     dlc_train_button=Button("Train")
-    dlc_grid[1,4] = dlc_train_button
+    dlc_grid[1,5] = dlc_train_button
 
     dlc_analyze_button=Button("Analyze")
-    dlc_grid[1,5] = dlc_analyze_button
+    dlc_grid[1,6] = dlc_analyze_button
 
     dlc_win=Window(dlc_grid)
     Gtk.showall(dlc_win)
     visible(dlc_win,false)
 
-    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button)
+    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button,check_labels_button)
 end
 
 function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
@@ -31,6 +34,7 @@ function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
     signal_connect(dlc_init_cb,w.create_button,"clicked",Void,(),false,(handles,))
     signal_connect(dlc_export_cb,w.export_button,"clicked",Void,(),false,(handles,))
     signal_connect(dlc_with_pole_cb,w.with_pole_button,"clicked",Void,(),false,(handles,))
+    signal_connect(dlc_check_labels_cb,w.check_labels_button,"clicked",Void,(),false,(handles,))
 end
 
 

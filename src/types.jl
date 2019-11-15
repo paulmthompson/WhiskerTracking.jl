@@ -215,6 +215,7 @@ mutable struct dlc_widgets
     with_pole_button::Gtk.GtkCheckButtonLeaf
     train_button::Gtk.GtkButtonLeaf
     analyze_button::Gtk.GtkButtonLeaf
+    check_labels_button::Gtk.GtkButtonLeaf
 end
 
 mutable struct DLC_Wrapper
