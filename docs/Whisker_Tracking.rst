@@ -121,9 +121,7 @@ outputs the data into a format that deeplabcut can use, and initalizes the netwo
 #. Click the "Initialize" button (the jupyter notebook will have some output)
 #. Check the "with pole button"
 #. Click the "export" button
-#. The data folder should be created in the ~/Documents/Analysis_Scripts folder in a new folder with the date
-#. When you enter this new folder, the whisker tracking data will be in the DLC folder. Enter it to find the config.yaml.
-#. Copy the name of this directory
+#. 
 
 *********************
 7. Train the network

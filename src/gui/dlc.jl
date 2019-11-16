@@ -64,9 +64,13 @@ function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
     signal_connect(dlc_export_cb,w.export_button,"clicked",Void,(),false,(handles,))
     signal_connect(dlc_with_pole_cb,w.with_pole_button,"clicked",Void,(),false,(handles,))
     signal_connect(dlc_create_training_cb,w.create_training_button,"clicked",Void,(),false,(handles,))
+    signal_connect(dlc_load_weights_cb,w.load_weights_button,"clicked",Void,(),false,(handles,))
+    signal_connect(dlc_train_network_cb,w.train_button,"clicked",Void,(),false,(handles,))
+
+
     signal_connect(dlc_select_network_cb,w.select_network_button,"clicked",Void,(),false,(handles,))
 
-    signal_connect(dlc_load_weights_cb,w.load_weights_button,"clicked",Void,(),false,(handles,))
+
 
 end
 
@@ -160,6 +164,15 @@ function dlc_create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     #Call deeplabcut to create training dataset
     dlc_create_training(han.dlc)
+
+    nothing
+end
+
+function dlc_train_network_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    dlc_start_training(han.dlc)
 
     nothing
 end

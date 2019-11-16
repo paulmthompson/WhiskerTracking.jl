@@ -29,6 +29,10 @@ function dlc_create_training(dlc::DLC_Wrapper)
     dlc_module[:create_training_dataset](dlc.config_path)
 end
 
+function dlc_start_training(dlc::DLC_Wrapper)
+    dlc_module[:train_network](dlc.config_path,maxiters=200000)
+end
+
 function dlc_replace_discrete_points(dlc::DLC_Wrapper,label_path,num,pole,pointx,pointy)
 
     whisker_body_parts=[string(i) for i=1:num]
