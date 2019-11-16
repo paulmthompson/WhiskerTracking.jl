@@ -80,10 +80,7 @@ function make_gui()
     push!(sortmenu,save_whisk_)
     load_whisk_ = MenuItem("Load Whiskers")
     push!(sortmenu,load_whisk_)
-    save_contact_ = MenuItem("Save Contact Detection")
-    push!(sortmenu,save_contact_)
-    load_contact_ = MenuItem("Load Contact Detection")
-    push!(sortmenu,load_contact_)
+
     export_menu_ = MenuItem("Export...")
     push!(sortmenu,export_menu_)
 
@@ -123,6 +120,17 @@ function make_gui()
     push!(imagemenu,image_adjust_menu_)
 
     push!(mb,imageopts)
+
+    contactopts = MenuItem("_Contact Detection")
+    contactmenu = Menu(contactopts)
+    save_contact_ = MenuItem("Save Contact Labels")
+    push!(contactmenu,save_contact_)
+    load_contact_ = MenuItem("Load Contact Labels")
+    push!(contactmenu,load_contact_)
+    classifier_ = MenuItem("Classifier for Prediction")
+    push!(contactmenu,classifier_)
+
+    push!(mb,contactopts)
 
     otheropts = MenuItem("_Other Programs")
     othermenu = Menu(otheropts)
@@ -168,6 +176,8 @@ function make_gui()
     #Export options
     e_widgets = _make_export_gui()
 
+    #contact options
+    c_widgets = _make_contact_gui()
 
     win = Window(grid, "Whisker Tracker") |> Gtk.showall
 
@@ -194,7 +204,7 @@ function make_gui()
     falses(0),Array{Int64,1}(),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,e_widgets,
-    falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
+    c_widgets,falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
     false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),zeros(Float64,1,1),DLC_Wrapper(),these_paths)
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
@@ -267,6 +277,10 @@ function make_gui()
     #Export
     make_menu_callbacks(export_menu_,e_widgets.win)
     add_export_callbacks(e_widgets,handles)
+
+    #Contact
+    make_menu_callbacks(contactmenu,c_widgets.win)
+    add_contact_callbacks(c_widgets,handles)
 
     handles
 end

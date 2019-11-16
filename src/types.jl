@@ -231,6 +231,12 @@ mutable struct export_widgets
     export_button::Gtk.GtkButtonLeaf
 end
 
+mutable struct contact_widgets
+    win::Gtk.GtkWindowLeaf
+    training_num_label::Gtk.GtkLabelLeaf
+    fit_button::Gtk.GtkButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     config_path::String
     export_pole::Bool
@@ -350,6 +356,7 @@ mutable struct Tracker_Handles
     janelia_widgets::janelia_widgets
     dlc_widgets::dlc_widgets
     export_widgets::export_widgets
+    contact_widgets::contact_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}

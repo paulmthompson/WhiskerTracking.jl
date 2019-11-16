@@ -92,6 +92,7 @@ include("gui/image.jl")
 include("gui/janelia.jl")
 include("gui/dlc.jl")
 include("gui/export.jl")
+include("gui/contact.jl")
 
 include("analysis/forces.jl")
 include("analysis/touch.jl")
