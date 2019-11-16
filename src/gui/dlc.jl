@@ -2,31 +2,60 @@
 function _make_dlc_gui()
 
     dlc_grid=Grid()
-    dlc_grid[1,1]=Label("DeepLabCut")
+    new_frame = Frame("Create New Network")
+    dlc_grid[1,1]=new_frame
+    new_grid=Grid()
+
+    push!(new_frame,new_grid)
 
     dlc_create_button=Button("Initialize")
-    dlc_grid[1,2] = dlc_create_button
+    new_grid[1,1] = dlc_create_button
 
     dlc_export_button=Button("Export")
-    dlc_grid[1,3] = dlc_export_button
+    new_grid[1,2] = dlc_export_button
 
     dlc_with_pole_button=CheckButton("With Pole")
-    dlc_grid[2,3] = dlc_with_pole_button
+    new_grid[2,2] = dlc_with_pole_button
 
-    dlc_check_labels_button=Button("Check Labels")
-    dlc_grid[1,4] = dlc_check_labels_button
+    create_training_button=Button("Create Training Data")
+    new_grid[1,3]=create_training_button
 
     dlc_train_button=Button("Train")
-    dlc_grid[1,5] = dlc_train_button
+    new_grid[1,4] = dlc_train_button
+
+    weights_frame = Frame("Starting Network Weights")
+    weights_grid=Grid()
+    push!(weights_frame,weights_grid)
+    new_grid[2,4]=weights_frame
+
+    dlc_weights_label=Label("Default Resnet from DLC")
+    weights_grid[1,1]=dlc_weights_label
+
+    update_weights_button = Button("Load")
+    weights_grid[2,1] = update_weights_button
+
+    dlc_grid[2,1] = Label("Use labeled data currently in GUI to train a new neural network specifically \n for this dataset")
+
+
+    analyze_frame = Frame("Analyze Data")
+    analyze_grid = Grid()
+    push!(analyze_frame,analyze_grid)
+    dlc_grid[1,2]=analyze_frame
+
+    select_network_button=Button("Select Network")
+    analyze_grid[1,1]=select_network_button
 
     dlc_analyze_button=Button("Analyze")
-    dlc_grid[1,6] = dlc_analyze_button
+    analyze_grid[1,2] = dlc_analyze_button
+
+    dlc_grid[2,2] = Label("Use a neural network to find the whisker of interest in the currently loaded video")
 
     dlc_win=Window(dlc_grid)
     Gtk.showall(dlc_win)
     visible(dlc_win,false)
 
-    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button,dlc_check_labels_button)
+    deep_widgets=dlc_widgets(dlc_win,dlc_create_button,dlc_export_button,dlc_with_pole_button,dlc_train_button,dlc_analyze_button,
+    dlc_weights_label,update_weights_button,create_training_button,select_network_button)
 end
 
 function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
@@ -34,7 +63,11 @@ function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
     signal_connect(dlc_init_cb,w.create_button,"clicked",Void,(),false,(handles,))
     signal_connect(dlc_export_cb,w.export_button,"clicked",Void,(),false,(handles,))
     signal_connect(dlc_with_pole_cb,w.with_pole_button,"clicked",Void,(),false,(handles,))
-    signal_connect(dlc_check_labels_cb,w.check_labels_button,"clicked",Void,(),false,(handles,))
+    signal_connect(dlc_create_training_cb,w.create_training_button,"clicked",Void,(),false,(handles,))
+    signal_connect(dlc_select_network_cb,w.select_network_button,"clicked",Void,(),false,(handles,))
+
+    signal_connect(dlc_load_weights_cb,w.load_weights_button,"clicked",Void,(),false,(handles,))
+
 end
 
 
@@ -126,6 +159,38 @@ function dlc_with_pole_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.dlc.export_pole=getproperty(han.dlc_widgets.with_pole_button,:active,Bool)
+
+    nothing
+end
+
+function dlc_create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    #Call deeplabcut to create training dataset
+
+    nothing
+end
+
+function dlc_select_network_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    #Change the configuration file to use.
+
+    nothing
+end
+
+function dlc_load_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    filepath = open_dialog("Load Weights",han.win)
+
+    setproperty!(han.dlc_widgets.weights_label,:label,filepath[(end-20):end])
+
+    han.dlc.starting_weights = filepath
+    #Need to change the pose_cfg file
 
     nothing
 end

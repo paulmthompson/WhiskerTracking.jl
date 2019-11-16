@@ -217,7 +217,10 @@ mutable struct dlc_widgets
     with_pole_button::Gtk.GtkCheckButtonLeaf
     train_button::Gtk.GtkButtonLeaf
     analyze_button::Gtk.GtkButtonLeaf
-    check_labels_button::Gtk.GtkButtonLeaf
+    weights_label::Gtk.GtkLabelLeaf
+    load_weights_button::Gtk.GtkButtonLeaf
+    create_training_button::Gtk.GtkButtonLeaf
+    select_network_button::Gtk.GtkButtonLeaf
 end
 
 mutable struct export_widgets
@@ -231,10 +234,11 @@ end
 mutable struct DLC_Wrapper
     config_path::String
     export_pole::Bool
+    starting_weights::String
 end
 
 function DLC_Wrapper()
-    DLC_Wrapper("",false)
+    DLC_Wrapper("",false,"")
 end
 
 mutable struct Save_Paths
