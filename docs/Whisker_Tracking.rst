@@ -132,4 +132,35 @@ outputs the data into a format that deeplabcut can use, and initalizes the netwo
 This step will train the neural network to detect the discrete points along the whisker. This step takes approximately
 *6 hours*, so set aside time accordingly.
 
-#. 
+#.
+
+***********************
+8. Analyze Entire Video
+***********************
+
+Once you have a trained neural network, you can use it to predict the whisker point locations for all of the frames
+in your video.
+
+#.
+
+**********************
+9. Visualize Results
+**********************
+
+Now whisker traces have been found for each frame in the video. You can load these whisker traces into the GUI to
+inspect their accuracy.
+
+#. Go to File -> "Load DLC Tracked Whiskers"
+#. Go to Extras -> Viewer and click the "Tracked Whiskers" checkbox.
+#. Scroll through your video and inspect how well the tracking performed.
+
+**********************
+10. Process and Export
+**********************
+
+Once you have acceptable whisker labels, you can calculate meaningful kinematic and mechanical quantities, and
+export these to a .mat file for future analysis.
+
+#. Go to File -> Export...
+#. Select the quantities you would like to calculate from your whisker traces
+#. Click "Export!" to generate an "output.mat" file in the same directory as your video. This may take >5 minutes to complete

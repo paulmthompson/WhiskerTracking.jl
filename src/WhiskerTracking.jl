@@ -1,5 +1,5 @@
 if VERSION > v"0.7-"
-    #__precompile__(false)
+    __precompile__(false)
 else
 
 end
