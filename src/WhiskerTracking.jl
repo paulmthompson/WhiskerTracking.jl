@@ -7,7 +7,7 @@ end
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot, PyCall, LinearAlgebra
+Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles
 
 if VERSION > v"0.7-"
     using SharedArrays, Libdl, Dates

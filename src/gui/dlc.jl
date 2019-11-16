@@ -128,15 +128,6 @@ function dlc_export_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function dlc_check_labels_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    dlc_check_labels(han.dlc)
-
-    nothing
-end
-
 function copy_images_to_dlc(han::Tracker_Handles)
 
     #Copy images to folder
@@ -168,6 +159,7 @@ function dlc_create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     #Call deeplabcut to create training dataset
+    dlc_create_training(han.dlc)
 
     nothing
 end
@@ -187,10 +179,35 @@ function dlc_load_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     filepath = open_dialog("Load Weights",han.win)
 
-    setproperty!(han.dlc_widgets.weights_label,:label,filepath[(end-20):end])
+    try
+        #Remove .index
+        filepath = filepath[1:(end-5)]
 
-    han.dlc.starting_weights = filepath
-    #Need to change the pose_cfg file
+        setproperty!(han.dlc_widgets.weights_label,:label,filepath[(end-20):end])
+
+        han.dlc.starting_weights = filepath
+        model_path=string(han.paths.DLC,"dlc-models")
+        iter_path=readdir(model_path)[1]
+        training_dir=readdir(string(model_path,"/",iter_path))[1]
+        pose_cfg_path=string(model_path,"/",iter_path,"/",training_dir,"/train/pose_cfg.yaml")
+
+        f = open(pose_cfg_path)
+        out=readlines(f)
+        close(f)
+
+        for i=1:length(out)
+            if out[i][1:5] == "init_"
+                println(i)
+                out[i] = string("init_weights: ",filepath)
+            end
+        end
+
+        ff=open(pose_cfg_path,"w")
+        writedlm(ff,out)
+        close(ff)
+    catch
+        println("Could not update weights")
+    end
 
     nothing
 end

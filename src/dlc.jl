@@ -25,9 +25,8 @@ function dlc_create_label_file(dlc::DLC_Wrapper,label_path)
     dlc_py[:create_label_hdf5](dlc.config_path,label_path)
 end
 
-function dlc_check_labels(dlc::DLC_Wrapper)
-    #This doesn't work
-    #dlc_module[:label_frames](dlc.config_path)
+function dlc_create_training(dlc::DLC_Wrapper)
+    dlc_py[:create_training_dataset](dlc.config_path)
 end
 
 function dlc_replace_discrete_points(dlc::DLC_Wrapper,label_path,num,pole,pointx,pointy)
