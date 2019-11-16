@@ -11,6 +11,7 @@ function _make_discrete_gui()
     discrete_grid[2,2] = Label("Max number of Points")
 
     discrete_auto_calc = CheckButton("Auto Calculate")
+    setproperty!(discrete_auto_calc,:active,true)
     discrete_grid[1,3] = discrete_auto_calc
 
     discrete_add_button = CheckButton("Add Discrete Point")

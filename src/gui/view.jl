@@ -7,6 +7,7 @@ function _make_view_gui()
     view_roi_button = CheckButtonLeaf("Region of Interest")
     view_grid[1,2] = view_roi_button
     view_discrete_button = CheckButtonLeaf("Discrete Points")
+    setproperty!(view_discrete_button,:active,true)
     view_grid[1,3] = view_discrete_button
     view_pole_button = CheckButtonLeaf("Pole")
     view_grid[1,4] = view_pole_button

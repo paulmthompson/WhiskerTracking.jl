@@ -186,7 +186,7 @@ function make_gui()
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,touch_no_contact,false,
     falses(0),Array{Int64,1}(),zeros(Float64,vid_length),zeros(Float64,vid_length),
-    wt,5.0,false,false,false,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
+    wt,5.0,false,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
     false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),zeros(Float64,1,1),DLC_Wrapper(),these_paths)
@@ -346,6 +346,10 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     handles.paths = these_paths
 
     save_single_image(handles,vid[:,:,1],1)
+
+    handles.current_frame=temp'
+    handles.current_frame2=deepcopy(handles.current_frame)
+    redraw_all(handles)
 
     nothing
 end
