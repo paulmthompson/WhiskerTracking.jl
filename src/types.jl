@@ -144,6 +144,7 @@ mutable struct discrete_widgets
     points_button::Gtk.GtkSpinButtonLeaf
     calc_button::Gtk.GtkCheckButtonLeaf
     add_button::Gtk.GtkCheckButtonLeaf
+    delete_button::Gtk.GtkButtonLeaf
 end
 
 mutable struct mask_widgets
