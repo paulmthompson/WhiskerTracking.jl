@@ -6,7 +6,7 @@ else
     jt_parameters = "C:\\Program Files\\WhiskerTracking\\default.parameters"
 end
 
-libwhisk = Libdl.dlopen(libwhisk_path)
+#libwhisk = Libdl.dlopen(libwhisk_path,Libdl.RTLD_NOW)
 
 if is_unix()
     const ffmpeg_path = string(homedir(),"/Programs/ffmpeg/ffmpeg")

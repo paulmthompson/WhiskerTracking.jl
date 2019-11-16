@@ -1,5 +1,5 @@
 if VERSION > v"0.7-"
-    __precompile__(false)
+    #__precompile__(false)
 else
 
 end
@@ -29,7 +29,7 @@ include("config.jl")
 
 function __init__()
 
-    ccall((Libdl.dlsym(libwhisk,:Load_Params_File)),Int32,(Cstring,),jt_parameters)
+    ccall((:Load_Params_File,libwhisk_path),Int32,(Cstring,),jt_parameters)
 
     if is_unix()
         copy!(dlc_module, pyimport("deeplabcut"))
