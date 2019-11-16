@@ -64,35 +64,24 @@ the fur and doesn't creep up the length of the whisker.
 #. Exit out of the mask window
 #. Use arrow keys to reload the mask and make it disappear
 
-******************************
-3. Discretization of Whiskers
-******************************
-
-This whisker tracking algorithm relies on a neural network that detects *points* on the
-image rather than lines. Consequently, we need to describe whisker traces as discrete points
-to use the neural network.
-
-#. Open the *Viewer* window by going to *Extras* --> *Viewer*
-#. Click the *Discrete Points* checkbox
-#. Open the Discrete Points window by going to *Extras* --> *Discretization*
-#. Click the *Auto Calculate* button
-#. Leave this window open
-
 ********************
-4. Tracing Whiskers
+3. Tracing Whiskers
 ********************
 
 Now you can trace a whisker in the current frame. Tools are built into the GUI to aid in
-defining the features of the whisker of interest.
+defining the features of the whisker of interest. This whisker tracking algorithm relies on a neural network that detects *points* on the
+image rather than lines. Consequently, we need to describe whisker traces as discrete points
+to use the neural network.
 
 #. Click the *Trace* button (blue candidate whisker traces should appear)
 #. If a representative whisker is present, select it with the mouse by clicking the blue trace for the whisker of interest (It should turn red).
 #. At the base of the whisker, there will be a collection of green open circles bunched together. These are the "discrete points" selected to describe the whisker.
+#. Open the Discrete Points window by going to *Extras* --> *Discretization*
 #. Adjust the *Number of Points* and *Spacing* boxes in the *Discrete Points* window.
 #. You should adjust these values until the green dots adequate represent the shape of the whisker. Reasonable values are 20-30 for spacing and 12-14 for number of points
 
 *********************
-5. Annotating Frames
+4. Annotating Frames
 *********************
 
 The neural network needs a training dataset. From experience, roughly 100 images are enough for
@@ -103,13 +92,14 @@ are significantly different from one another so that the machine learning algori
 #. When you find a good candidate frame, hit the *trace* button. Blue traces will appear around candidate whiskers.
 #. If the traces are acceptable, click the "add frame to tracking" button. A green boundary will appear around the image.
 #. Click the whisker of interest. It should appear red and the discrete green points should be automatically calculated and applied.
+#. If the tip of the whisker is missing, for instance if the middle is obscured by a pole, you can add discrete points by clicking on the "Add Points" checkbox and clicking along the whisker. Uncheck this box when finished.
+#. If the points are incorrect, they can be delete with the "Delete points" button, and you can try tracing again.
 #. Repeat the above steps until you have annotated ~100 frames
 
 *If the whiskers overlap, go to "Extras" --> "Tracing" --> "Combine segments", then select the most proximal trace of the true whisker, and the distal part of the true whisker. If this works, you will see the true whisker now entirely in red. When done, unclick the "combine segments" button.*
-*If some whiskers do not show up well or are not annotated correctly, they can be fixed later in DeepLabCut*
 
 ************************************
-6. Pole Annotation and Verification
+5. Pole Annotation and Verification
 ************************************
 
 Once you have finished annotated your frames, it is good to do the final check of your work,
@@ -121,7 +111,7 @@ and perform pole tracing (if necessary).
 #. Advance to the next frame and until every tracked frame's pole has been labeled
 
 ************************
-7. Export to DeepLabCut
+6. Export to DeepLabCut
 ************************
 
 This program currently uses DeepLabCut to perform the deep learning step of tracking. This step
@@ -135,22 +125,11 @@ outputs the data into a format that deeplabcut can use, and initalizes the netwo
 #. When you enter this new folder, the whisker tracking data will be in the DLC folder. Enter it to find the config.yaml.
 #. Copy the name of this directory
 
-****************************
-8. Fix errors in DeepLabCut
-****************************
-
-Currently, I like to inspect the data in DeepLabCut's interface to ensure that the data export
-was performed correctly.
-
-#. In the Jupyter notebook viewer, go to the notebook ~/Documents/Analysis_Scripts/check_dlc_labels.ipynb.
-#. Change the path to the path of your config.yaml file from the last step
-#. Click "Load frames" and select the folder that comes up
-#. Use the DeepLabCut view to scroll through the annotated images of the whisker and pole.
-#. If any points are wrong, or you need to add additional points, or delete points, you can do it here.
-#. When you are satisfied with the quality of the data, click the "save" button
-
 *********************
-9. Train the network
+7. Train the network
 *********************
 
-*This is done to get your labeled data*
+This step will train the neural network to detect the discrete points along the whisker. This step takes approximately
+*6 hours*, so set aside time accordingly.
+
+#. 
