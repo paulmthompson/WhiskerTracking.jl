@@ -66,7 +66,7 @@ end
 Updates liklihood matrix to false if points jump past
 distance threshold from smoothed temporal traces
 =#
-function dlc_smooth_liklihood(xx,yy,kernel_size,ll,dist_thres)
+function dlc_smooth_liklihood(xx::Array{Float64,2},yy::Array{Float64,2},kernel_size,ll,dist_thres)
 
     #outlier removal
     #smooth with gaussian kernel
@@ -155,7 +155,7 @@ function read_pole_and_whisker_hdf5(path,l_thres_in=0.5)
     (woi,p)
 end
 
-function save_single_image(han,img,num)
+function save_single_image(han::Tracker_Handles,img,num)
 
     my_wd=pwd()
     cd(han.paths.images)

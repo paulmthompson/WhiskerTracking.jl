@@ -938,7 +938,7 @@ Mode 5 =
 Mode 10 = Select Whisker Pad
 Mode 11 = Select ROI
 Mode 12 = Select Pole
-
+Mode 13 = Discrete Select
 =#
 
 function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
@@ -981,6 +981,14 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
         catch
             println("Could not select pole")
         end
+    elseif han.selection_mode == 13
+        try
+            add_discrete_point(han,m_x,m_y)
+            redraw_all(han)
+        catch
+            println("Could not add point")
+        end
+
     end
 
     if han.erase_mode
