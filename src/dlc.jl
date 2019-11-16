@@ -26,7 +26,7 @@ function dlc_create_label_file(dlc::DLC_Wrapper,label_path)
 end
 
 function dlc_create_training(dlc::DLC_Wrapper)
-    dlc_py[:create_training_dataset](dlc.config_path)
+    dlc_module[:create_training_dataset](dlc.config_path)
 end
 
 function dlc_replace_discrete_points(dlc::DLC_Wrapper,label_path,num,pole,pointx,pointy)

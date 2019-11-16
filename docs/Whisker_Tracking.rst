@@ -121,6 +121,9 @@ outputs the data into a format that deeplabcut can use, and initalizes the netwo
 #. Click the "Initialize" button (the jupyter notebook will have some output)
 #. Check the "with pole button"
 #. Click the "export" button
+#. The data folder should be created in the ~/Documents/Analysis_Scripts folder in a new folder with the date
+#. When you enter this new folder, the whisker tracking data will be in the DLC folder. Enter it to find the config.yaml.
+#. Copy the name of this directory
 
 *********************
 7. Train the network
@@ -129,11 +132,7 @@ outputs the data into a format that deeplabcut can use, and initalizes the netwo
 This step will train the neural network to detect the discrete points along the whisker. This step takes approximately
 *6 hours*, so set aside time accordingly.
 
-#. Click the "Create Training Data" button to create a training dataset for the neural network
-#. You may want to use different starting weights for your network (for instance a network trained on a different animal). Load these by clicking the "load" button
-#. Navigate to the previous DLC weights you want to use. They should be located in a path like "dlc-models\iteration-0\Whisker_TrackJul16-trainset95shuffle1\train\snapshot-200000.index"
-#. The name of this file should now appear as the listed starting weights
-#. Click the "Train" button
+#.
 
 ***********************
 8. Analyze Entire Video
@@ -150,7 +149,6 @@ in your video.
 
 Now whisker traces have been found for each frame in the video. You can load these whisker traces into the GUI to
 inspect their accuracy.
-
 #. Go to File -> "Load DLC Tracked Whiskers"
 #. Go to Extras -> Viewer and click the "Tracked Whiskers" checkbox.
 #. Scroll through your video and inspect how well the tracking performed.

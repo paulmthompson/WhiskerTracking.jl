@@ -181,12 +181,12 @@ function dlc_load_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     try
         #Remove .index
-        filepath = filepath[1:(end-5)]
+        filepath = filepath[1:(end-6)]
 
         setproperty!(han.dlc_widgets.weights_label,:label,filepath[(end-20):end])
 
         han.dlc.starting_weights = filepath
-        model_path=string(han.paths.DLC,"dlc-models")
+        model_path=string(han.dlc.config_path[1:(end-11)],"dlc-models")
         iter_path=readdir(model_path)[1]
         training_dir=readdir(string(model_path,"/",iter_path))[1]
         pose_cfg_path=string(model_path,"/",iter_path,"/",training_dir,"/train/pose_cfg.yaml")
