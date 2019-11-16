@@ -69,7 +69,7 @@ function add_dlc_callbacks(w::dlc_widgets,handles::Tracker_Handles)
 
 
     signal_connect(dlc_select_network_cb,w.select_network_button,"clicked",Void,(),false,(handles,))
-
+    signal_connect(dlc_analyze_cb,w.analyze_button,"clicked",Void,(),false,(handles,))
 
 
 end
@@ -182,6 +182,16 @@ function dlc_select_network_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     #Change the configuration file to use.
+    filepath = open_dialog("Load Configuration File",han.win)
+    han.dlc.config_path = filepath
+
+    nothing
+end
+
+function dlc_analyze_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+    dlc_analyze(han.dlc,han.wt.vid_name)
 
     nothing
 end

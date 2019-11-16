@@ -31,6 +31,11 @@ end
 
 function dlc_start_training(dlc::DLC_Wrapper)
     dlc_module[:train_network](dlc.config_path,maxiters=200000)
+    dlc_module[:evaluate_network](dlc.config_path)
+end
+
+function dlc_analyze(dlc::DLC_Wrapper,vid_name::String)
+    dlc_module[:analyze_videos](dlc.config_path,[vid_name],videotype=".mp4")
 end
 
 function dlc_replace_discrete_points(dlc::DLC_Wrapper,label_path,num,pole,pointx,pointy)

@@ -121,7 +121,6 @@ outputs the data into a format that deeplabcut can use, and initalizes the netwo
 #. Click the "Initialize" button (the jupyter notebook will have some output)
 #. Check the "with pole button"
 #. Click the "export" button
-#. 
 
 *********************
 7. Train the network
@@ -130,7 +129,11 @@ outputs the data into a format that deeplabcut can use, and initalizes the netwo
 This step will train the neural network to detect the discrete points along the whisker. This step takes approximately
 *6 hours*, so set aside time accordingly.
 
-#.
+#. Click the "Create Training Data" button to create a training dataset for the neural network
+#. You may want to use different starting weights for your network (for instance a network trained on a different animal). Load these by clicking the "load" button
+#. Navigate to the previous DLC weights you want to use. They should be located in a path like "dlc-models\iteration-0\Whisker_TrackJul16-trainset95shuffle1\train\snapshot-200000.index"
+#. The name of this file should now appear as the listed starting weights
+#. Click the "Train" button
 
 ***********************
 8. Analyze Entire Video
@@ -139,7 +142,8 @@ This step will train the neural network to detect the discrete points along the 
 Once you have a trained neural network, you can use it to predict the whisker point locations for all of the frames
 in your video.
 
-#.
+#. If you need to select a trained neural network (for instance, if I didn't label any frames), you can select the config.yaml file by clicking the "Select Network"
+#. Click the Analyze button to process your current video. It will save a .h5 file into the same folder as your video.
 
 **********************
 9. Visualize Results
