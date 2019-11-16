@@ -84,6 +84,9 @@ function make_gui()
     push!(sortmenu,save_contact_)
     load_contact_ = MenuItem("Load Contact Detection")
     push!(sortmenu,load_contact_)
+    export_menu_ = MenuItem("Export...")
+    push!(sortmenu,export_menu_)
+
     push!(mb,sortopts)
 
     extraopts = MenuItem("_Extra")
@@ -162,6 +165,9 @@ function make_gui()
     #DeepLabCut options
     deep_widgets = _make_dlc_gui()
 
+    #Export options
+    e_widgets = _make_export_gui()
+
 
     win = Window(grid, "Whisker Tracker") |> Gtk.showall
 
@@ -187,7 +193,7 @@ function make_gui()
     start_frame,false,false,false,draw_button,false,false,touch_override,touch_no_contact,false,
     falses(0),Array{Int64,1}(),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,
+    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,e_widgets,
     falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
     false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),zeros(Float64,1,1),DLC_Wrapper(),these_paths)
 
@@ -257,6 +263,10 @@ function make_gui()
     #DLC Callbacks
     make_menu_callbacks(dlc_menu_,deep_widgets.win)
     add_dlc_callbacks(deep_widgets,handles)
+
+    #Export
+    make_menu_callbacks(export_menu_,e_widgets.win)
+    add_export_callbacks(e_widgets,handles)
 
     handles
 end
@@ -749,7 +759,6 @@ function load_whisker_data(han,filepath)
 
         #change saving
         han.wt.tracking_name = filepath
-
 
     end
     nothing

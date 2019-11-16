@@ -220,6 +220,14 @@ mutable struct dlc_widgets
     check_labels_button::Gtk.GtkButtonLeaf
 end
 
+mutable struct export_widgets
+    win::Gtk.GtkWindowLeaf
+    angle_button::Gtk.GtkCheckButtonLeaf
+    curve_button::Gtk.GtkCheckButtonLeaf
+    phase_button::Gtk.GtkCheckButtonLeaf
+    export_button::Gtk.GtkButtonLeaf
+end
+
 mutable struct DLC_Wrapper
     config_path::String
     export_pole::Bool
@@ -337,6 +345,7 @@ mutable struct Tracker_Handles
     image_adj_widgets::image_adj_widgets
     janelia_widgets::janelia_widgets
     dlc_widgets::dlc_widgets
+    export_widgets::export_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}

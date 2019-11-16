@@ -123,7 +123,7 @@ l is the liklihood for each point
 inds is the range of indexes to interpolate between
 interp_res is the desired interpixel distance for interpolation
 =#
-function interpolate_dlc(w_x_in,w_y_in,l,inds,interp_res)
+function interpolate_dlc(w_x_in::Array{Float64,2},w_y_in::Array{Float64,2},l::BitArray{2},inds::Tuple,interp_res::Float64)
 
     #Interpolate DLC points and generate line of values spaced 1 unit apart (for better visualization)
     wx=[Array{Float64,1}() for i=1:size(w_x_in,2)]
@@ -145,9 +145,9 @@ function interpolate_dlc(w_x_in,w_y_in,l,inds,interp_res)
 end
 
 #=
-Take discrete points along the whisker and interpolate between with 1.0 pixel spacing
+Take discrete points along the whisker and interpolate between with interp_res pixel spacing
 =#
-function get_woi_x_y(w_x,w_y,interp_res,follicle=(400.0f0,50.0f0))
+function get_woi_x_y(w_x,w_y,interp_res::Float64,follicle=(400.0f0,50.0f0))
 
     my_range = zeros(Float64,length(w_x))
     for i=2:length(my_range)
