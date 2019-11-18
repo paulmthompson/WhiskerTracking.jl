@@ -279,7 +279,7 @@ function make_gui()
     add_export_callbacks(e_widgets,handles)
 
     #Contact
-    make_menu_callbacks(contactmenu,c_widgets.win)
+    make_menu_callbacks(classifier_,c_widgets.win)
     add_contact_callbacks(c_widgets,handles)
 
     handles
