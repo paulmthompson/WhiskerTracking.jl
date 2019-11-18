@@ -123,10 +123,16 @@ function make_gui()
 
     contactopts = MenuItem("_Contact Detection")
     contactmenu = Menu(contactopts)
+
+    labelopts = MenuItem("_Labels")
+    push!(contact_menu,labelopts)
+    labelmenu = Menu(labelopts)
+
     save_contact_ = MenuItem("Save Contact Labels")
-    push!(contactmenu,save_contact_)
+    push!(labelmenu,save_contact_)
     load_contact_ = MenuItem("Load Contact Labels")
-    push!(contactmenu,load_contact_)
+    push!(labelmenu,load_contact_)
+
     classifier_ = MenuItem("Classifier for Prediction")
     push!(contactmenu,classifier_)
 
