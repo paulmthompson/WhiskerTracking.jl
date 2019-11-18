@@ -73,7 +73,7 @@ function make_discrete_woi(wt,woi,tracked,spacing)
     nothing
 end
 
-function draw_discrete(han)
+function draw_discrete(han::Tracker_Handles)
 
     circ_rad=5.0
 
@@ -91,7 +91,7 @@ function draw_discrete(han)
 
 end
 
-function add_discrete_point(han,x,y)
+function add_discrete_point(han::Tracker_Handles,x,y)
 
     num_points = div(size(han.wt.w_p,1),2)
     ss=han.d_spacing

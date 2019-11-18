@@ -151,7 +151,7 @@ function local_contrast_enhance(img)
     img2
 end
 
-function subtract_background(han)
+function subtract_background(han::Tracker_Handles)
 
     mydiff = han.wt.vid[:,:,han.frame] .- mean_image(han)
     new_diff = (mydiff - minimum(mydiff))
@@ -162,7 +162,7 @@ function subtract_background(han)
     nothing
 end
 
-function sharpen_image(han)
+function sharpen_image(han::Tracker_Handles)
 
     imgl = imfilter(han.current_frame, Kernel.Laplacian());
     newimg= imgl .- minimum(imgl)
@@ -172,10 +172,10 @@ function sharpen_image(han)
     nothing
 end
 
-function mean_image_uint8(han)
+function mean_image_uint8(han::Tracker_Handles)
     round.(UInt8,squeeze(mean(han.wt.vid,3),3))
 end
 
-function mean_image(han)
+function mean_image(han::Tracker_Handles)
     squeeze(mean(han.wt.vid,3),3)
 end

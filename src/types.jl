@@ -379,4 +379,5 @@ mutable struct Tracker_Handles
 
     dlc::DLC_Wrapper
     paths::Save_Paths
+    temp_frame::Array{UInt8,2}
 end

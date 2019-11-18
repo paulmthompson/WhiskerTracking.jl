@@ -205,7 +205,8 @@ function make_gui()
     wt,5.0,false,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,e_widgets,
     c_widgets,falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
-    false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),zeros(Float64,1,1),DLC_Wrapper(),these_paths)
+    false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
+    zeros(Float64,1,1),DLC_Wrapper(),these_paths,zeros(UInt8,640,480))
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
@@ -485,11 +486,10 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     end
 
     #If equal to frame we already acquired, don't get it again
-    temp=zeros(UInt8,640,480)
     frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
     try
-        load_single_frame(frame_time,temp,han.wt.vid_name)
-        han.current_frame=temp'
+        load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
+        han.current_frame=han.temp_frame'
         han.current_frame2=deepcopy(han.current_frame)
         redraw_all(han)
     catch
@@ -1040,7 +1040,7 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     nothing
 end
 
-function select_whisker_pad(han,x,y)
+function select_whisker_pad(han::Tracker_Handles,x,y)
 
     han.wt.pad_pos=(x,y)
 
@@ -1048,7 +1048,7 @@ function select_whisker_pad(han,x,y)
 
 end
 
-function select_pole_location(han,x,y)
+function select_pole_location(han::Tracker_Handles,x,y)
 
     han.pole_present[han.frame] = true
     han.pole_loc[han.frame,1] = x
@@ -1058,7 +1058,7 @@ function select_pole_location(han,x,y)
 end
 
 
-function draw_start(han,x,y)
+function draw_start(han::Tracker_Handles,x,y)
 
     plot_image(han,han.current_frame')
     r = Gtk.getgc(han.c)
@@ -1090,7 +1090,7 @@ function draw_start(han,x,y)
     nothing
 end
 
-function draw_move(han, x,y,ctxcopy)
+function draw_move(han::Tracker_Handles, x,y,ctxcopy)
 
     r=Gtk.getgc(han.c)
 
@@ -1122,7 +1122,7 @@ function draw_move(han, x,y,ctxcopy)
     nothing
 end
 
-function draw_stop(han,x,y,ctxcopy)
+function draw_stop(han::Tracker_Handles,x,y,ctxcopy)
 
     assign_woi(han)
     han.tracked[han.frame]=true
@@ -1134,7 +1134,7 @@ function draw_stop(han,x,y,ctxcopy)
     nothing
 end
 
-function erase_start(han,x,y)
+function erase_start(han::Tracker_Handles,x,y)
 
     plot_image(han,han.current_frame')
     r = Gtk.getgc(han.c)
@@ -1150,7 +1150,7 @@ function erase_start(han,x,y)
     nothing
 end
 
-function erase_move(han, x,y,ctxcopy)
+function erase_move(han::Tracker_Handles, x,y,ctxcopy)
 
     r=Gtk.getgc(han.c)
 
@@ -1184,7 +1184,7 @@ function erase_move(han, x,y,ctxcopy)
     nothing
 end
 
-function erase_stop(han,x,y,ctxcopy)
+function erase_stop(han::Tracker_Handles,x,y,ctxcopy)
 
     assign_woi(han)
 

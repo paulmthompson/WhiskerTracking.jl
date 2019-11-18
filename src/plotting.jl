@@ -67,7 +67,7 @@ function w_plot_image(ax,frame_array,f_id)
     nothing
 end
 
-function plot_mask(han)
+function plot_mask(han::Tracker_Handles)
 
     img=han.wt.mask'.*255
 
@@ -101,7 +101,7 @@ Draw interpolated whisker from DLC points on currently displayed frame
 
 =#
 
-function draw_tracked_whisker(han)
+function draw_tracked_whisker(han::Tracker_Handles)
     ctx=Gtk.getgc(han.c)
 
     ii=han.displayed_frame+1
