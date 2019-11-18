@@ -172,7 +172,7 @@ function dlc_train_network_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    dlc_start_training(han.dlc)
+    @async dlc_start_training(han.dlc)
 
     nothing
 end
@@ -191,7 +191,7 @@ end
 function dlc_analyze_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
-    dlc_analyze(han.dlc,han.wt.vid_name)
+    @async dlc_analyze(han.dlc,han.wt.vid_name)
 
     nothing
 end
