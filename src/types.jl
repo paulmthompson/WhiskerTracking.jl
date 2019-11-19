@@ -235,6 +235,7 @@ mutable struct contact_widgets
     win::Gtk.GtkWindowLeaf
     training_num_label::Gtk.GtkLabelLeaf
     fit_button::Gtk.GtkButtonLeaf
+    load_predicted_button::Gtk.GtkButtonLeaf
 end
 
 mutable struct DLC_Wrapper

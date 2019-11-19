@@ -12,10 +12,18 @@ function _make_contact_gui()
     training_num_label=Label("1")
     training_grid[2,1]=training_num_label
 
+    tracked_frame = Frame("Predicted Data")
+    tracked_grid = Grid()
+    push!(tracked_frame,tracked_grid)
+    grid[1,2]=tracked_frame
+
+    tracked_load_button = Button("Load Predicted Contact and Pole")
+    tracked_grid[1,1] = tracked_load_button
+
     classifier_frame = Frame("Classifier")
     classifier_grid = Grid()
     push!(classifier_frame, classifier_grid)
-    grid[1,2]=classifier_frame
+    grid[1,3]=classifier_frame
 
     fit_button = Button("Fit Classifier")
     classifier_grid[1,1]=fit_button
@@ -25,12 +33,14 @@ function _make_contact_gui()
     Gtk.showall(win)
     visible(win,false)
 
-    c_widgets=contact_widgets(win,training_num_label,fit_button)
+    c_widgets=contact_widgets(win,training_num_label,fit_button,tracked_load_button)
 end
 
 function add_contact_callbacks(w,handles)
 
     signal_connect(contact_fit_cb,w.fit_button,"clicked",Void,(),false,(handles,))
+
+    signal_connect(contact_load_predicted_cb,w.load_predicted_button,"clicked",Void,(),false,(handles,))
 
     nothing
 end
@@ -80,6 +90,33 @@ function save_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         write(file,"Touch_Inds",han.touch_frames_i)
         write(file,"Touch",convert(Array{Int64,1},han.touch_frames))
         close(file)
+    end
+
+    nothing
+end
+
+function contact_load_predicted_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    #Load Contact
+    filepath = open_dialog("Load Predicted Labels",han.win)
+
+    if filepath != ""
+
+        file = matopen(filepath,"r")
+        if MAT.exists(file,"Contact")
+            contact = read(file,"Contact")
+            han.tracked_contact = contact
+        end
+    end
+
+    filepath = open_dialog("Load Tracked Pole",han.win)
+
+    if filepath != ""
+
+        p=read_pole_hdf5(filepath)
+        han.tracked_pole = p
     end
 
     nothing

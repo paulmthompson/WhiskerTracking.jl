@@ -147,8 +147,7 @@ function draw_tracked_whisker(han::Tracker_Handles)
         move_to(ctx,han.tracked_pole[ii,1],han.tracked_pole[ii,2])
         arc(ctx,han.tracked_pole[ii,1],han.tracked_pole[ii,2],5,0,2*pi)
         stroke(ctx)
-
     end
-
+    
     reveal(han.c)
 end

@@ -125,7 +125,7 @@ function make_gui()
     contactmenu = Menu(contactopts)
 
     labelopts = MenuItem("_Training Labels")
-    push!(contact_menu,labelopts)
+    push!(contactmenu,labelopts)
     labelmenu = Menu(labelopts)
 
     save_contact_ = MenuItem("Save Contact Labels")
@@ -134,7 +134,7 @@ function make_gui()
     push!(labelmenu,load_contact_)
 
     predopts = MenuItem("_Predicted Labels")
-    push!(contact_menu,predopts)
+    push!(contactmenu,predopts)
     label_pred_menu = Menu(predopts)
 
     load_pred_labels = MenuItem("Load Predicted Labels")
