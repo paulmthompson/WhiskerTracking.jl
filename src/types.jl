@@ -236,7 +236,18 @@ mutable struct contact_widgets
     training_num_label::Gtk.GtkLabelLeaf
     fit_button::Gtk.GtkButtonLeaf
     load_predicted_button::Gtk.GtkButtonLeaf
+    n_estimators_button::Gtk.GtkSpinButtonLeaf
+    forest_depth_button::Gtk.GtkSpinButtonLeaf
 end
+
+mutable struct classifier
+    predictors::Array{Float64,2}
+    n_estimators::Int64
+    forest_depth::Int64
+    clf::PyObject
+end
+
+classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1))
 
 mutable struct DLC_Wrapper
     config_path::String
@@ -377,6 +388,8 @@ mutable struct Tracker_Handles
     show_contact::Bool
     tracked_contact::BitArray{1}
     tracked_pole::Array{Float64,2}
+
+    class::classifier
 
     dlc::DLC_Wrapper
     paths::Save_Paths

@@ -9,6 +9,8 @@ module WhiskerTracking
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
 Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn
 
+@sk_import ensemble: RandomForestClassifier
+
 if VERSION > v"0.7-"
     using SharedArrays, Libdl, Dates
     const Void = Nothing
@@ -30,9 +32,6 @@ include("config.jl")
 function __init__()
 
     ccall((:Load_Params_File,libwhisk_path),Int32,(Cstring,),jt_parameters)
-
-    @sk_import ensemble: RandomForestClassifier
-    @sk_import model_selection: cross_val_score
 
     if is_unix()
         copy!(dlc_module, pyimport("deeplabcut"))
