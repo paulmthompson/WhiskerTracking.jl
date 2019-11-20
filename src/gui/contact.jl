@@ -52,6 +52,7 @@ function contact_fit_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+#Load labels
 function load_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -63,6 +64,7 @@ function load_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         if MAT.exists(file,"Touch_Inds")
             touch_inds = read(file,"Touch_Inds")
             han.touch_frames_i = touch_inds
+            setproperty!(han.contact_widgets.training_num_label,:label,string(length(han.touch_frames_i)))
         end
         if MAT.exists(file,"Touch")
             touch = read(file,"Touch")
@@ -132,6 +134,8 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
 
         push!(han.touch_frames_i,han.displayed_frame)
         push!(han.touch_frames,contact)
+
+        setproperty!(han.contact_widgets.training_num_label,:label,string(length(han.touch_frames_i)))
 
         #Do we need to sort these here?
 
