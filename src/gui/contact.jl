@@ -42,13 +42,17 @@ function _make_contact_gui()
 
     classifier_grid[5,1] = Label("Forest Depth")
 
+    classifier_grid[1,2] = Label("10-Foled cross validation: ")
+    cv_label = Label("")
+    classifier_grid[2,2] = cv_label
+
 
     win = Window(grid)
     Gtk.showall(win)
     visible(win,false)
 
     c_widgets=contact_widgets(win,training_num_label,fit_button,tracked_load_button,
-    n_estimators_button,forest_depth_button)
+    n_estimators_button,forest_depth_button,cv_label)
 end
 
 function add_contact_callbacks(w,handles)
@@ -65,15 +69,28 @@ function contact_fit_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    random_forest_estimators = 100 #Number of estimators
-    random_forest_depth = 10 #Number of trees
+    han.class.clf=RandomForestClassifier(n_estimators=han.class.n_estimators,max_depth=han.class.forest_depth,random_state=0)
 
-    han.class.clf=RandomForestClassifier(n_estimators=random_forest_estimators,max_depth=random_forest_depth,random_state=0)
+    #Select which variables to use
 
 
+    #Remove NaNs
+    #han.class.predictors[isnan.(han.class.predictors)] .= 0.0
+
+    #Create prediction
+    #ScikitLearn.fit!(han.class.clf,han.class.predictors,han.tracked_contact)
+
+    #Cross validation
+    #cross_val_rf=mean(cross_val_score(han.class.clf, han.class.predictors, han.tracked_contact, cv=10))
+
+    #setproperty!(han.c_widgets.cv_label,:label,han.class.cv)
 
     nothing
 end
+
+#Cross validate function
+
+#Predict Function
 
 function contact_estimators_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 

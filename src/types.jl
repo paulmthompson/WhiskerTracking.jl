@@ -238,6 +238,7 @@ mutable struct contact_widgets
     load_predicted_button::Gtk.GtkButtonLeaf
     n_estimators_button::Gtk.GtkSpinButtonLeaf
     forest_depth_button::Gtk.GtkSpinButtonLeaf
+    cv_label::Gtk.GtkLabelLeaf
 end
 
 mutable struct classifier
@@ -245,6 +246,7 @@ mutable struct classifier
     n_estimators::Int64
     forest_depth::Int64
     clf::PyObject
+    cv::Float64
 end
 
 classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1))
