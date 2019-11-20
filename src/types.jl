@@ -249,7 +249,7 @@ mutable struct classifier
     cv::Float64
 end
 
-classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1))
+classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1),0.0)
 
 mutable struct DLC_Wrapper
     config_path::String

@@ -42,7 +42,7 @@ function _make_contact_gui()
 
     classifier_grid[5,1] = Label("Forest Depth")
 
-    classifier_grid[1,2] = Label("10-Foled cross validation: ")
+    classifier_grid[1,2] = Label("Cross-validation prediction accuracy: ")
     cv_label = Label("")
     classifier_grid[2,2] = cv_label
 
