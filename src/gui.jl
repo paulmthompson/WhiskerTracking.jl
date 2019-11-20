@@ -77,9 +77,12 @@ function make_gui()
     push!(sortmenu,load_dlc_whiskers_)
 
     save_whisk_ = MenuItem("Save Whiskers")
-    push!(sortmenu,save_whisk_)
+    #push!(sortmenu,save_whisk_)
     load_whisk_ = MenuItem("Load Whiskers")
-    push!(sortmenu,load_whisk_)
+    #push!(sortmenu,load_whisk_)
+
+    load_previous_ = MenuItem("Load Previous Tracking Frames")
+    push!(sortmenu,load_previous_)
 
     export_menu_ = MenuItem("Export...")
     push!(sortmenu,export_menu_)
@@ -538,6 +541,22 @@ function num_whiskers_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #woi_angle
     #woi_curv
     #woi_id
+
+    nothing
+end
+
+function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    #Get path to directory
+
+    #Change save directories structure
+
+    #Load in .h5 file of labels from DLC (should we save a mat file in future to make this easier?)
+
+
+
 
     nothing
 end
