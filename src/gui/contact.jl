@@ -25,6 +25,8 @@ function _make_contact_gui()
     push!(classifier_frame, classifier_grid)
     grid[1,3]=classifier_frame
 
+    
+
     fit_button = Button("Fit Classifier")
     classifier_grid[1,1]=fit_button
 
