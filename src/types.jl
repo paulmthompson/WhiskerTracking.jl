@@ -239,6 +239,9 @@ mutable struct contact_widgets
     n_estimators_button::Gtk.GtkSpinButtonLeaf
     forest_depth_button::Gtk.GtkSpinButtonLeaf
     cv_label::Gtk.GtkLabelLeaf
+    pred_pole_button::Gtk.GtkCheckButtonLeaf
+    pred_pole_position::Gtk.GtkCheckButtonLeaf
+    pred_curv::Gtk.GtkCheckButtonLeaf
 end
 
 mutable struct classifier
