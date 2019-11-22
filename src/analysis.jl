@@ -25,15 +25,17 @@ their method
 woi is array of whiskers
 tracked specifies if a frame should be included or not
 =#
-function get_curv_and_angle(woi,tracked=trues(length(woi)),follicle=(400.0f0,50.0f0))
+function get_curv_and_angle(woi,tracked=trues(length(woi)),follicle=(400.0f0,50.0f0);face_axis='x')
     curv=zeros(Float64,length(woi))
     aa=zeros(Float64,length(woi))
 
     #Get angle and curvature from Janelia
+    f1=round(Int32,follicle[1])
+    f2=round(Int32,follicle[2])
     for i=1:length(woi)
 
         if (length(woi[i].x)>3)&(tracked[i])
-            mymeas=JT_measure(woi[i],follicle[1],follicle[2])
+            mymeas=JT_measure(woi[i],f1,f2,face_axis)
             curv[i]=unsafe_wrap(Array,mymeas.data,8)[4]
             aa[i]=unsafe_wrap(Array,mymeas.data,8)[3]
 

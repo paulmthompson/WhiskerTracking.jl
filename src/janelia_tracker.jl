@@ -60,9 +60,8 @@ end
 
 
 #returns measurements for single
-function JT_measure(wt,frame_id,whisker_num)
+function JT_measure(wt::Tracker,frame_id,whisker_num,face_axis='x')
 
-    face_axis = 'x' #Or 'y'
     facex=round(Int32,wt.pad_pos[1])
     facey=round(Int32,wt.pad_pos[2])
     whisk_num = convert(Int32,1)
@@ -74,9 +73,12 @@ function JT_measure(wt,frame_id,whisker_num)
     unsafe_load(mm,1)
 end
 
-function JT_measure(w::Whisker1,facex,facey)
+function JT_measure(w::Whisker1,facex::Float32,facey::Float32,face_axis='x')
+    JT_measure(w,round(Int32,facex),round(Int32,facey),face_axis)
+end
+
+function JT_measure(w::Whisker1,facex::Int32,facey::Int32,face_axis='x')
     #This should be an option depending on how the whisker is oriented
-    face_axis = 'x' #Or 'y'
 
     whisk_num = convert(Int32,1)
 
@@ -88,21 +90,21 @@ function JT_measure(w::Whisker1,facex,facey)
     unsafe_load(mm,1)
 end
 
-function JT_measure(wt,w)
+function JT_measure(wt::Tracker,w::Whisker1,face_axis='x')
 
     facex=round(Int32,wt.pad_pos[1])
     facey=round(Int32,wt.pad_pos[2])
 
-    JT_measure(w,facex,facey)
+    JT_measure(w,facex,facey,face_axis)
 end
 
-function get_JT_measurements(wt)
+function get_JT_measurements(wt::Tracker,face_axis='x')
 
     mymeas=Array{JT_Measurements,1}(0)
 
     for i=1:length(wt.all_whiskers)
         for j=1:length(wt.all_whiskers[i])
-            xx=JT_measure(wt,i,j)
+            xx=JT_measure(wt,i,j,face_axis)
             push!(mymeas,xx)
         end
     end

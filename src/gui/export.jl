@@ -3,28 +3,39 @@ function _make_export_gui()
 
     grid=Grid()
 
-    grid[1,1] = Label("Select the variables to export")
+    grid[1,1] = Label("How is the animal oriented in your video?")
+
+    face_axis_combo = ComboBoxText()
+    for choice in ["Horizontal Animal (Whiskers are Vertical)"; "Vertical Animal (Whiskers are Horizontal)"]
+        push!(face_axis_combo,choice)
+    end
+    setproperty!(face_axis_combo,:active,0)
+    grid[2,1] = face_axis_combo
+
+    grid[1,2] = Label("Select the variables to export")
+
+
 
     angle_button = CheckButton("Angle")
     setproperty!(angle_button,:active,true)
-    grid[1,2] = angle_button
+    grid[1,3] = angle_button
 
     curve_button = CheckButton("Curvature")
     setproperty!(curve_button,:active,true)
-    grid[1,3] = curve_button
+    grid[1,4] = curve_button
 
     phase_button = CheckButton("Phase")
     setproperty!(phase_button,:active,true)
-    grid[1,4] = phase_button
+    grid[1,5] = phase_button
 
     export_button = Button("Export!")
-    grid[1,5] = export_button
+    grid[1,6] = export_button
 
     win = Window(grid)
     Gtk.showall(win)
     visible(win,false)
 
-    e_widgets = export_widgets(win,angle_button,curve_button,phase_button,
+    e_widgets = export_widgets(win,face_axis_combo,angle_button,curve_button,phase_button,
     export_button)
 end
 
@@ -77,7 +88,13 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #Convert to Janelia
     my_whiskers=convert_whisker_points_to_janelia(wx,wy,mytracked);
 
-    (mycurv,myangles)=get_curv_and_angle(my_whiskers,mytracked);
+    face_axis_num=getproperty(han.export_widgets.face_axis,:active,Int64)
+
+    if face_axis_num == 0
+        (mycurv,myangles)=get_curv_and_angle(my_whiskers,mytracked,han.wt.pad_pos);
+    else
+        (mycurv,myangles)=get_curv_and_angle(my_whiskers,mytracked,han.wt.pad_pos,face_axis='y');
+    end
 
     #Whisking phase calculation
     phase_low_band=8.0 #Band pass filter lower band
@@ -95,6 +112,7 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         if e_phase
             write(file,"Phase",myphase)
         end
+    write(file,"Tracked",mytracked)
     close(file)
 
     #catch

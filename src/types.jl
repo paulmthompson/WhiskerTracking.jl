@@ -225,6 +225,7 @@ end
 
 mutable struct export_widgets
     win::Gtk.GtkWindowLeaf
+    face_axis::Gtk.GtkComboBoxTextLeaf
     angle_button::Gtk.GtkCheckButtonLeaf
     curve_button::Gtk.GtkCheckButtonLeaf
     phase_button::Gtk.GtkCheckButtonLeaf
