@@ -175,6 +175,7 @@ function dlc_train_network_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     setproperty!(han.dlc_widgets.train_button,:label,"Training Underway...")
     dlc_start_training(han.dlc)
     setproperty!(han.dlc_widgets.train_button,:label,"Train")
+    println("Network Training Complete")
 
     nothing
 end
@@ -197,6 +198,7 @@ function dlc_analyze_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     setproperty!(han.dlc_widgets.analyze_button,:label,"Analyzing Video...")
     dlc_analyze(han.dlc,han.wt.vid_name)
     setproperty!(han.dlc_widgets.analyze_button,:label,"Analyze")
+    println("Analysis of Video Complete")
 
     nothing
 end
