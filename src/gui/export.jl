@@ -59,6 +59,8 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    setproperty!(han.export_widgets.export_button,:label,"Exporting to MAT file...")
+
     e_angle = getproperty(han.export_widgets.angle_button,:active,Bool)
 
     e_curve = getproperty(han.export_widgets.curve_button,:active,Bool)
@@ -97,6 +99,9 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     #catch
     #end
+
+    setproperty!(han.export_widgets.export_button,:label,"Export")
+    println("Export complete")
 
     nothing
 end
