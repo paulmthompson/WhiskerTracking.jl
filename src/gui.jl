@@ -399,14 +399,18 @@ function load_dlc_tracked_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    filepath = open_dialog("Load DLC Whisker File",han.win)
+    try
+        filepath = open_dialog("Load DLC Whisker File",han.win)
 
-    if filepath != ""
-        (xxx,yyy,lll)=dlc_hd5_to_array(filepath,0.2,true);
-        dlc_smooth_liklihood(xxx,yyy,15,lll,50.0)
-        han.tracked_whiskers_x=xxx
-        han.tracked_whiskers_y=yyy
-        han.tracked_whiskers_l=lll;
+        if filepath != ""
+            (xxx,yyy,lll)=dlc_hd5_to_array(filepath,0.2,true);
+            dlc_smooth_liklihood(xxx,yyy,15,lll,50.0)
+            han.tracked_whiskers_x=xxx
+            han.tracked_whiskers_y=yyy
+            han.tracked_whiskers_l=lll;
+        end
+    catch
+        println("Could not load whiskers")
     end
 
     nothing
