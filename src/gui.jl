@@ -382,7 +382,10 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
 
     #Update these paths
-    t_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
+    date_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
+
+    t_folder = string(path,date_folder)
+
     these_paths = Save_Paths(t_folder)
     handles.paths = these_paths
 

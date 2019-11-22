@@ -279,10 +279,8 @@ function Save_Paths(mypath,make_dirs=true)
     end
 
     if is_windows()
-        mypath=string(".\\",mypath)
         out=Save_Paths(mypath,string(mypath,"\\temp"),string(mypath,"\\images"),string(mypath,"\\backup"),string(mypath,"\\DLC"))
     else
-        mypath = string("./",mypath)
         out=Save_Paths(mypath,string(mypath,"/temp"),string(mypath,"/images"),string(mypath,"/backup"),string(mypath,"/DLC"))
     end
 
