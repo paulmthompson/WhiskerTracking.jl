@@ -564,6 +564,29 @@ function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         change_save_paths(han,config_path)
 
         load_label_data(han,config_path)
+
+        num_discrete=div(size(han.wt.w_p,1),2)
+        setproperty!(han.d_widgets.points_button,:value,num_discrete)
+
+        d_spacing = 0.0
+        num=0
+        wp_x = 0.0
+        wp_y = 0.0
+        for i=1:size(han.wt.w_p,2)
+            d=sqrt((han.wt.w_p[3,i] - han.wt.w_p[1,i]) ^2 + (han.wt.w_p[4,i] - han.wt.w_p[2,i]) ^2)
+            if !isnan(d)
+                d_spacing += d
+                num += 1
+                wp_x += han.wt.w_p[1,i]
+                wp_y += han.wt.w_p[2,i]
+            end
+        end
+
+        han.d_spacing = round(Int64,d_spacing / num)
+        setproperty!(han.d_widgets.space_button,:value,han.d_spacing)
+
+        #Whisker Pad
+        han.wt.pad_pos = (round(Float32,wp_x/num),round(Float32,wp_y/num))
     end
 
     nothing
