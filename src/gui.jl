@@ -247,6 +247,7 @@ function make_gui()
     #File Callbacks
     signal_connect(load_video_cb, load_video_, "activate",Void,(),false,(handles,))
     signal_connect(load_dlc_tracked_cb,load_dlc_whiskers_,"activate",Void,(),false,(handles,))
+    signal_connect(load_previous_cb,load_previous_,"activate",Void,(),false,(handles,))
     signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
     signal_connect(save_contact_cb,save_contact_,"activate",Void,(),false,(handles,))
@@ -556,14 +557,104 @@ function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    #Get path to directory
+    config_path = open_dialog("Load Previous DLC session",han.win)
 
-    #Change save directories structure
+    if config_path != ""
 
-    #Load in .h5 file of labels from DLC (should we save a mat file in future to make this easier?)
+        change_save_paths(han,config_path)
 
+        load_label_data(han,config_path)
+    end
 
+    nothing
+end
 
+function load_label_data(han::Tracker_Handles,config_path::String)
+
+    label_path=get_label_path_from_config(config_path)
+
+    (w_p,frame_list)=load_labels(label_path)
+
+    han.wt.w_p = w_p
+    han.frame_list = frame_list
+
+    #Change frame list spin button maximum number and current index
+    Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
+
+    #add whisker WOI
+    han.woi=[Whisker1() for i=1:length(frame_list)]
+
+    han.wt.all_whiskers = [Array{Whisker1,1}() for i=1:length(frame_list)]
+
+    han.tracked = falses(length(frame_list))
+    han.woi_angle = zeros(Float64,length(frame_list))
+    han.woi_curv = zeros(Float64,length(frame_list))
+
+    han.pole_present = zeros(Float64,length(frame_list))
+
+    han.pole_loc = zeros(Float32,length(frame_list),2)
+
+    han.wt.vid = load_select_video_frames(han)
+
+    nothing
+end
+
+function load_select_video_frames(han::Tracker_Handles)
+
+    new_vid=zeros(UInt8,size(han.wt.vid,1),size(han.wt.vid,2),length(han.frame_list))
+
+    temp=zeros(UInt8,640,480)
+    for i=1:length(han.frame_list)
+        frame_time = han.frame_list[i] / 25
+        load_single_frame(frame_time,temp,han.wt.vid_name)
+        new_vid[:,:,i] = temp'
+    end
+
+    new_vid
+end
+
+function get_label_path_from_config(config_path::String)
+
+    dlc_folder_path = dirname(config_path)
+
+    label_dir=string(dlc_folder_path,"/labeled-data")
+
+    vid_dir=string(label_dir,"/",readdir(label_dir)[1])
+
+    label_path=string(vid_dir,"/",filter(x->occursin(".h5",x), readdir(vid_dir))[1])
+end
+
+function load_labels(label_path::String)
+    myfile=h5open(label_path)
+    mytable=read(myfile,"df_with_missing")["table"]
+
+    d_points_length=length(mytable[1].data[2])-2 #subtract pole
+
+    frame_num=length(mytable)
+
+    w_p=zeros(Float32,d_points_length,frame_num)
+
+    frame_list=zeros(Int64,frame_num)
+
+    for i=1:frame_num
+        for j=1:d_points_length
+            w_p[j,i] = mytable[i].data[2][j]
+        end
+        frame_list[i] = parse(Int64,basename(mytable[i].data[1])[4:(end-4)])
+    end
+
+    close(myfile)
+
+    (w_p,frame_list)
+end
+
+function change_save_paths(han::Tracker_Handles,config_path::String)
+
+    dlc_folder_path = dirname(config_path)
+
+    save_folder_name=dirname(dirname(dlc_folder_path))
+
+    han.paths=Save_Paths(save_folder_name,false)
 
     nothing
 end
