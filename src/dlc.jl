@@ -155,7 +155,7 @@ end
 #=
 Take discrete points along the whisker and interpolate between with interp_res pixel spacing
 =#
-function get_woi_x_y(w_x,w_y,interp_res::Float64,follicle=(400.0f0,50.0f0))
+function get_woi_x_y(w_x::Array{T,1},w_y::Array{T,1},interp_res::Float64,follicle=(400.0f0,50.0f0))
 
     my_range = zeros(Float64,length(w_x))
     for i=2:length(my_range)

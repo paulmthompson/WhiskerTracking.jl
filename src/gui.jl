@@ -626,9 +626,12 @@ function load_label_data(han::Tracker_Handles,config_path::String)
         if length(x) != length(y)
             println("Error")
         end
-        n_points=length(x)
 
-        han.woi[i] = Whisker1(1,han.frame_list[i],n_points,x,y,zeros(Float32,n_points),zeros(Float32,n_points))
+        (xx,yy) = get_woi_x_y(x,y,5.0,(x[end],y[end]))
+
+        n_points=length(xx)
+
+        han.woi[i] = Whisker1(1,han.frame_list[i],n_points,xx,yy,zeros(Float32,n_points),zeros(Float32,n_points))
     end
 
     han.wt.all_whiskers = [Array{Whisker1,1}() for i=1:length(frame_list)]
