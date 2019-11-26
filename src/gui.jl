@@ -788,11 +788,27 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
             redraw_all(han)
 
+            save_backup(han)
+
         end
 
     catch
         println("Could not add frame")
     end
+
+    nothing
+end
+
+function save_backup(han::Tracker_Handles)
+
+    #Read backup
+
+    #Write backup
+    file = matopen(string(han.paths.backup,"/backup.mat"), "w")
+    write(file, "w_p", han.wt.w_p)
+    write(file, "frame_list",han.frame_list)
+    close(file)
+
 
     nothing
 end
