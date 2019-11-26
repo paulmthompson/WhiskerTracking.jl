@@ -50,7 +50,7 @@ function generate_mask(wt,min_val,max_val,frame_id)
     nothing
 end
 
-function adjust_contrast_gui(han)
+function adjust_contrast_gui(han::Tracker_Handles)
 
     han.current_frame=adjust_contrast(han.wt,han.frame)
 
@@ -62,7 +62,7 @@ Only Whiskers are identified that are inside a region of interest (ROI)
 That ROI is a circle centered on the whisker pad of radius 100
 =#
 
-function apply_roi(whiskers,pad_pos)
+function apply_roi(whiskers::Array{Whisker1,1},pad_pos)
 
     remove_whiskers=Array{Int64,1}()
 
@@ -104,7 +104,7 @@ function frames_between(tt1,tt2,fps)
     total_frames(tt2,fps)-total_frames(tt1,fps)
 end
 
-function get_follicle(han)
+function get_follicle(han::Tracker_Handles)
     x=0.0
     y=0.0
     count=0
@@ -125,7 +125,7 @@ end
 #Really we want this to be such that the length of each line is equal.
 #Probably can do this by interpolating along each segment or something
 #I also need to reverse these
-function whisker_similarity(han,prev)
+function whisker_similarity(han::Tracker_Handles,prev)
 
     cor_length=20
 
@@ -165,14 +165,14 @@ function smooth(x, window_len=7)
     DSP.filtfilt(w ./ sum(w), [1.0], x)
 end
 
-function calc_woi_angle(han,x,y)
+function calc_woi_angle(han::Tracker_Handles,x,y)
 
     this_angle=atan(y[end-5] - y[end], x[end-5] - x[end])
     han.woi_angle[han.frame]=rad2deg(this_angle)
     nothing
 end
 
-function calc_woi_curv(han,x,y)
+function calc_woi_curv(han::Tracker_Handles,x,y)
     han.woi_curv[han.frame]=get_curv(x,y)
     nothing
 end
@@ -208,7 +208,7 @@ function get_curv(xdata,ydata)
     mycurv
 end
 
-function assign_woi(han)
+function assign_woi(han::Tracker_Handles)
 
     han.woi[han.frame] = deepcopy(han.wt.whiskers[han.woi_id])
 
@@ -235,7 +235,7 @@ Put the Loading steps in try/catch blocks in case there is some error calculatin
 
 Is there a way with ffmpeg to determine the number of frames?
 =#
-function load_video(vid_name,frame_range = (false,0.0,0))
+function load_video(vid_name::String,frame_range = (false,0.0,0))
 
     if !frame_range[1]
 
@@ -283,7 +283,7 @@ function load_video(vid_name,frame_range = (false,0.0,0))
     (vid,start_frame,vid_length)
 end
 
-function WT_length_constraint(whiskers,min_length)
+function WT_length_constraint(whiskers::Array{Whisker1,1},min_length)
 
     remove_whiskers=Array{Int64,1}()
 
@@ -299,7 +299,7 @@ function WT_length_constraint(whiskers,min_length)
     nothing
 end
 
-function apply_mask(whiskers,mask,min_length)
+function apply_mask(whiskers::Array{Whisker1,1},mask,min_length)
 
     remove_whiskers=Array{Int64,1}()
 
@@ -351,7 +351,7 @@ function apply_mask(whiskers,mask,min_length)
     nothing
 end
 
-function WT_reorder_whisker(whiskers,pad_pos)
+function WT_reorder_whisker(whiskers::Array{Whisker1,1},pad_pos)
 
     #order whiskers so that the last index is closest to the whisker pad
     for i=1:length(whiskers)
@@ -492,7 +492,7 @@ function whisker_prev_frame(wt,iFrame,keep_thres=20.0)
     nothing
 end
 
-function eliminate_redundant(whiskers,keep_thres=20.0)
+function eliminate_redundant(whiskers::Array{Whisker1,1},keep_thres=20.0)
 
     i=1
 
@@ -533,7 +533,7 @@ function eliminate_redundant(whiskers,keep_thres=20.0)
 end
 
 #Order anterior to posterior
-function reorder_whiskers(wt)
+function reorder_whiskers(wt::Tracker)
 
     for i=1:length(wt.all_whiskers)
 
