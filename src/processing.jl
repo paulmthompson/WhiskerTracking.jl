@@ -61,7 +61,7 @@ Only Whiskers are identified that are inside a region of interest (ROI)
 That ROI is a circle centered on the whisker pad of radius 100
 =#
 
-function apply_roi(whiskers::Array{Whisker1,1},pad_pos)
+function apply_roi(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,Float32})
 
     remove_whiskers=Array{Int64,1}()
 
@@ -282,7 +282,7 @@ function load_video(vid_name::String,frame_range = (false,0.0,0))
     (vid,start_frame,vid_length)
 end
 
-function WT_length_constraint(whiskers::Array{Whisker1,1},min_length)
+function WT_length_constraint(whiskers::Array{Whisker1,1},min_length::Int)
 
     remove_whiskers=Array{Int64,1}()
 
