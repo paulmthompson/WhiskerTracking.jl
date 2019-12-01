@@ -433,15 +433,6 @@ function get_max_frames(vid_name::String)
 end
 
 #=
-Touch Functions
-=#
-
-
-function detect_touch(han)
-
-end
-
-#=
 Draw marker to indicate that touch has occured
 =#
 
@@ -1447,10 +1438,6 @@ function WT_constraints(han)
             println("Track attempt: ", han.track_attempt)
     end
     =#
-
-    if han.tracked[han.frame]
-        detect_touch(han)
-    end
 
     nothing
 end

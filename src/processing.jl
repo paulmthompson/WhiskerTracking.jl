@@ -6,7 +6,6 @@ function upload_mask(wt,mask_file)
     #Load mask
     myimg = reinterpret(UInt8,load(string(wt.data_path,mask_file)))
 
-
     if size(myimg,3) == 1
         wt.mask = myimg.==0
     else
@@ -299,7 +298,7 @@ function WT_length_constraint(whiskers::Array{Whisker1,1},min_length)
     nothing
 end
 
-function apply_mask(whiskers::Array{Whisker1,1},mask,min_length)
+function apply_mask(whiskers::Array{Whisker1,1},mask::BitArray{2},min_length::Int64)
 
     remove_whiskers=Array{Int64,1}()
 
@@ -351,7 +350,7 @@ function apply_mask(whiskers::Array{Whisker1,1},mask,min_length)
     nothing
 end
 
-function WT_reorder_whisker(whiskers::Array{Whisker1,1},pad_pos)
+function WT_reorder_whisker(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,Float32})
 
     #order whiskers so that the last index is closest to the whisker pad
     for i=1:length(whiskers)
