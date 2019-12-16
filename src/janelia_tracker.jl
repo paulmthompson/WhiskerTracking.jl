@@ -3,7 +3,7 @@ const background_img = zeros(UInt8,640*480)
 
 const background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(background_img)))
 
-function JT_trace(iFrame::Int,image_data::AbtractArray{UInt8,2})
+function JT_trace(iFrame::Int,image_data::AbstractArray{UInt8,2})
 
     img=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(image_data)))
     #background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(zeros(UInt8,640*480))))
@@ -25,7 +25,7 @@ function JT_trace(iFrame::Int,image_data::AbtractArray{UInt8,2})
     wts
 end
 
-function WT_trace(iFrame::Int,image_data::AbtractArray{UInt8,2},min_length::Int,pad_pos::Tuple{Float32,Float32},mask::BitArray{2})
+function WT_trace(iFrame::Int,image_data::AbstractArray{UInt8,2},min_length::Int,pad_pos::Tuple{Float32,Float32},mask::BitArray{2})
 
     whiskers=JT_trace(iFrame,image_data)
 
