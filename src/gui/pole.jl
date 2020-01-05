@@ -14,13 +14,17 @@ function _make_pole_gui()
     pole_delete_button = Button("Delete Pole in Frame")
     pole_grid[1,5] = pole_delete_button
 
+    pole_use_tracked_button = Button("Use Tracked Pole Locations")
+    pole_grid[1,6] = pole_use_tracked_button
+
     pole_grid[1,7] = Label("Check the top checkbox if you want the whisker tracker to \n also look for a pole in each frame")
 
     pole_win = Window(pole_grid)
     Gtk.showall(pole_win)
     visible(pole_win,false)
 
-    pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button,pole_delete_button)
+    pp_widgets=pole_widgets(pole_win,pole_mode_button,pole_gen_button,pole_auto_button,pole_touch_button,pole_delete_button,
+    pole_use_tracked_button)
 end
 
 function add_pole_callbacks(w::pole_widgets,handles::Tracker_Handles)
@@ -29,6 +33,7 @@ function add_pole_callbacks(w::pole_widgets,handles::Tracker_Handles)
     signal_connect(pole_select_cb,w.gen_button,"clicked",Void,(),false,(handles,))
     signal_connect(pole_auto_cb,w.auto_button,"clicked",Void,(),false,(handles,))
     signal_connect(pole_delete_cb,w.delete_button,"clicked",Void,(),false,(handles,))
+    signal_connect(pole_use_tracked_cb,w.use_pole_tracked_button,"clicked",Void,(),false,(handles,))
 
 end
 
@@ -85,6 +90,25 @@ function pole_delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han.pole_present[han.frame] = false
 
     redraw_all(han)
+
+    nothing
+end
+
+function pole_use_tracked_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    try
+        for i=1:length(han.frame_list)
+            if !isnan(han.tracked_pole[i,1])
+                han.pole_present[i] = true
+                han.pole_loc[i,1] = han.tracked_pole[han.frame_list[i],1]
+                han.pole_loc[i,2] = han.tracked_pole[han.frame_list[i],2]
+            end
+        end
+    catch
+        println("Could not move over pole positions from tracked frames")
+    end
 
     nothing
 end

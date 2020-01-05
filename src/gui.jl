@@ -696,7 +696,7 @@ function change_save_paths(han::Tracker_Handles,config_path::String)
 
     dlc_folder_path = dirname(config_path)
 
-    save_folder_name=dirname(dirname(dlc_folder_path))
+    save_folder_name=dirname(dlc_folder_path)
 
     han.paths=Save_Paths(save_folder_name,false)
 
