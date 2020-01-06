@@ -100,7 +100,7 @@ function pole_use_tracked_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     try
         for i=1:length(han.frame_list)
-            if !isnan(han.tracked_pole[i,1])
+            if !isnan(han.tracked_pole[han.frame_list[i],1])
                 han.pole_present[i] = true
                 han.pole_loc[i,1] = han.tracked_pole[han.frame_list[i],1]
                 han.pole_loc[i,2] = han.tracked_pole[han.frame_list[i],2]

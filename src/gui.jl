@@ -553,7 +553,7 @@ function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if config_path != ""
 
         change_save_paths(han,config_path)
-
+        han.dlc.config_path = config_path
         load_label_data(han,config_path)
 
         update_discrete(han)
@@ -689,6 +689,12 @@ function load_labels(label_path::String)
 
     close(myfile)
 
+    #Check for duplicates. This can happen on windows with / \ confusion
+    unique_inds=findfirst.(isequal.(unique(frame_list)), [frame_list])
+    frame_list=unique(frame_list)
+    w_p = w_p[:,unique_inds]
+
+
     (w_p,frame_list)
 end
 
@@ -696,7 +702,7 @@ function change_save_paths(han::Tracker_Handles,config_path::String)
 
     dlc_folder_path = dirname(config_path)
 
-    save_folder_name=dirname(dlc_folder_path)
+    save_folder_name=dirname(dirname(dlc_folder_path))
 
     han.paths=Save_Paths(save_folder_name,false)
 
