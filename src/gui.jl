@@ -554,7 +554,11 @@ function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         change_save_paths(han,config_path)
         han.dlc.config_path = config_path
-        load_label_data(han,config_path)
+        try
+            load_label_data(han,config_path)
+        catch
+            println("Could not load labeled data")
+        end
 
         update_discrete(han)
 
@@ -601,6 +605,16 @@ function load_label_data(han::Tracker_Handles,config_path::String)
 
     (w_p,frame_list)=load_labels(label_path)
 
+    #If one of the whiskers doesn't exist, delete it
+    keep = trues(length(frame_list))
+    for i=1:length(frame_list)
+        if all(isnan.(w_p[:,i]))
+            keep[i] = false
+        end
+    end
+
+    frame_list = frame_list[keep]
+    w_p = w_p[:,keep]
     han.wt.w_p = w_p
     han.frame_list = frame_list
 
@@ -690,10 +704,12 @@ function load_labels(label_path::String)
     close(myfile)
 
     #Check for duplicates. This can happen on windows with / \ confusion
-    unique_inds=findfirst.(isequal.(unique(frame_list)), [frame_list])
-    frame_list=unique(frame_list)
-    w_p = w_p[:,unique_inds]
+    if length(unique(frame_list)) < length(frame_list)
+        unique_inds=findfirst.(isequal.(unique(frame_list)), [frame_list])
 
+        frame_list=unique(frame_list)
+        w_p = w_p[:,unique_inds]
+    end
 
     (w_p,frame_list)
 end
