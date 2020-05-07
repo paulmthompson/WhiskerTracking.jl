@@ -112,13 +112,14 @@ function combine_end(han,x,y)
 
     if out1==1
         println("No intersection found, looking for closest match")
-
+        d=1000.0
         for i=2:han.partial.len
             for j=2:han.wt.whiskers[han.woi_id].len
-                if sqrt((han.partial.x[i]-han.wt.whiskers[han.woi_id].x[j]).^2+(han.partial.y[i]-han.wt.whiskers[han.woi_id].y[j]).^2)<2.0
+                this_d = sqrt((han.partial.x[i]-han.wt.whiskers[han.woi_id].x[j]).^2+(han.partial.y[i]-han.wt.whiskers[han.woi_id].y[j]).^2)
+                if this_d<d
+                    d = this_d
                     out1=i
                     out2=j
-                    break
                 end
             end
         end

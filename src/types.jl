@@ -1,26 +1,4 @@
 
-mutable struct WT_Image
-    kind::Int32 #bytes per pixel
-    width::Int32
-    height::Int32
-    text::Cstring #NULL for TIFF
-    array::Ptr{UInt8} #data
-end
-
-mutable struct Line_Params
-    offset::Float32
-    angle::Float32
-    width::Float32
-    score::Float32
-end
-
-mutable struct Seed
-    xpnt::Int32
-    ypnt::Int32
-    xdir::Int32
-    ydir::Int32
-end
-
 mutable struct Whisker1
     id::Int32
     time::Int32
@@ -33,26 +11,7 @@ end
 
 Whisker1()=Whisker1(0,0,0,Array{Float32,1}(),Array{Float32,1}(),Array{Float32,1}(),Array{Float32,1}())
 
-mutable struct Whisker2
-    id::Int32
-    time::Int32
-    len::Int32
-    x::Ptr{Float32}
-    y::Ptr{Float32}
-    thick::Ptr{Float32}
-    scores::Ptr{Float32}
-end
-
-function Whisker2(w::Whisker1)
-    id=w.id
-    time=w.time
-    len=w.len
-    x=pointer(w.x)
-    y=pointer(w.y)
-    thick=pointer(w.thick)
-    scores=pointer(w.scores)
-    Whisker2(id,time,len,x,y,thick,scores)
-end
+include("janelia_types.jl")
 
 function Whisker1(w::Whisker2)
     id=w.id
@@ -63,60 +22,6 @@ function Whisker1(w::Whisker2)
     thick=unsafe_wrap(Array,w.thick,len)
     scores=unsafe_wrap(Array,w.scores,len)
     Whisker1(id,time,len,x,y,thick,scores)
-end
-
-struct JT_Measurements
-    row::Int32
-    fid::Int32
-    wid::Int32
-    state::Int32 #1 if Whisker, 0 if not. Defaults to 0 when measurements are first made
-    face_x::Int32
-    face_y::Int32
-    col_follicle_x::Int32
-    col_follicle_y::Int32
-    valid_velocity::Int32
-    n::Int32
-    face_axis::Cuchar
-    data::Ptr{Float64}
-    velocity::Ptr{Float64}
-end
-
-mutable struct JT_Params
-    paramMIN_LENPRJ::Int32
-    paramMIN_LENSQR::Int32
-    paramMIN_LENGTH::Int32
-    paramDUPLICATE_THRESHOLD::Float32
-    paramFRAME_DELTA::Int32
-    paramHALF_SPACE_TUNNELING_MAX_MOVES::Int32
-    paramHALF_SPACE_ASSYMETRY_THRESH::Float32
-    paramMAX_DELTA_OFFSET::Float32
-    paramMAX_DELTA_WIDTH::Float32
-    paramMAX_DELTA_ANGLE::Float32
-    paramMIN_SIGNAL::Float32
-    paramWIDTH_MAX::Float32
-    paramWIDTH_MIN::Float32
-    paramWIDTH_STEP::Float32
-    paramANGLE_STEP::Float32
-    paramOFFSET_STEP::Float32
-    paramTLEN::Int32
-    paramMIN_SIZE::Int32
-    paramMIN_LEVEL::Int32
-    paramHAT_RADIUS::Float32
-    paramSEED_THRESH::Float32
-    paramSEED_ACCUM_THRESH::Float32
-    paramSEED_ITERATION_THRESH::Float32
-    paramSEED_ITERATIONS::Int32
-    paramSEED_SIZE_PX::Int32
-    paramSEED_ON_GRID_LATTICE_SPACING::Int32
-    paramSEED_METHOD::Int32
-    paramIDENTITY_SOLVER_SHAPE_NBINS::Int32
-    paramIDENTITY_SOLVER_VELOCITY_NBINS::Int32
-    paramCOMPARE_IDENTITIES_DISTS_NBINS::Int32
-    paramHMM_RECLASSIFY_BASELINE_LOG2::Float32
-    paramHMM_RECLASSIFY_VEL_DISTS_NBINS::Int32
-    paramHMM_RECLASSIFY_SHP_DISTS_NBINS::Int32
-    paramSHOW_PROGRESS_MESSAGES::Cchar
-    paramSHOW_DEBUG_MESSAGES::Cchar
 end
 
 mutable struct Tracker
@@ -256,22 +161,15 @@ end
 
 classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1),0.0)
 
-mutable struct DLC_Wrapper
-    config_path::String
-    export_pole::Bool
-    starting_weights::String
-end
-
-function DLC_Wrapper()
-    DLC_Wrapper("",false,"")
-end
-
 mutable struct Save_Paths
     path::String
     temp::String
     images::String
     backup::String
     DLC::String
+end
+
+mutable struct DLC_Wrapper
 end
 
 function Save_Paths(mypath,make_dirs=true)
@@ -295,6 +193,8 @@ function Save_Paths(mypath,make_dirs=true)
 
     out
 end
+
+abstract type NN end;
 
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
@@ -396,7 +296,6 @@ mutable struct Tracker_Handles
 
     class::classifier
 
-    dlc::DLC_Wrapper
     paths::Save_Paths
     temp_frame::Array{UInt8,2}
 end

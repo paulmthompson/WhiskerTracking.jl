@@ -65,14 +65,14 @@ function apply_roi(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,Float32})
 
     remove_whiskers=Array{Int64,1}()
 
-    for i=1:length(whiskers)
+    #for i=1:length(whiskers)
 
-        if sqrt((pad_pos[1]-whiskers[i].x[end])^2+(pad_pos[2]-whiskers[i].y[end])^2)>100.0
-            push!(remove_whiskers,i)
-        end
-    end
+        #if sqrt((pad_pos[1]-whiskers[i].x[end])^2+(pad_pos[2]-whiskers[i].y[end])^2)>100.0
+            #push!(remove_whiskers,i)
+        #end
+    #end
 
-    deleteat!(whiskers,remove_whiskers)
+    #deleteat!(whiskers,remove_whiskers)
 
     nothing
 end

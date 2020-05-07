@@ -7,7 +7,7 @@ end
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn
+Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn, FFMPEG, Knet
 
 @sk_import ensemble: RandomForestClassifier
 
@@ -23,8 +23,6 @@ if VERSION > v"0.7-"
     const indmax = argmax
 end
 
-const dlc_module = PyNULL()
-const dlc_py = PyNULL()
 const sp = PyNULL()
 
 include("config.jl")
@@ -32,47 +30,16 @@ include("config.jl")
 function __init__()
 
     ccall((:Load_Params_File,libwhisk_path),Int32,(Cstring,),jt_parameters)
-
-    if is_unix()
-        copy!(dlc_module, pyimport("deeplabcut"))
-
-        unshift!(PyVector(pyimport("sys")["path"]), "/home/wanglab/Programs/WhiskerTracking.jl/src")
-
-        copy!(dlc_py,pyimport("dlc_python"))
-        copy!(sp,pyimport("scipy"))
-    else
-
-        #I have descended into darkness
-        myhome=homedir()
-        py"""
-        import os
-        def change_path(x):
-            os.environ["PATH"] += os.pathsep + x
-        """
-        py"change_path"(string(myhome,"\\.julia\\conda\\3"))
-        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Library\\mingw-w64\\bin"))
-        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Library\\usr\\bin"))
-        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Library\\bin"))
-        py"change_path"(string(myhome,"\\.julia\\conda\\3\\Scripts"))
-        py"change_path"(string(myhome,"\\.julia\\conda\\3\\bin"))
-        py"change_path"(string(myhome,"\\.julia\\conda\\3\\condabin"))
-
-        py"""
-        import wx
-        """
-
-        copy!(dlc_module, pyimport("deeplabcut"))
-
-        unshift!(PyVector(pyimport("sys")["path"]), "$(myhome)\\Documents\\WhiskerTracking.jl\\src")
-
-        copy!(dlc_py,pyimport("dlc_python"))
-        copy!(sp,pyimport("scipy"))
-
-    end
-
+    copy!(sp,pyimport("scipy"))
 end
 
 include("types.jl")
+
+include("deep_learning/hourglass/residual.jl")
+include("deep_learning/hourglass/hourglass.jl")
+include("deep_learning/helper.jl")
+include("deep_learning/load.jl")
+
 include("gui.jl")
 include("janelia_tracker.jl")
 include("processing.jl")

@@ -44,7 +44,7 @@ function WT_trace(iFrame::Int,image_data::AbstractArray{UInt8,2},min_length::Int
 end
 
 function get_JT_params()
-    ccall((Libdl.dlsym(libwhisk,:Params)),Ptr{JT_Params},())
+    ccall((:Params,libwhisk_path),Ptr{JT_Params},())
 end
 
 function change_JT_param(f_name,value)
