@@ -7,7 +7,7 @@ end
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn, FFMPEG, Knet
+Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn, FFMPEG, Knet, Random, IterTools
 
 @sk_import ensemble: RandomForestClassifier
 
@@ -35,8 +35,6 @@ end
 
 include("types.jl")
 
-include("deep_learning/hourglass/residual.jl")
-include("deep_learning/hourglass/hourglass.jl")
 include("deep_learning/helper.jl")
 include("deep_learning/load.jl")
 
@@ -62,6 +60,7 @@ include("gui/janelia.jl")
 include("gui/dlc.jl")
 include("gui/export.jl")
 include("gui/contact.jl")
+include("gui/deeplearning.jl")
 
 include("analysis/forces.jl")
 include("analysis/touch.jl")

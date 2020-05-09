@@ -151,6 +151,13 @@ mutable struct contact_widgets
     pred_curv::Gtk.GtkCheckButtonLeaf
 end
 
+mutable struct deep_learning_widgets
+    win::Gtk.GtkWindowLeaf
+    prog::Gtk.GtkProgressBar
+    create_button::Gtk.GtkButtonLeaf
+    train_button::Gtk.GtkButtonLeaf
+end
+
 mutable struct classifier
     predictors::Array{Float64,2}
     n_estimators::Int64
@@ -160,6 +167,31 @@ mutable struct classifier
 end
 
 classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1),0.0)
+
+mutable struct Normalize_Parameters
+    mean_img::Array{Float32,3}
+    std_img::Array{Float32,3}
+    min_ref::Float32
+    max_ref::Float32
+end
+
+Normalize_Parameters() = Normalize_Parameters(zeros(Float32,0,0,0),zeros(Float32,0,0,0),0,0)
+
+abstract type NN end;
+
+include("deep_learning/hourglass/residual.jl")
+include("deep_learning/hourglass/hourglass.jl")
+
+mutable struct NeuralNetwork
+    labels::Array{Float32,4} #Labels for training
+    imgs::Array{Float32,4} #Images for training
+    norm::Normalize_Parameters #Reference values to scale input images
+    hg::NN #Deep Learning weights
+    epochs::Int64
+    losses::Array{Float32,1}
+end
+
+NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0))
 
 mutable struct Save_Paths
     path::String
@@ -193,8 +225,6 @@ function Save_Paths(mypath,make_dirs=true)
 
     out
 end
-
-abstract type NN end;
 
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
@@ -274,6 +304,7 @@ mutable struct Tracker_Handles
     dlc_widgets::dlc_widgets
     export_widgets::export_widgets
     contact_widgets::contact_widgets
+    dl_widgets::deep_learning_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}
@@ -295,6 +326,7 @@ mutable struct Tracker_Handles
     tracked_pole::Array{Float64,2}
 
     class::classifier
+    nn::NeuralNetwork
 
     paths::Save_Paths
     temp_frame::Array{UInt8,2}

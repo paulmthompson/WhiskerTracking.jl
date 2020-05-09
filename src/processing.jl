@@ -211,9 +211,9 @@ function assign_woi(han::Tracker_Handles)
 
     han.woi[han.frame] = deepcopy(han.wt.whiskers[han.woi_id])
 
-    if han.discrete_auto_calc
-        make_discrete(han.wt.w_p,han.frame,han.woi[han.frame],han.d_spacing)
-    end
+    #if han.discrete_auto_calc
+        #make_discrete(han.wt.w_p,han.frame,han.woi[han.frame],han.d_spacing)
+    #end
 
     #=
     These don't work for some reason

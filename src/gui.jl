@@ -112,6 +112,9 @@ function make_gui()
     manual_menu_ = MenuItem("Tracing")
     push!(extramenu,manual_menu_)
 
+    dl_menu_ = MenuItem("Deep Learning")
+    push!(extramenu,dl_menu_)
+
     push!(mb,extraopts)
 
     imageopts = MenuItem("_Image")
@@ -195,6 +198,8 @@ function make_gui()
     #contact options
     c_widgets = _make_contact_gui()
 
+    dl_widgets = _make_deeplearning_gui()
+
     win = Window(grid, "Whisker Tracker") |> Gtk.showall
 
     all_whiskers=[Array{Whisker1,1}() for i=1:vid_length]
@@ -220,9 +225,9 @@ function make_gui()
     falses(0),Array{Int64,1}(),zeros(Float64,vid_length),zeros(Float64,vid_length),
     wt,5.0,false,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,e_widgets,
-    c_widgets,falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
+    c_widgets,dl_widgets,falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
     false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),classifier(),these_paths,zeros(UInt8,640,480))
+    zeros(Float64,1,1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,640,480))
 
     signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
     signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
@@ -299,6 +304,10 @@ function make_gui()
     #Contact
     make_menu_callbacks(classifier_,c_widgets.win)
     add_contact_callbacks(c_widgets,handles)
+
+    #Deep learning
+    make_menu_callbacks(dl_menu_,dl_widgets.win)
+    add_deeplearning_callbacks(dl_widgets,handles)
 
     handles
 end

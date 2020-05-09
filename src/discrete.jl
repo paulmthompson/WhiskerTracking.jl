@@ -73,6 +73,57 @@ function make_discrete_woi(wt,woi,tracked,spacing)
     nothing
 end
 
+function make_discrete_all_whiskers(han,spacing=15.0)
+
+    #Make sure that whiskers are ordered with follicle at base
+    WhiskerTracking.WT_reorder_whisker(han.woi,han.wt.pad_pos)
+
+    #Find longest whisker
+    (d_longest,dl_i)=longest_whisker(han.woi)
+
+    num_points = round(Int,div(d_longest, spacing))
+
+    #Divide into x points
+    d_points=make_woi_discrete(han.woi,num_points,spacing)
+end
+
+function longest_whisker(woi)
+
+    d_longest=0.0
+    dl_i=1;
+    for i=1:length(woi)
+        d=0.0
+        w=woi[i]
+        for j=2:length(w.x)
+            d += sqrt((w.x[j]-w.x[j-1])^2 + (w.y[j]-w.y[j-1])^2)
+        end
+
+        if d > d_longest
+            d_longest = d
+            dl_i = i
+        end
+    end
+    (d_longest, dl_i)
+end
+
+function make_woi_discrete(woi,num_points,spacing)
+
+    d_points = zeros(Float32,num_points,2,length(woi))
+
+    for i=1:length(woi)
+        for j=1:num_points
+            id=WhiskerTracking.culm_dist(woi[i].x,woi[i].y,spacing*(j-1))
+            if id != 1
+                d_points[j,1,i] = woi[i].x[id]
+                d_points[j,2,i] = woi[i].y[id]
+            end
+        end
+    end
+
+    d_points
+end
+
+
 function draw_discrete(han::Tracker_Handles)
 
     circ_rad=5.0

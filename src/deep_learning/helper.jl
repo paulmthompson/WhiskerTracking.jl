@@ -63,10 +63,52 @@ function image_augmentation(im,ll)
     (im_out,l_out)
 end
 
+function augment_images(im,ll)
+
+    total_augmentations = 6
+
+    im_out = zeros(Float32,size(im,1),size(im,2),size(im,3),size(im,4)*total_augmentations)
+    l_out = zeros(Float32,size(ll,1),size(ll,2),size(ll,3),size(ll,4)*total_augmentations)
+
+    count=1
+
+    for i=1:size(im,4)
+        im_out[:,:,:,count] = im[:,:,:,i]
+        l_out[:,:,:,count] = ll[:,:,:,i]
+        count += 1
+        #rotations
+        for j in [pi/12, pi/6, -pi/12, -pi/6]
+            for k=1:size(im,3)
+                im_out[:,:,k,count] = imrotate(im[:,:,k,i],j,Reflect())[1:size(im,1),1:size(im,2)]
+            end
+            for k=1:size(ll,3)
+                l_out[:,:,k,count] = imrotate(ll[:,:,k,i],j,Reflect())[1:size(ll,1),1:size(ll,2)]
+            end
+            count += 1
+        end
+
+        #additive noise
+        im_out[:,:,:,count] = im[:,:,:,i] .+ 0.1*rand(Float32,size(im_out,1),size(im_out,2),size(im_out,3))
+        l_out[:,:,:,count] = ll[:,:,:,i]
+        count += 1
+
+        #Set group of pixels to random value x times
+    end
+
+    #Shuffle Positions
+    myinds=Random.shuffle(collect(1:size(im_out,4)));
+    im_out=im_out[:,:,:,myinds]
+    l_out=l_out[:,:,:,myinds]
+
+    (im_out,l_out)
+end
+
+
 function normalize_images(ii)
 
     mean_img = mean(ii,dims=4)[:,:,:,1]
     std_img = std(ii,dims=4)[:,:,:,1]
+    std_img[std_img .== 0.0] .= 1
 
     for i=1:size(ii,4)
         ii[:,:,:,i] = (ii[:,:,:,i] .- mean_img) ./ std_img
@@ -81,6 +123,14 @@ function normalize_images(ii)
     (mean_img,std_img,min_ref,max_ref)
 end
 
+function ffmpeg_cmd(st,vid_name,num_frames,temp_file)
+`$(ffmpeg_path) -y -loglevel panic -ss $(st) -i $(vid_name) -frames:v $(num_frames) -f rawvideo -pix_fmt gray $(temp_file)`
+end
+
+function normalize_new_images(ii::KnetArray,mean_img::Array,std_img,min_ref,max_ref)
+    normalize_new_images(ii,convert(KnetArray,mean_img),convert(KnetArray,std_img),min_ref,max_ref)
+end
+
 function normalize_new_images(ii,mean_img,std_img,min_ref,max_ref)
 
     for i=1:size(ii,4)
@@ -90,15 +140,59 @@ function normalize_new_images(ii,mean_img,std_img,min_ref,max_ref)
     ii[:] = ii .- min_ref
     ii[:] = ii ./ max_ref
 
-    ii[ii.>1] .= 1
+    #ii[ii.>1] .= 1
 
     nothing
+end
+
+function my_imresize(im,w,h)
+    kernel = [0 0 0; 0 1 0; 0 0 0]
+    weights=convert(KnetArray,zeros(Float32,3,3,1,1))
+    weights[:] = kernel
+
+    conv_x = numerator(size(im,1) // w)
+    conv_y = numerator(size(im,2) // h)
+
+    sample_x = denominator(size(im,1) // w)
+    sample_y = denominator(size(im,2) // h)
+
+    upsampled=unpool(im,window=(sample_x,sample_y),mode=2)
+    conv4(weights,upsampled,stride=(conv_x,conv_y))
 end
 
 #=
 Convert Discrete points to heatmap for deep learning
 =#
-function discrete_to_heatmap()
+function make_heatmap_labels(han,real_w=640,real_h=480,label_img_size=64)
 
+    d_points=make_discrete_all_whiskers(han)
 
+    labels=zeros(Float32,label_img_size,label_img_size,size(d_points,1),size(han.woi,1))
+
+    for i=1:size(labels,4)
+        for j=1:size(labels,3)
+            this_x = d_points[j,1,i] / real_w * label_img_size
+            this_y = d_points[j,2,i] / real_h * label_img_size
+
+            if (this_x !=0.0)&(this_y != 0.0)
+                labels[:,:,j,i] = WhiskerTracking.gaussian_2d(1.0:1.0:label_img_size,1.0:1.0:label_img_size,this_y,this_x)
+                labels[:,:,j,i] = labels[:,:,j,i] ./ maximum(labels[:,:,j,i])
+            end
+        end
+    end
+
+    labels
+end
+
+function get_labeled_frames(han,out_hw=256,h=480,w=640,frame_rate=25)
+
+    imgs=zeros(Float32,out_hw,out_hw,1,length(han.frame_list))
+
+    temp=zeros(UInt8,w,h)
+    for i=1:length(han.frame_list)
+        frame_time = han.frame_list[i] / frame_rate
+        WhiskerTracking.load_single_frame(frame_time,temp,han.wt.vid_name)
+        imgs[:,:,1,i]=Images.imresize(temp',(out_hw,out_hw))
+    end
+    imgs
 end
