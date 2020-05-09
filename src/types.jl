@@ -156,6 +156,8 @@ mutable struct deep_learning_widgets
     prog::Gtk.GtkProgressBar
     create_button::Gtk.GtkButtonLeaf
     train_button::Gtk.GtkButtonLeaf
+    epochs_sb::Gtk.GtkSpinButtonLeaf
+    confidence_sb::Gtk.GtkSpinButtonLeaf
 end
 
 mutable struct classifier
@@ -189,9 +191,10 @@ mutable struct NeuralNetwork
     hg::NN #Deep Learning weights
     epochs::Int64
     losses::Array{Float32,1}
+    confidence_thres::Float64
 end
 
-NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0))
+NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5)
 
 mutable struct Save_Paths
     path::String

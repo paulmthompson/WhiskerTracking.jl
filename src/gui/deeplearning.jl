@@ -3,25 +3,52 @@ function _make_deeplearning_gui()
 
     grid = Grid()
 
-    training_button = Button("Train!")
-    grid[1,2] = training_button
-
     create_button = Button("Create Model")
     grid[1,1] = create_button
 
+    training_frame = Frame("Training")
+    grid[1,2] = training_frame
+    training_grid=Grid()
+    push!(training_frame,training_grid)
+
+    training_grid[1,1] = Label("Adjust values for training your model")
+
+    training_button = Button("Train!")
+    training_grid[1,2] = training_button
+
     prog = ProgressBar();
-    grid[2:3,2] = prog
+    training_grid[2:3,2] = prog
+
+    epochs_sb = SpinButton(1:10000)
+    setproperty!(epochs_sb,:value,10)
+    training_grid[1,3] = epochs_sb
+    training_grid[2,3] = Label("Epochs")
+
+    prediction_frame = Frame("Prediction")
+    grid[1,3] = prediction_frame
+    prediction_grid = Grid()
+    push!(prediction_frame,prediction_grid)
+
+    prediction_grid[1,1] = Label("Adjust parameters for predicting with trained model")
+
+    confidence_sb = SpinButton(0.1:0.1:0.9)
+    setproperty!(confidence_sb,:value,0.5)
+    prediction_grid[1,2] = confidence_sb
+    prediction_grid[2,2] = Label("Confidence Threshold")
+
 
     win = Window(grid)
     Gtk.showall(win)
     visible(win,false)
 
-    c_widgets=deep_learning_widgets(win,prog,create_button,training_button)
+    c_widgets=deep_learning_widgets(win,prog,create_button,training_button,epochs_sb,confidence_sb)
 end
 
 function add_deeplearning_callbacks(w,handles)
     signal_connect(create_button_cb,w.create_button,"clicked",Void,(),false,(handles,))
     signal_connect(training_button_cb,w.train_button,"clicked",Void,(),false,(handles,))
+    signal_connect(epochs_sb_cb,w.epochs_sb,"value-changed",Void,(),false,(handles,))
+    signal_connect(confidence_sb_cb,w.confidence_sb,"value-changed",Void,(),false,(handles,))
 
     nothing
 end
@@ -52,6 +79,24 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     myadam=Adam(lr=1e-3)
     @async run_training(han.nn.hg,dtrn,myadam,han.dl_widgets.prog,han.nn.epochs,han.nn.losses)
+
+    nothing
+end
+
+function epochs_sb_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.nn.epochs=getproperty(han.dl_widgets.epochs_sb,:value,Int)
+
+    nothing
+end
+
+function confidence_sb_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    han.nn.confidence_thres=getproperty(han.dl_widgets.confidence_sb,:value,Int)
 
     nothing
 end
