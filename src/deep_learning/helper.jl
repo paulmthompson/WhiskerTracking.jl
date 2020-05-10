@@ -110,15 +110,13 @@ function normalize_images(ii)
     std_img = std(ii,dims=4)[:,:,:,1]
     std_img[std_img .== 0.0] .= 1
 
-    for i=1:size(ii,4)
-        ii[:,:,:,i] = (ii[:,:,:,i] .- mean_img) ./ std_img
-    end
+    ii = (ii .- mean_img) ./ std_img
 
     min_ref = minimum(ii)
-    ii[:] = ii .- min_ref
+    ii = ii .- min_ref
 
     max_ref = maximum(ii)
-    ii[:] = ii ./ max_ref
+    ii = ii ./ max_ref
 
     (mean_img,std_img,min_ref,max_ref)
 end
@@ -131,18 +129,9 @@ function normalize_new_images(ii::KnetArray,mean_img::Array,std_img,min_ref,max_
     normalize_new_images(ii,convert(KnetArray,mean_img),convert(KnetArray,std_img),min_ref,max_ref)
 end
 
-function normalize_new_images(ii,mean_img,std_img,min_ref,max_ref)
-
-    for i=1:size(ii,4)
-        ii[:,:,:,i] = (ii[:,:,:,i] .- mean_img) ./ std_img
-    end
-
-    ii[:] = ii .- min_ref
-    ii[:] = ii ./ max_ref
-
-    #ii[ii.>1] .= 1
-
-    nothing
+function normalize_new_images(ii,mean_img)
+    ii = ii ./ 255
+    ii = ii .- mean_img
 end
 
 function my_imresize(im,w,h)

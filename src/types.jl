@@ -175,9 +175,10 @@ mutable struct Normalize_Parameters
     std_img::Array{Float32,3}
     min_ref::Float32
     max_ref::Float32
+    num::Int64 #Number of frames to calculate mean over
 end
 
-Normalize_Parameters() = Normalize_Parameters(zeros(Float32,0,0,0),zeros(Float32,0,0,0),0,0)
+Normalize_Parameters() = Normalize_Parameters(zeros(Float32,0,0,0),zeros(Float32,0,0,0),0,0,10000)
 
 abstract type NN end;
 
@@ -192,9 +193,12 @@ mutable struct NeuralNetwork
     epochs::Int64
     losses::Array{Float32,1}
     confidence_thres::Float64
+    predict_single::Bool
+    normalize_inputs::Bool
 end
 
-NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5)
+NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5,false,
+true)
 
 mutable struct Save_Paths
     path::String
