@@ -3,8 +3,28 @@ function _make_deeplearning_gui()
 
     grid = Grid()
 
-    create_button = Button("Create Model")
-    grid[1,1] = create_button
+    network_frame = Frame("Options")
+    grid[1,1] = network_frame
+    network_grid = Grid()
+    push!(network_frame,network_grid)
+
+    network_grid[1,1]=Label("Model Type: ")
+    network_grid[1,2]=Label("Stacked Hourglass, \n 64 Channel")
+
+    network_grid[2,1] = Label("Model Weights: ")
+    model_weights_label = Label("Train from scratch")
+    network_grid[2,2] = model_weights_label
+    load_weights_button = Button("Load Weights")
+    network_grid[2,3] = load_weights_button
+
+    network_grid[3,1] = Label("Training Dataset: ")
+    model_labels_label = Label("Use labels in this video")
+    network_grid[3,2] = model_labels_label
+    load_labels_button = Button("Load Existing Labels")
+    network_grid[3,3] = load_labels_button
+
+    create_training_button = Button("Create Model")
+    network_grid[1,4] = create_training_button
 
     training_frame = Frame("Training")
     grid[1,2] = training_frame
@@ -41,11 +61,18 @@ function _make_deeplearning_gui()
     Gtk.showall(win)
     visible(win,false)
 
-    c_widgets=deep_learning_widgets(win,prog,create_button,training_button,epochs_sb,confidence_sb)
+    c_widgets=deep_learning_widgets(win,prog,create_training_button, load_weights_button, false, model_weights_label,
+    load_labels_button, false, model_labels_label,
+    training_button,epochs_sb,confidence_sb)
 end
 
 function add_deeplearning_callbacks(w,handles)
-    signal_connect(create_button_cb,w.create_button,"clicked",Void,(),false,(handles,))
+
+    signal_connect(load_weights_cb,w.load_weights_button,"clicked",Void,(),false,(handles,))
+    signal_connect(load_labels_cb,w.load_labels_button,"clicked",Void,(),false,(handles,))
+
+    signal_connect(create_training_cb,w.create_button,"clicked",Void,(),false,(handles,))
+
     signal_connect(training_button_cb,w.train_button,"clicked",Void,(),false,(handles,))
     signal_connect(epochs_sb_cb,w.epochs_sb,"value-changed",Void,(),false,(handles,))
     signal_connect(confidence_sb_cb,w.confidence_sb,"value-changed",Void,(),false,(handles,))
@@ -53,22 +80,99 @@ function add_deeplearning_callbacks(w,handles)
     nothing
 end
 
-function create_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+function load_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    set_up_training(han) #heatmaps, labels, normalize, augment
+    #Change Weight Path with file dialog
 
-    hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
+    config_path = open_dialog("Load Previous Weights",han.win)
 
-    han.nn.losses=zeros(Float32,0)
+    if config_path != ""
 
-    load_hourglass("quad_hourglass_64.mat",hg)
-    change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
-
-    han.nn.hg = hg
+        try
+            han.nn.weight_path = config_path
+            hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
+            load_hourglass(han.nn.weight_path,hg)
+            han.nn.hg = hg
+            setproperty!(han.dl_widgets.weights_label,:label,config_path)
+            han.dl_widgets.use_existing_weights = true
+        catch
+            println("Could not load labeled data")
+        end
+    end
 
     nothing
+end
+
+function load_labels_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    config_path = open_dialog("Load Previous Labels",han.win)
+
+    if config_path != ""
+
+        try
+            load_training(han,config_path)
+            setproperty!(han.dl_widgets.labels_label,:label,config_path)
+            han.dl_widgets.use_existing_labels = true
+        catch
+            println("Could not load labeled data")
+        end
+
+        println("Previous Session Loaded")
+    end
+
+    nothing
+end
+
+function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    if !han.dl_widgets.use_existing_labels
+        set_up_training(han) #heatmaps, labels, normalize, augment
+        save_training(han)
+    else
+        set_up_training(han,false)
+        save_training(han)
+    end
+
+    if !han.dl_widgets.use_existing_weights
+        hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
+        load_hourglass(han.nn.weight_path,hg)
+        change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
+        han.nn.hg = hg
+    end
+
+    nothing
+end
+
+
+function save_training(han)
+
+    file = jldopen(string(han.paths.backup,"/labels.jld"), "w")
+    write(file, "frame_list",han.frame_list)
+    write(file, "woi",han.woi)
+    write(file, "mean_img",han.nn.norm.mean_img)
+    write(file, "std_img",han.nn.norm.std_img)
+
+    close(file)
+
+    nothing
+end
+
+function load_training(han,path)
+
+    file = jldopen(path, "r")
+    han.frame_list = read(file, "frame_list")
+    han.woi = read(file, "woi")
+    han.nn.norm.mean_img = read(file, "mean_img")
+    han.nn.norm.std_img = read(file, "std_img")
+
+    close(file)
+
 end
 
 function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -79,6 +183,8 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     myadam=Adam(lr=1e-3)
     @async run_training(han.nn.hg,dtrn,myadam,han.dl_widgets.prog,han.nn.epochs,han.nn.losses)
+
+    #save_hourglass(string(han.paths.backup,"weights.jld"),han.nn.hg)
 
     nothing
 end
@@ -125,7 +231,7 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,max_int
     running_mean_i[:,:,1] = mean(temp_frames2,dims=3) ./ max_intensity
 
     for i=1:load_number
-        run(WhiskerTracking.ffmpeg_cmd(i*loading_size / 25,han.wt.vid_name,loading_size,"test5.yuv"))
+        run(WhiskerTracking.ffmpeg_cmd(i*loading_size / 25,vid_name,loading_size,"test5.yuv"))
         read!("test5.yuv",temp_frames)
         temp_frames2[:]=convert(KnetArray{Float32,3},temp_frames)
 
@@ -144,18 +250,21 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,max_int
     (convert(Array,running_mean), convert(Array,running_std))
 end
 
-function set_up_training(han)
-    han.nn.labels=WhiskerTracking.make_heatmap_labels(han)
-    han.nn.imgs=WhiskerTracking.get_labeled_frames(han);
+function set_up_training(han,get_mean=true)
 
-    (mean_img,std_img)=mean_std_video_gpu(han,han.nn.norm.num)
-    han.nn.norm.min_ref = 0
-    han.nn.norm.max_ref = 255
-    han.nn.norm.mean_img = mean_img
-    han.nn.norm.std_img = std_img
+    if get_mean
+        (mean_img,std_img)=mean_std_video_gpu(han,han.max_frames)
+        han.nn.norm.min_ref = 0
+        han.nn.norm.max_ref = 255
+        han.nn.norm.mean_img = mean_img
+        han.nn.norm.std_img = std_img
 
-    #Rotate and Reshape to 256 256
-    han.nn.norm.mean_img = reshape(imresize(han.nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
+        #Rotate and Reshape to 256 256
+        han.nn.norm.mean_img = reshape(imresize(han.nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
+    end
+
+    han.nn.labels=make_heatmap_labels(han)
+    han.nn.imgs=get_labeled_frames(han);
 
     #Normalize
     han.nn.imgs=normalize_new_images(han.nn.imgs,han.nn.norm.mean_img);

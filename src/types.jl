@@ -155,6 +155,12 @@ mutable struct deep_learning_widgets
     win::Gtk.GtkWindowLeaf
     prog::Gtk.GtkProgressBar
     create_button::Gtk.GtkButtonLeaf
+    load_weights_button::Gtk.GtkButtonLeaf
+    use_existing_weights::Bool
+    weights_label::Gtk.GtkLabelLeaf
+    load_labels_button::Gtk.GtkButtonLeaf
+    use_existing_labels::Bool
+    labels_label::Gtk.GtkLabelLeaf
     train_button::Gtk.GtkButtonLeaf
     epochs_sb::Gtk.GtkSpinButtonLeaf
     confidence_sb::Gtk.GtkSpinButtonLeaf
@@ -195,10 +201,11 @@ mutable struct NeuralNetwork
     confidence_thres::Float64
     predict_single::Bool
     normalize_inputs::Bool
+    weight_path::String
 end
 
 NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5,false,
-true)
+true,"quad_hourglass_64.mat")
 
 mutable struct Save_Paths
     path::String
