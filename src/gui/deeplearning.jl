@@ -84,21 +84,19 @@ function load_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    #Change Weight Path with file dialog
-
     config_path = open_dialog("Load Previous Weights",han.win)
 
     if config_path != ""
 
         try
             han.nn.weight_path = config_path
-            hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
+            hg=HG2(64,1,4); #Dummy Numbers
             load_hourglass(han.nn.weight_path,hg)
             han.nn.hg = hg
             setproperty!(han.dl_widgets.weights_label,:label,config_path)
             han.dl_widgets.use_existing_weights = true
         catch
-            println("Could not load labeled data")
+            println("Could not load weights")
         end
     end
 
@@ -149,7 +147,6 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-
 function save_training(han)
 
     file = jldopen(string(han.paths.backup,"/labels.jld"), "w")
@@ -182,8 +179,9 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     dtrn=make_training_batch(han.nn.imgs,han.nn.labels);
 
     myadam=Adam(lr=1e-3)
-    @async run_training(han.nn.hg,dtrn,myadam,han.dl_widgets.prog,han.nn.epochs,han.nn.losses)
-
+    @async begin
+        run_training(han.nn.hg,dtrn,myadam,han.dl_widgets.prog,han.nn.epochs,han.nn.losses)
+    end
     #save_hourglass(string(han.paths.backup,"weights.jld"),han.nn.hg)
 
     nothing
@@ -285,16 +283,19 @@ function run_training(hg,trn::Knet.Data,this_opt,p,epochs=100,ls=Array{Float64,1
     count=0
     Gtk.set_gtk_property!(p, :fraction, 0)
     sleep(0.0001)
-    for x in takenth(minimizer,1)
-        push!(ls,x)
-        count+=1
-        complete=round(count/total_length,digits=2)
-        if complete > last_update
-            Gtk.set_gtk_property!(p, :fraction, complete)
-            last_update = complete
-            sleep(0.0001)
+
+        for x in takenth(minimizer,1)
+            push!(ls,x)
+            count+=1
+            complete=round(count/total_length,digits=2)
+            if complete > last_update
+                Gtk.set_gtk_property!(p, :fraction, complete)
+                last_update = complete
+                sleep(0.0001)
+                reveal(p,true)
+            end
         end
-    end
+
 
     ls
 end

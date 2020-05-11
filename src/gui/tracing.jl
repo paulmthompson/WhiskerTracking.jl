@@ -125,24 +125,17 @@ function combine_end(han,x,y)
         end
     end
 
-    if out1>1
-        println("Segments combined")
-        new_x = [han.wt.whiskers[han.woi_id].x[1:out2]; han.partial.x[out1:end]]
-        new_y = [han.wt.whiskers[han.woi_id].y[1:out2]; han.partial.y[out1:end]]
-        new_scores = [han.wt.whiskers[han.woi_id].scores[1:out2]; han.partial.scores[out1:end]]
-        new_thick = [han.wt.whiskers[han.woi_id].thick[1:out2]; han.partial.thick[out1:end]]
-        han.woi[han.frame].x=new_x
-        han.woi[han.frame].y=new_y
-        han.woi[han.frame].thick=new_thick
-        han.woi[han.frame].scores=new_scores
-        han.woi[han.frame].len = length(new_thick)
 
-        if han.discrete_auto_calc
-            make_discrete(han.wt.w_p,han.frame,han.woi[han.frame],han.d_spacing)
-        end
-    else
-        println("No intersection found")
-    end
+    println("Segments combined")
+    new_x = [han.wt.whiskers[han.woi_id].x[1:out2]; han.partial.x[out1:end]]
+    new_y = [han.wt.whiskers[han.woi_id].y[1:out2]; han.partial.y[out1:end]]
+    new_scores = [han.wt.whiskers[han.woi_id].scores[1:out2]; han.partial.scores[out1:end]]
+    new_thick = [han.wt.whiskers[han.woi_id].thick[1:out2]; han.partial.thick[out1:end]]
+    han.woi[han.frame].x=new_x
+    han.woi[han.frame].y=new_y
+    han.woi[han.frame].thick=new_thick
+    han.woi[han.frame].scores=new_scores
+    han.woi[han.frame].len = length(new_thick)
 
     han.combine_mode = 1
     redraw_all(han)

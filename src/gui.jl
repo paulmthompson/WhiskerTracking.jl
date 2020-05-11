@@ -204,7 +204,7 @@ function make_gui()
     tracker_name = (vid_name)[1:(end-4)]
 
     wt=Tracker(path,name,vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
-    (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
+    (0.0,0.0),255,0,all_whiskers)
 
     if VERSION > v"0.7-"
         woi_array = Array{Whisker1,1}(undef,vid_length)
@@ -372,7 +372,7 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     tracker_name = (vid_name)[1:(end-4)]
 
     handles.wt=Tracker(path,name,vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
-    (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
+    (0.0,0.0),255,0,all_whiskers)
 
     #Update these paths
     date_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
@@ -463,13 +463,6 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #Reset array of displayed whiskers
     han.wt.whiskers=Array{Whisker1,1}()
 
-    #If whiskers were found previously, load them
-    if (length(han.wt.all_whiskers[han.frame])>0)&(han.displayed_frame == han.frame_list[han.frame])
-        han.wt.whiskers=han.wt.all_whiskers[han.frame]
-        WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
-        plot_whiskers(han)
-    end
-
     #If equal to frame we already acquired, don't get it again
     frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
     try
@@ -477,6 +470,13 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         han.current_frame=han.temp_frame'
         han.current_frame2=deepcopy(han.current_frame)
         redraw_all(han)
+
+        #If whiskers were found previously, load them
+        if (length(han.wt.all_whiskers[han.frame])>0)&(han.displayed_frame == han.frame_list[han.frame])
+            han.wt.whiskers=han.wt.all_whiskers[han.frame]
+            WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
+            plot_whiskers(han)
+        end
     catch
     end
 
@@ -550,41 +550,10 @@ function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             println("Could not load labeled data")
         end
 
-        update_discrete(han)
+        #update_discrete(han)
 
         println("Previous Session Loaded")
     end
-
-    nothing
-end
-
-function update_discrete(han::Tracker_Handles)
-
-    w_p = deepcopy(han.wt.w_p)
-
-    num_discrete=div(size(w_p,1),2)
-    setproperty!(han.d_widgets.points_button,:value,num_discrete)
-
-    d_spacing = 0.0
-    num=0
-    wp_x = 0.0
-    wp_y = 0.0
-    for i=1:size(w_p,2)
-        d=sqrt((w_p[3,i] - w_p[1,i]) ^2 + (w_p[4,i] - w_p[2,i]) ^2)
-        if !isnan(d)
-            d_spacing += d
-            num += 1
-            wp_x += w_p[1,i]
-            wp_y += w_p[2,i]
-        end
-    end
-
-    han.d_spacing = round(Int64,d_spacing / num)
-    setproperty!(han.d_widgets.space_button,:value,han.d_spacing)
-
-    han.wt.pad_pos = (convert(Float32,wp_x/num),convert(Float32,wp_y/num))
-
-    han.wt.w_p = w_p
 
     nothing
 end
@@ -605,7 +574,7 @@ function load_label_data(han::Tracker_Handles,config_path::String)
 
     frame_list = frame_list[keep]
     w_p = w_p[:,keep]
-    han.wt.w_p = w_p
+
     han.frame_list = frame_list
 
     #Change frame list spin button maximum number and current index
@@ -614,8 +583,8 @@ function load_label_data(han::Tracker_Handles,config_path::String)
     #add whisker WOI
     han.woi=[Whisker1() for i=1:length(frame_list)]
     for i=1:length(frame_list)
-        x=reverse(han.wt.w_p[1:2:(end-1),i])
-        y=reverse(han.wt.w_p[2:2:end,i])
+        x=reverse(w_p[1:2:(end-1),i])
+        y=reverse(w_p[2:2:end,i])
         x=x[.!isnan.(x)]
         y=y[.!isnan.(y)]
         if length(x) != length(y)
@@ -737,18 +706,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             end
             han.pole_loc = new_pole_loc
 
-            #Discrete points
-            new_wp = zeros(Float32,size(han.wt.w_p,1),size(han.wt.w_p,2)+1)
-            for i=1:size(han.wt.w_p,2)
-
-                if i<frame_location
-                    new_wp[:,i] = han.wt.w_p[:,i]
-                else
-                    new_wp[:,i+1] = han.wt.w_p[:,i]
-                end
-            end
-            han.wt.w_p = new_wp
-
             #Change frame list spin button maximum number and current index
             Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
             setproperty!(han.frame_advance_sb,:value,frame_location)
@@ -772,9 +729,9 @@ function save_backup(han::Tracker_Handles)
     #Read backup
 
     #Write backup
-    file = matopen(string(han.paths.backup,"/backup.mat"), "w")
-    write(file, "w_p", han.wt.w_p)
+    file = jldopen(string(han.paths.backup,"/backup.jld"), "w")
     write(file, "frame_list",han.frame_list)
+    write(file, "woi",han.woi)
     close(file)
 
     nothing
@@ -1088,7 +1045,7 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
         end
     elseif han.selection_mode == 13
         try
-            add_discrete_point(han,m_x,m_y)
+            #add_discrete_point(han,m_x,m_y)
             redraw_all(han)
         catch
             println("Could not add point")

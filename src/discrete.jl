@@ -26,34 +26,21 @@ function make_discrete(p_array::Array{Float32,2},ind,w::Whisker1,spacing)
     nothing
 end
 
-function change_discrete_size(wt::Tracker,new_size)
+function make_woi_discrete(woi,num_points,spacing)
 
-    num_points = div(size(wt.w_p,1),2)
+    d_points = zeros(Float32,num_points,2,length(woi))
 
-    if new_size > num_points
-
-        new_p_array=zeros(Float32,new_size*2,size(wt.w_p,2))
-
-        for i=1:size(wt.w_p,1),j=1:size(wt.w_p,2)
-            new_p_array[i,j] = wt.w_p[i,j]
+    for i=1:length(woi)
+        for j=1:num_points
+            id=culm_dist(woi[i].x,woi[i].y,spacing*(j-1))
+            if id != 1
+                d_points[j,1,i] = woi[i].x[id]
+                d_points[j,2,i] = woi[i].y[id]
+            end
         end
-
-        wt.w_p=new_p_array
-
-    elseif new_size < num_points
-
-        new_p_array=zeros(Float32,new_size*2,size(wt.w_p,2))
-
-        for i=1:size(new_p_array,1),j=1:size(wt.w_p,2)
-            new_p_array[i,j] = wt.w_p[i,j]
-        end
-
-        wt.w_p=new_p_array
-    else
-
     end
 
-    nothing
+    d_points
 end
 
 #=
@@ -65,8 +52,7 @@ function make_discrete_woi(wt,woi,tracked,spacing)
     for i=1:length(woi)
 
         if tracked[i]
-
-            make_discrete(wt.w_p,i,woi[i],spacing)
+            #make_discrete(wt.w_p,i,woi[i],spacing)
         end
     end
 
@@ -106,26 +92,9 @@ function longest_whisker(woi)
     (d_longest, dl_i)
 end
 
-function make_woi_discrete(woi,num_points,spacing)
-
-    d_points = zeros(Float32,num_points,2,length(woi))
-
-    for i=1:length(woi)
-        for j=1:num_points
-            id=WhiskerTracking.culm_dist(woi[i].x,woi[i].y,spacing*(j-1))
-            if id != 1
-                d_points[j,1,i] = woi[i].x[id]
-                d_points[j,2,i] = woi[i].y[id]
-            end
-        end
-    end
-
-    d_points
-end
-
-
 function draw_discrete(han::Tracker_Handles)
 
+#=
     circ_rad=5.0
 
     ctx=Gtk.getgc(han.c)
@@ -136,48 +105,6 @@ function draw_discrete(han::Tracker_Handles)
         arc(ctx, han.wt.w_p[i*2-1,han.frame],han.wt.w_p[i*2,han.frame], circ_rad, 0, 2*pi);
         stroke(ctx);
     end
-
-
-    nothing
-
-end
-
-function add_discrete_point(han::Tracker_Handles,x,y)
-
-    num_points = div(size(han.wt.w_p,1),2)
-    ss=han.d_spacing
-
-    last_point=1
-
-    loc_x=zeros(Float64,num_points)
-    loc_y=zeros(Float64,num_points)
-    point_exists=falses(num_points)
-    for i=1:num_points
-
-        if han.wt.w_p[i*2-1,han.frame] != 0.0
-            loc_x[i]=han.wt.w_p[i*2-1,han.frame]
-            loc_y[i]=han.wt.w_p[i*2,han.frame]
-            point_exists[i] = true
-            last_point = i
-        end
-    end
-
-    if last_point < num_points
-
-        total_dist=0.0
-        for i=2:last_point
-            total_dist += sqrt((loc_x[i]-loc_x[i-1])^2 + (loc_y[i]-loc_y[i-1])^2)
-        end
-
-        true_dist=sqrt((x - loc_x[last_point])^2 + (y-loc_y[last_point])^2)
-
-        pos_vals=((last_point+1):(num_points))*ss
-
-        j=argmin(abs.(pos_vals .- true_dist))
-
-        han.wt.w_p[(last_point+j)*2-1,han.frame] = x
-        han.wt.w_p[(last_point+j)*2,han.frame] = y
-    end
-
+=#
     nothing
 end

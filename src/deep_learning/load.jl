@@ -100,11 +100,29 @@ function load_nn(x,file,count)
                 count[1]+=1
             elseif f == :ms
                 x.ms.momentum=read(file,string("ms_mo_",count[1]))
-                x.ms.mean = convert(KnetArray,read(file,string("ms_mean_",count[1])))
-                x.ms.var = convert(KnetArray,read(file,string("ms_var_",count[1])))
+
+                xx=read(file,string("ms_mean_",count[1]))
+                if typeof(xx) == Float32
+                    x.ms.mean = convert(KnetArray,[xx])
+                else
+                    x.ms.mean = convert(KnetArray,xx)
+                end
+
+                xx=read(file,string("ms_var_",count[1]))
+                if typeof(xx) == Float32
+                    x.ms.var = convert(KnetArray,[xx])
+                else
+                    x.ms.var = convert(KnetArray,xx)
+                end
+
                 count[1]+=1
             elseif f == :bn_p
-                setfield!(x,f,Param(convert(KnetArray,read(file,string("bn_p_",count[1])))))
+                xx = read(file,string("bn_p_",count[1]))
+                if typeof(xx) == Float32
+                    x.bn_p = Param(convert(KnetArray,[xx]))
+                else
+                    x.bn_p = Param(convert(KnetArray,xx))
+                end
                 count[1]+=1
             end
         end
