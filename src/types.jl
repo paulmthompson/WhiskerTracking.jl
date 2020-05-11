@@ -25,12 +25,9 @@ function Whisker1(w::Whisker2)
 end
 
 mutable struct Tracker
-    vid::SharedArray{UInt8,3} #Video pixel data (width x height x frame)
     data_path::String
     file_name::String
     vid_name::String
-    whisk_path::String
-    meas_path::String
     tracking_path::String
     tracking_name::String
     min_length::Int64 #Minimum size of traced element from Janelia tracker, in pixels

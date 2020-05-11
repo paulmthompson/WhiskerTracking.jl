@@ -1,31 +1,4 @@
 
-function image_preprocessing(vid,i)
-
-    temp_img = zeros(Float64,size(vid,1),size(vid,2))
-    temp_img2=zeros(Float64,size(vid,1),size(vid,2))
-
-    #Adjust contrast
-
-    for j=1:size(vid,1)
-        for k=1:size(vid,2)
-            temp_img[j,k] = convert(Float64,vid[j,k,i])
-        end
-    end
-
-    local_contrast_enhance!(temp_img,temp_img)
-
-    #anisotropic diffusion to smooth while perserving edges
-    anisodiff!(temp_img, 20,20.0,0.05,1,temp_img2)
-
-    for j=1:size(vid,1)
-        for k=1:size(vid,2)
-            vid[j,k,i] = round(UInt8,temp_img[j,k])
-        end
-    end
-
-    nothing
-end
-
 function anisodiff(im,niter,kappa,lambda,option)
     diff=zeros(Float64,size(im))
     anisodiff!(im,niter,kappa,lambda,option,diff)
@@ -153,7 +126,7 @@ end
 
 function subtract_background(han::Tracker_Handles)
 
-    mydiff = han.wt.vid[:,:,han.frame] .- mean_image(han)
+    mydiff = han.current_frame2 .- mean_image(han)
     new_diff = (mydiff - minimum(mydiff))
     new_diff = new_diff ./ maximum(new_diff)
 
@@ -172,10 +145,15 @@ function sharpen_image(han::Tracker_Handles)
     nothing
 end
 
-function mean_image_uint8(han::Tracker_Handles)
-    round.(UInt8,squeeze(mean(han.wt.vid,3),3))
-end
+function adjust_contrast(myimg,contrast_min,contrast_max)
 
-function mean_image(han::Tracker_Handles)
-    squeeze(mean(han.wt.vid,3),3)
+    if VERSION > v"0.7-"
+        myimg[myimg.>contrast_max] .= 255
+        myimg[myimg.<contrast_min] .= 0
+    else
+        myimg[myimg.>contrast_max]=255
+        myimg[myimg.<contrast_min]=0
+    end
+
+    myimg
 end

@@ -6,12 +6,9 @@ function make_gui()
     name=""
     path=""
     vid_name = ""
-    whisk_path = ""
-    meas_path = ""
 
     max_frames = 2
     vid_length = 1
-    vid=zeros(UInt8,480,640,1)
     frame_list = [1]
     start_frame = 1
 
@@ -206,7 +203,7 @@ function make_gui()
 
     tracker_name = (vid_name)[1:(end-4)]
 
-    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
+    wt=Tracker(path,name,vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
     (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
 
     if VERSION > v"0.7-"
@@ -218,7 +215,7 @@ function make_gui()
     these_paths = Save_Paths("",false)
 
     handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    vid[:,:,1],zeros(UInt8,640,480),0,woi_array,1,num_whiskers_sb,1,
+    zeros(UInt8,480,640),zeros(UInt8,640,480),0,woi_array,1,num_whiskers_sb,1,
     false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,touch_no_contact,false,
@@ -354,29 +351,27 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
 
     name=""
     vid_name = string(path,vid_title)
-    whisk_path = string(path,name,".whiskers")
-    meas_path = string(path,name,".measurements")
 
     if (dynamic_load)
         #load first frame
-        vid=zeros(UInt8,480,640,1)
         temp=zeros(UInt8,640,480)
         frame_time = 1  /  25 #Number of frames in a second of video
         try
             load_single_frame(frame_time,temp,vid_name)
-            vid[:,:,1] = temp'
         catch
         end
         vid_length = 1
         frame_list=[1]
         start_frame=1
     else
+        #=
         if !image_stack
             (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
             frame_list=Array{Int64,1}()
         else
             (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
         end
+        =#
     end
 
     handles.max_frames = get_max_frames(vid_name)
@@ -388,7 +383,7 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
 
     tracker_name = (vid_name)[1:(end-4)]
 
-    handles.wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
+    handles.wt=Tracker(path,name,vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
     (0.0,0.0),255,0,all_whiskers,zeros(Float32,10,vid_length))
 
     #Update these paths
@@ -399,7 +394,7 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     these_paths = Save_Paths(t_folder)
     handles.paths = these_paths
 
-    save_single_image(handles,vid[:,:,1],1)
+    save_single_image(handles,temp',1)
 
     handles.current_frame=temp'
     handles.current_frame2=deepcopy(handles.current_frame)
@@ -662,23 +657,7 @@ function load_label_data(han::Tracker_Handles,config_path::String)
 
     han.pole_loc = zeros(Float32,length(frame_list),2)
 
-    han.wt.vid = load_select_video_frames(han)
-
     nothing
-end
-
-function load_select_video_frames(han::Tracker_Handles)
-
-    new_vid=zeros(UInt8,size(han.wt.vid,1),size(han.wt.vid,2),length(han.frame_list))
-
-    temp=zeros(UInt8,640,480)
-    for i=1:length(han.frame_list)
-        frame_time = han.frame_list[i] / 25
-        load_single_frame(frame_time,temp,han.wt.vid_name)
-        new_vid[:,:,i] = temp'
-    end
-
-    new_vid
 end
 
 function get_label_path_from_config(config_path::String)
@@ -751,18 +730,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             end
 
             insert!(han.frame_list,frame_location,new_frame)
-
-            #Add new video frame to video array
-            new_vid=zeros(UInt8,size(han.wt.vid,1),size(han.wt.vid,2),size(han.wt.vid,3)+1)
-            for i=1:size(han.wt.vid,3)
-                if i<frame_location
-                    new_vid[:,:,i] = han.wt.vid[:,:,i]
-                else
-                    new_vid[:,:,i+1] = han.wt.vid[:,:,i]
-                end
-            end
-            new_vid[:,:,frame_location] = han.current_frame2
-            han.wt.vid = new_vid
 
             #add whisker WOI
             insert!(han.woi,frame_location,Whisker1())
@@ -938,15 +905,10 @@ function load_whisker_data(han,filepath)
         end
         if JLD.exists(file,"Whiskers")
             mytracked = read(file, "Frames_Tracked")
-            if size(han.wt.vid,3) != length(mytracked)
-                println("Error: Number of loaded whisker frames does not match number of video frames")
-            else
-
-                for i=1:length(mywhiskers)
-                    han.woi[mywhiskers[i].time] = deepcopy(mywhiskers[i])
-                end
-                han.tracked = mytracked
+            for i=1:length(mywhiskers)
+                han.woi[mywhiskers[i].time] = deepcopy(mywhiskers[i])
             end
+            han.tracked = mytracked
         end
         if JLD.exists(file,"Start_Frame")
             start_frame = read(file,"Start_Frame")
@@ -1014,7 +976,15 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     setproperty!(han.adj_frame,:value,han.frame_list[han.frame])
     han.displayed_frame = han.frame_list[han.frame]
 
-    han.current_frame = han.wt.vid[:,:,han.frame]
+    frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
+    try
+        load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
+        han.current_frame=han.temp_frame'
+        han.current_frame2=deepcopy(han.current_frame)
+        redraw_all(han)
+    catch
+
+    end
 
     adjust_contrast_gui(han)
 
@@ -1028,8 +998,15 @@ function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.tracked[han.frame]=false
-    han.current_frame = han.wt.vid[:,:,han.frame]
-    plot_image(han,han.current_frame')
+    frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
+    try
+        load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
+        han.current_frame=han.temp_frame'
+        han.current_frame2=deepcopy(han.current_frame)
+        redraw_all(han)
+    catch
+
+    end
 
     nothing
 end
@@ -1175,7 +1152,11 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
     if han.erase_mode
         erase_start(han,m_x,m_y)
     elseif han.draw_mode
-        draw_start(han,m_x,m_y)
+        try
+            draw_start(han,m_x,m_y)
+        catch
+            println("Drawing Failed")
+        end
     elseif han.combine_mode>0
         try
             if han.combine_mode == 1

@@ -15,9 +15,7 @@ function upload_mask(wt,mask_file)
     nothing
 end
 
-function generate_mask(wt,min_val,max_val,frame_id)
-
-    myimg = wt.vid[:,:,frame_id]
+function generate_mask(wt,myimg,min_val,max_val)
 
     if VERSION > v"0.7-"
         myimg[myimg.>max_val] .= 255
@@ -51,7 +49,7 @@ end
 
 function adjust_contrast_gui(han::Tracker_Handles)
 
-    han.current_frame=adjust_contrast(han.wt,han.frame)
+    han.current_frame=adjust_contrast(han.current_frame,han.wt.contrast_min,han.wt.contrast_max)
 
     nothing
 end
@@ -75,21 +73,6 @@ function apply_roi(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,Float32})
     #deleteat!(whiskers,remove_whiskers)
 
     nothing
-end
-
-function adjust_contrast(wt,iFrame)
-
-    myimg = wt.vid[:,:,iFrame]
-
-    if VERSION > v"0.7-"
-        myimg[myimg.>wt.contrast_max] .= 255
-        myimg[myimg.<wt.contrast_min] .= 0
-    else
-        myimg[myimg.>wt.contrast_max]=255
-        myimg[myimg.<wt.contrast_min]=0
-    end
-
-    myimg
 end
 
 function total_frames(tt,fps)
@@ -421,76 +404,6 @@ function make_tracking(path,name; frame_range = (false,0.0,0),image_stack=false)
     (0.0,0.0),255,0,all_whiskers)
 end
 
-function offline_tracking(wt,max_whiskers=10)
-
-    for i=1:size(wt.vid,3)
-        image_preprocessing(wt.vid,i)
-    end
-
-    for i=1:size(wt.vid,3)
-        #Need to transpose becuase row major in C vs column major in julia
-        wt.all_whiskers[i]=WT_trace(i,wt.vid[:,:,i]',wt.min_length,wt.pad_pos,wt.mask)
-        println(string(i,"/",size(wt.vid,3)))
-    end
-
-    reorder_whiskers(wt)
-
-    nothing
-end
-
-function offline_tracking_parallel(wt,max_whiskers=10)
-
-    pmap(t->image_preprocessing(wt.vid,t),1:size(wt.vid,3),batch_size=ceil(Int,size(wt.vid,3)/nworkers()))
-    #pmap(t->image_preprocessing(wt.vid,t),1:10)
-    println("Preprocessing complete")
-
-    wt.all_whiskers=pmap(t->WT_trace(t,wt.vid[:,:,t]',wt.min_length,wt.pad_pos,wt.mask),1:size(wt.vid,3),
-    batch_size=ceil(Int,size(wt.vid,3)/nworkers()))
-    #wt.all_whiskers=pmap(t->WT_trace(t,wt.vid[:,:,t]',wt.min_length,wt.pad_pos,wt.mask),1:10)
-
-    reorder_whiskers(wt)
-
-    nothing
-end
-
-function remove_bad_whiskers(wt,i,imax_whiskers)
-
-    if i>1
-        whisker_prev_frame(wt,i)
-    else
-        wt.whiskers=wt.whiskers[1:max_whiskers]
-    end
-
-    nothing
-end
-
-function whisker_prev_frame(wt,iFrame,keep_thres=20.0)
-
-    keep=Array{Int64,1}()
-
-    for i=1:length(wt.whiskers)
-        w2=[wt.whiskers[i].x[(end-9):end] wt.whiskers[i].y[(end-9):end]]
-        mincor=10000.0
-        w_id = 0;
-        for j=1:length(wt.all_whiskers[iFrame-1])
-            w1=[wt.all_whiskers[iFrame-1][j].x[(end-9):end] wt.all_whiskers[iFrame-1][j].y[(end-9):end]]
-
-            mycor=euclidean(w1,w2)
-            if mycor < mincor
-                mincor=mycor
-                w_id = i
-            end
-        end
-        if mincor<keep_thres
-            push!(keep,i)
-        end
-    end
-
-    wt.whiskers=wt.whiskers[keep]
-
-    nothing
-end
-
 function eliminate_redundant(whiskers::Array{Whisker1,1},keep_thres=20.0)
 
     i=1
@@ -625,11 +538,4 @@ function find_intersecting(whiskers)
 
     end
     (myoverlap,overlap_i)
-end
-
-function offline_tracking_multiple()
-
-
-
-
 end
