@@ -347,32 +347,21 @@ function load_video_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handles;frame_range = (false,0.0,0),image_stack=false,dynamic_load=true)
+function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handles;frame_range = (false,0.0,0),image_stack=false)
 
     name=""
     vid_name = string(path,vid_title)
 
-    if (dynamic_load)
-        #load first frame
-        temp=zeros(UInt8,640,480)
-        frame_time = 1  /  25 #Number of frames in a second of video
-        try
-            load_single_frame(frame_time,temp,vid_name)
-        catch
-        end
-        vid_length = 1
-        frame_list=[1]
-        start_frame=1
-    else
-        #=
-        if !image_stack
-            (vid,start_frame,vid_length)=load_video(vid_name,frame_range)
-            frame_list=Array{Int64,1}()
-        else
-            (vid,start_frame,vid_length,frame_list)=load_image_stack(string(path,name))
-        end
-        =#
+    #load first frame
+    temp=zeros(UInt8,640,480)
+    frame_time = 1  /  25 #Number of frames in a second of video
+    try
+        load_single_frame(frame_time,temp,vid_name)
+    catch
     end
+    vid_length = 1
+    frame_list=[1]
+    start_frame=1
 
     handles.max_frames = get_max_frames(vid_name)
 

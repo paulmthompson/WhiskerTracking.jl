@@ -101,8 +101,8 @@ function combine_end(han,x,y)
     for i=2:han.partial.len
         for j=2:han.wt.whiskers[han.woi_id].len
             if intersect(han.partial.x[i-1],han.partial.x[i],han.wt.whiskers[han.woi_id].x[j-1],
-            han.wt.whiskers[han.woi_id].x[j],han.partial.y[i-1],han.partial.y[i],
-            han.wt.whiskers[han.woi_id].y[j-1],han.wt.whiskers[han.woi_id].y[j])
+                han.wt.whiskers[han.woi_id].x[j],han.partial.y[i-1],han.partial.y[i],
+                han.wt.whiskers[han.woi_id].y[j-1],han.wt.whiskers[han.woi_id].y[j])
                 out1=i
                 out2=j
                 break

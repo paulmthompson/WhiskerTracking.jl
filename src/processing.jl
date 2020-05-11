@@ -1,6 +1,4 @@
 
-export make_tracking, offline_tracking
-
 function upload_mask(wt,mask_file)
 
     #Load mask
@@ -48,9 +46,7 @@ function generate_mask(wt,myimg,min_val,max_val)
 end
 
 function adjust_contrast_gui(han::Tracker_Handles)
-
     han.current_frame=adjust_contrast(han.current_frame,han.wt.contrast_min,han.wt.contrast_max)
-
     nothing
 end
 
@@ -198,11 +194,6 @@ function assign_woi(han::Tracker_Handles)
         #make_discrete(han.wt.w_p,han.frame,han.woi[han.frame],han.d_spacing)
     #end
 
-    #=
-    These don't work for some reason
-    =#
-    #x=smooth(han.woi[han.frame].x)
-    #y=smooth(han.woi[han.frame].y)
     x=han.woi[han.frame].x
     y=han.woi[han.frame].y
 
@@ -210,59 +201,6 @@ function assign_woi(han::Tracker_Handles)
     calc_woi_curv(han,x,y)
 
     nothing
-end
-
-#=
-Put the Loading steps in try/catch blocks in case there is some error calculating frames
-
-Is there a way with ffmpeg to determine the number of frames?
-=#
-function load_video(vid_name::String,frame_range = (false,0.0,0))
-
-    if !frame_range[1]
-
-        yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
-
-        if is_windows()
-            vid_length=parse(Int64,String(yy[1:(end-2)]))
-        else
-            vid_length=parse(Int64,String(yy[1:(end-1)]))
-        end
-
-        xx=open(`$(ffmpeg_path) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
-
-        temp=zeros(UInt8,640,480)
-
-
-        vid=SharedArray{UInt8}(480,640,vid_length)
-        for i=1:vid_length
-            read!(xx[1],temp)
-            vid[:,:,i]=temp'
-        end
-        start_frame = 1
-        #Specific range to track
-    else
-        start_time=frame_range[2]
-        xx=open(`$(ffmpeg_path) -ss $(start_time) -i $(vid_name) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
-
-        vid_length = frame_range[3]
-        vid=SharedArray{UInt8}(480,640,vid_length)
-
-        temp=zeros(UInt8,640,480)
-
-        for i=1:vid_length
-            read!(xx[1],temp)
-            vid[:,:,i]=temp'
-        end
-        close(xx[1])
-
-        start_frame = frame_range[2] * 25
-        vid = reshape(vid,480,640,vid_length)
-    end
-
-    println("Video loaded.")
-
-    (vid,start_frame,vid_length)
 end
 
 function WT_length_constraint(whiskers::Array{Whisker1,1},min_length::Int)
@@ -351,59 +289,6 @@ function WT_reorder_whisker(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,F
     nothing
 end
 
-function load_image_stack(path)
-
-    myfiles=readdir(path)
-    frame_list=Array{Int64,1}()
-
-    count=0
-
-    for i=1:length(myfiles)
-
-        if (myfiles[i][1:3])=="img" #this should be a variable
-            count+=1
-        end
-    end
-
-    vid=SharedArray{UInt8}(480,640,count)
-    count=1
-    for i=1:length(myfiles)
-
-        if (myfiles[i][1:3])=="img"
-            if VERSION > v"0.7-"
-                vid[:,:,count]=reinterpret(UInt8,load(string(path,myfiles[i])))[1:3:end,:]
-            else
-                vid[:,:,count]=reinterpret(UInt8,load(string(path,myfiles[i])))[1,:,:]
-            end
-            count+=1
-            push!(frame_list,parse(Int64,myfiles[i][4:(end-4)]))
-        end
-    end
-
-    (vid,1,count-1,frame_list)
-end
-
-function make_tracking(path,name; frame_range = (false,0.0,0),image_stack=false)
-
-    vid_name = string(path,name)
-    whisk_path = string(path,name,".whiskers")
-    meas_path = string(path,name,".measurements")
-
-    if !image_stack
-        (vid,start_frame)=load_video(vid_name,frame_range)
-    else
-        (vid, start_frame)=load_image_stack(string(path,name))
-    end
-    vid_length=size(vid,3)
-
-    all_whiskers=[Array{Whisker1}(0) for i=1:vid_length]
-
-    tracker_name=vid_name[1:(end-4)]
-
-    wt=Tracker(vid,path,name,vid_name,whisk_path,meas_path,path,tracker_name,50,falses(480,640),Array{Whisker1}(0),
-    (0.0,0.0),255,0,all_whiskers)
-end
-
 function eliminate_redundant(whiskers::Array{Whisker1,1},keep_thres=20.0)
 
     i=1
@@ -451,91 +336,7 @@ function reorder_whiskers(wt::Tracker)
 
         xpos=[wt.all_whiskers[i][j].x[end] for j=1:length(wt.all_whiskers[i])]
         wt.all_whiskers[i]=wt.all_whiskers[i][sortperm(xpos)]
-
     end
 
     nothing
-end
-
-function extend_whisker(whisker,mask)
-
-    extend=true
-
-    v_y=whisker.y[end] - whisker.y[end-1]
-    v_x=whisker.x[end] - whisker.x[end-1]
-
-    new_x=[whisker.x[end]; whisker.x[end]+v_x]
-    new_y=[whisker.y[end]; whisker.y[end]+v_y]
-
-    while (extend)
-        x_ind = round(Int64,new_y[end])
-        y_ind = round(Int64,new_x[end])
-
-        if x_ind<1
-            x_ind=1
-        elseif x_ind>size(mask,1)
-            x_ind=size(mask,1)
-        end
-
-        if y_ind<1
-            y_ind=1
-        elseif y_ind>size(mask,2)
-            y_ind=size(mask,2)
-        end
-
-        if mask[x_ind,y_ind]
-            break
-            extend=false
-        elseif (x_ind<5)|(y_ind<5)|(x_ind>size(mask,1)-5)|(y_ind>size(mask,2)-5)
-            break
-            extend=false
-        else
-            v_y=new_y[end] - new_y[end-1]
-            v_x=new_x[end] - new_x[end-1]
-
-            push!(new_x,new_x[end]+v_x)
-            push!(new_y,new_y[end]+v_y)
-        end
-    end
-
-    if length(new_y)>2
-
-        append!(whisker.x,new_x[3:end])
-        append!(whisker.y,new_y[3:end])
-        whisker.len += (length(new_y)-2)
-        append!(whisker.scores,0.0)
-        append!(whisker.thick,0.0)
-
-    end
-
-    nothing
-end
-
-function find_intersecting(whiskers)
-
-    myoverlap=Array{Tuple{Int64,Int64},1}(0)
-    overlap_i=Array{Tuple{Int64,Int64},1}(0)
-
-    for i=1:length(whiskers)
-
-        w1_x=whiskers[i].x
-        w1_y=whiskers[i].y
-        for j=(i+1):length(whiskers)
-
-                w2_x=whiskers[j].x
-                w2_y=whiskers[j].y
-
-                for ii=2:length(w1_x), jj = 2:length(w2_x)
-                    if WhiskerTracking.intersect(w1_x[ii-1],w1_x[ii],w2_x[jj-1],w2_x[jj],
-                            w1_y[ii-1],w1_y[ii],w2_y[jj-1],w2_y[jj])
-                            push!(myoverlap,(i,j))
-                            push!(overlap_i,(ii,jj))
-                            break
-                    end
-                end
-
-        end
-
-    end
-    (myoverlap,overlap_i)
 end
