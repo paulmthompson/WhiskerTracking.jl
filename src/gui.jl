@@ -704,7 +704,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     new_frame=han.displayed_frame
 
     try
-
         if isempty(findall(han.frame_list.==new_frame))
 
             frame_location=findfirst(han.frame_list.>new_frame)
@@ -759,7 +758,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             redraw_all(han)
 
             save_backup(han)
-
         end
 
     catch
@@ -778,7 +776,6 @@ function save_backup(han::Tracker_Handles)
     write(file, "w_p", han.wt.w_p)
     write(file, "frame_list",han.frame_list)
     close(file)
-
 
     nothing
 end
@@ -980,25 +977,6 @@ function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function erase_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.erase_mode = getproperty(han.erase_button,:active,Bool)
-
-    nothing
-end
-
-function draw_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.draw_mode = getproperty(han.draw_button,:active,Bool)
-
-    nothing
-end
-
-
 function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
 
    ctx=Gtk.getgc(han.c)
@@ -1149,7 +1127,6 @@ function select_whisker_pad(han::Tracker_Handles,x,y)
     han.wt.pad_pos=(x,y)
 
     redraw_all(han)
-
 end
 
 function select_pole_location(han::Tracker_Handles,x,y)
@@ -1161,150 +1138,11 @@ function select_pole_location(han::Tracker_Handles,x,y)
     redraw_all(han)
 end
 
-
-function draw_start(han::Tracker_Handles,x,y)
-
-    plot_image(han,han.current_frame')
-    r = Gtk.getgc(han.c)
-    Cairo.save(r)
-    ctxcopy = copy(r)
-
-    #
-    if han.tracked[han.frame] == false
-        new_whisker=Whisker1()
-
-        push!(new_whisker.x,han.woi[han.frame-1].x[end])
-        push!(new_whisker.y,han.woi[han.frame-1].y[end])
-        push!(new_whisker.scores,han.woi[han.frame-1].scores[end])
-        push!(new_whisker.thick,han.woi[han.frame-1].thick[end])
-
-        new_whisker.len=1
-
-        han.wt.whiskers=[new_whisker]
-
-        han.woi_id = 1
-    end
-
-    plot_whiskers(han)
-
-    push!((han.c.mouse, :button1motion),  (c, event) -> draw_move(han, event.x, event.y, ctxcopy))
-    push!((han.c.mouse, :motion), Gtk.default_mouse_cb)
-    push!((han.c.mouse, :button1release), (c, event) -> draw_stop(han, event.x, event.y, ctxcopy))
-
-    nothing
-end
-
-function draw_move(han::Tracker_Handles, x,y,ctxcopy)
-
-    r=Gtk.getgc(han.c)
-
-    han.wt.whiskers[han.woi_id].len+=1
-
-    front_dist = (han.wt.whiskers[han.woi_id].x[1]-x)^2+(han.wt.whiskers[han.woi_id].y[1]-y)^2
-    end_dist = (han.wt.whiskers[han.woi_id].x[end]-x)^2+(han.wt.whiskers[han.woi_id].y[end]-y)^2
-
-    if end_dist<front_dist #drawing closer to end
-
-        push!(han.wt.whiskers[han.woi_id].x,x)
-        push!(han.wt.whiskers[han.woi_id].y,y)
-        push!(han.wt.whiskers[han.woi_id].thick,1.0)
-        push!(han.wt.whiskers[han.woi_id].scores,1.0)
-
-    else
-        unshift!(han.wt.whiskers[han.woi_id].x,x)
-        unshift!(han.wt.whiskers[han.woi_id].y,y)
-        unshift!(han.wt.whiskers[han.woi_id].thick,1.0)
-        unshift!(han.wt.whiskers[han.woi_id].scores,1.0)
-    end
-
-    #redraw whisker
-    set_source(r,ctxcopy)
-    paint(r)
-
-    plot_whiskers(han)
-
-    nothing
-end
-
-function draw_stop(han::Tracker_Handles,x,y,ctxcopy)
-
-    assign_woi(han)
-    han.tracked[han.frame]=true
-
-    pop!((han.c.mouse, :button1motion))
-    pop!((han.c.mouse, :motion))
-    pop!((han.c.mouse, :button1release))
-
-    nothing
-end
-
-function erase_start(han::Tracker_Handles,x,y)
-
-    plot_image(han,han.current_frame')
-    r = Gtk.getgc(han.c)
-    Cairo.save(r)
-    ctxcopy = copy(r)
-
-    plot_whiskers(han)
-
-    push!((han.c.mouse, :button1motion),  (c, event) -> erase_move(han, event.x, event.y, ctxcopy))
-    push!((han.c.mouse, :motion), Gtk.default_mouse_cb)
-    push!((han.c.mouse, :button1release), (c, event) -> erase_stop(han, event.x, event.y, ctxcopy))
-
-    nothing
-end
-
-function erase_move(han::Tracker_Handles, x,y,ctxcopy)
-
-    r=Gtk.getgc(han.c)
-
-    #check for whisker overlap and erase points that are overlapping
-    keep=trues(han.wt.whiskers[han.woi_id].len)
-    for i=1:han.wt.whiskers[han.woi_id].len
-        if (x+5.0>han.wt.whiskers[han.woi_id].x[i])&(x-5.0<han.wt.whiskers[han.woi_id].x[i])
-            if (y+5.0>han.wt.whiskers[han.woi_id].y[i])&(y-5.0<han.wt.whiskers[han.woi_id].y[i])
-                keep[i]=false
-            end
-        end
-    end
-
-    if length(find(keep.==false))>0
-        keep[1:findfirst(keep.==false)] .= false
-    end
-
-    han.wt.whiskers[han.woi_id].x=han.wt.whiskers[han.woi_id].x[keep]
-    han.wt.whiskers[han.woi_id].y=han.wt.whiskers[han.woi_id].y[keep]
-    han.wt.whiskers[han.woi_id].thick=han.wt.whiskers[han.woi_id].thick[keep]
-    han.wt.whiskers[han.woi_id].scores=han.wt.whiskers[han.woi_id].scores[keep]
-
-    han.wt.whiskers[han.woi_id].len=length(han.wt.whiskers[han.woi_id].x)
-
-    #redraw whisker
-    set_source(r,ctxcopy)
-    paint(r)
-
-    plot_whiskers(han)
-
-    nothing
-end
-
-function erase_stop(han::Tracker_Handles,x,y,ctxcopy)
-
-    assign_woi(han)
-
-    pop!((han.c.mouse, :button1motion))
-    pop!((han.c.mouse, :motion))
-    pop!((han.c.mouse, :button1release))
-
-    nothing
-end
-
 function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
     try
-
         if han.background_mode
             subtract_background(han)
         end
