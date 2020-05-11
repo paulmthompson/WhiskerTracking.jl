@@ -58,7 +58,6 @@ function change_JT_param(f_name,value)
     nothing
 end
 
-
 #returns measurements for single
 function JT_measure(wt::Tracker,frame_id,whisker_num,face_axis='x')
 

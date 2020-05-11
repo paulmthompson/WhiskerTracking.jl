@@ -219,8 +219,8 @@ function make_gui()
     false,erase_button,false,0,falses(vid_length),
     delete_button,0,Whisker1(),false,
     start_frame,false,false,false,draw_button,false,false,touch_override,touch_no_contact,false,
-    falses(0),Array{Int64,1}(),zeros(Float64,vid_length),zeros(Float64,vid_length),
-    wt,5.0,false,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
+    falses(0),Array{Int64,1}(),
+    wt,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
     r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,e_widgets,
     c_widgets,dl_widgets,falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
     false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
@@ -233,7 +233,6 @@ function make_gui()
     signal_connect(erase_cb,erase_button, "clicked",Void,(),false,(handles,))
     signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
     signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
-
 
     signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
     signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
@@ -515,7 +514,6 @@ function draw_frame_list(han::Tracker_Handles)
         move_to(ctx,x,0)
         line_to(ctx,x,h)
         stroke(ctx)
-
     end
 
     reveal(han.ts_canvas)
@@ -531,8 +529,6 @@ function num_whiskers_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     #woi_array
-    #woi_angle
-    #woi_curv
     #woi_id
 
     nothing
@@ -639,8 +635,6 @@ function load_label_data(han::Tracker_Handles,config_path::String)
     end
 
     han.tracked = trues(length(frame_list))
-    han.woi_angle = zeros(Float64,length(frame_list))
-    han.woi_curv = zeros(Float64,length(frame_list))
 
     han.pole_present = zeros(Float64,length(frame_list))
 
@@ -727,12 +721,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
             #tracked array
             insert!(han.tracked,frame_location,false)
-
-            #woi_angle::Array{Float64,1}
-            insert!(han.woi_angle,frame_location,0.0)
-
-            #woi_curv::Array{Float64,1}
-            insert!(han.woi_curv,frame_location,0.0)
 
             #pole present
             insert!(han.pole_present,frame_location,false)
@@ -873,8 +861,6 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         write(file,"Start_Frame", han.start_frame)
         write(file,"Touch",han.touch_frames)
         write(file,"Touch_Inds",han.touch_frames_i)
-        write(file,"Angles",han.woi_angle)
-        write(file,"Curvature",han.woi_curv)
         write(file,"all_whiskers",han.wt.all_whiskers)
 
         close(file)
@@ -910,12 +896,6 @@ function load_whisker_data(han,filepath)
         end
         if JLD.exists(file,"Touch_Inds")
             han.touch_frames_i=read(file,"Touch_Inds")
-        end
-        if JLD.exists(file,"Angles")
-            han.woi_angle=read(file,"Angles")
-        end
-        if JLD.exists(file,"Curvature")
-            han.woi_curv=read(file,"Curvature")
         end
         if JLD.exists(file,"all_whiskers")
             han.wt.all_whiskers=read(file,"all_whiskers")
@@ -1342,104 +1322,11 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
         plot_image(han,han.current_frame')
-        #WT_constraints(han)
-
         plot_whiskers(han)
 
     catch
         println("Could not perform tracing")
     end
-
-    nothing
-end
-
-
-function WT_constraints(han)
-
-    #get_follicle average
-    (fx,fy)=get_follicle(han)
-    #Find most similar whisker follicle position
-    #=
-    if length(han.wt.whiskers)>0
-        min_dist = sqrt((han.wt.whiskers[1].x[end]-fx)^2+(han.wt.whiskers[1].y[end]-fy)^2)
-        han.woi_id = 1
-        for i=2:length(han.wt.whiskers)
-            mydist = sqrt((han.wt.whiskers[i].x[end]-fx)^2+(han.wt.whiskers[i].y[end]-fy)^2)
-            if mydist<min_dist
-                min_dist = mydist
-                han.woi_id = i
-            end
-        end
-    else
-        min_dist=100.0
-    end
-    =#
-    use_both = false
-    if (length(han.wt.whiskers)>0)&(han.frame>2)
-        #If the previous frame was tracked, compare this frame with the previous
-        if han.tracked[han.frame-1]
-            (mincor, w_id) = whisker_similarity(han,1)
-            use_both = true
-        elseif han.tracked[han.frame-2] #if the previous frame wasn't tracked, go back two frames
-            (mincor, w_id) = whisker_similarity(han,2)
-            use_both = true
-        else
-            w_id =0
-        end
-        if w_id !=0
-            han.woi_id = w_id
-            min_dist = sqrt((han.wt.whiskers[w_id].x[end]-fx)^2+(han.wt.whiskers[w_id].y[end]-fy)^2)
-        else
-            min_dist=100.0
-        end
-    else
-        min_dist=100.0
-    end
-
-    #Whisker should not move more than 0.64 mm / ms  (1.28 mm / 2ms)
-    # If about 0.07 mm / pixel or about 20 pixels
-    #If we don't have a whisker with this criteria met, adjust paramters
-    #and try again
-    if (!han.tracked[han.frame])
-        if (use_both)
-            if ((mincor<15.0)&(min_dist < 20.0))|(mincor<han.cor_thres)
-                han.tracked[han.frame]=true
-                assign_woi(han)
-            end
-        else
-            if (min_dist <10.0)
-                han.tracked[han.frame]=true
-                assign_woi(han)
-            end
-        end
-    end
-
-    if !han.tracked[han.frame]
-        han.stop_flag = true
-    end
-    #=
-    if !han.tracked[han.frame]
-        han.track_attempt+=1
-        if han.track_attempt==1
-            subtract_background(han)
-            WT_trace(han.wt,han.frame,han.current_frame')
-            WT_constraints(han)
-        elseif han.track_attempt==2
-            sharpen_image(han)
-            plot_(han.wt,han.frame,han.current_frame')
-            WT_constraints(han)
-        else #tried lots of tricks, and still didn't work
-            #if min_dist <20.0
-                #han.tracked[han.frame]=true
-                #han.woi[han.frame]=deepcopy(han.wt.whiskers[han.woi_id])
-            #end
-        end
-
-            #Tracking Statistics
-            println("Frame number: ", han.frame, " Distance: ", min_dist)
-            println("Track attempt: ", han.track_attempt)
-    end
-    =#
 
     nothing
 end

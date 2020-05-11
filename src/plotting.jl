@@ -10,40 +10,9 @@ function w_plot_image(ax,frame_array,f_id)
     nothing
 end
 
-function plot_mask(han::Tracker_Handles)
-
-    img=han.wt.mask'.*255
-
-    ctx=Gtk.getgc(han.c)
-
-    w,h = size(img)
-
-    for i=1:length(img)
-        if (img[i]>0)
-            han.plot_frame[i] = (convert(UInt32,img[i]) << 16)
-        end
-    end
-    stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
-    @assert stride == 4*w
-    surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
-                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
-                han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
-
-    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Void},
-    (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
-
-    rectangle(ctx, 0, 0, w, h)
-
-    fill(ctx)
-
-    reveal(han.c)
-end
-
 #=
 Draw interpolated whisker from DLC points on currently displayed frame
-
 =#
-
 function draw_tracked_whisker(han::Tracker_Handles)
     ctx=Gtk.getgc(han.c)
 
