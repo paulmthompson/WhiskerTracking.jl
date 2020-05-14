@@ -7,7 +7,7 @@ end
 module WhiskerTracking
 
 using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn, FFMPEG, Knet, Random, IterTools
+Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn, FFMPEG, Knet, FFTW, CuArrays, CuArrays.CUFFT, Random, IterTools
 
 @sk_import ensemble: RandomForestClassifier
 
@@ -37,6 +37,7 @@ include("types.jl")
 
 include("deep_learning/helper.jl")
 include("deep_learning/load.jl")
+include("deep_learning/subpixel.jl")
 
 include("gui.jl")
 include("janelia_tracker.jl")

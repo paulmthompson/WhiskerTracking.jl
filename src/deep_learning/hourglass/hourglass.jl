@@ -120,6 +120,8 @@ function HG2(N,K,nstack)
     HG2(nstack,fb,hg,o1,c1,merge_features,merge_preds)
 end
 
+features(hg::HG2)=size(hg.merge_preds[1].w,3)
+
 function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     temp=h.fb(x)
 

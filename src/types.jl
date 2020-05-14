@@ -198,10 +198,12 @@ mutable struct NeuralNetwork
     predict_single::Bool
     normalize_inputs::Bool
     weight_path::String
+    features::Int64
+    draw_preds::Bool
 end
 
 NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5,false,
-true,"quad_hourglass_64.mat")
+true,"quad_hourglass_64.mat",1,false)
 
 mutable struct Save_Paths
     path::String

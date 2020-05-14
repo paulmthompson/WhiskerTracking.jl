@@ -18,6 +18,14 @@ end
 
 gaussian_2d(x,y,x0,y0)=[1/sqrt.(2 .* pi) .* exp.(-1 .* ((xi .- x0).^2 + (yi .- y0).^2)) for xi in x, yi in y]
 
+function create_padded_kernel(size_x,size_y,kl)
+    kernel = gaussian_2d(collect(-kl:1:kl),collect(-kl:1:kl),0,0)
+    kernel = kernel ./ maximum(kernel)
+    kernel_pad = zeros(Float32,size_x,size_y)
+    kernel_pad[(div(size_x,2)-kl):(div(size_x,2)+kl),(div(size_y,2)-kl):(div(size_y,2)+kl)] = kernel
+    kernel_pad
+end
+
 function image_augmentation(im,ll)
 
     im_out = zeros(Float32,size(im,1),size(im,2),size(im,3),size(im,4)*8)

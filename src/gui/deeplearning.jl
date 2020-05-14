@@ -95,6 +95,7 @@ function load_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             han.nn.hg = hg
             setproperty!(han.dl_widgets.weights_label,:label,config_path)
             han.dl_widgets.use_existing_weights = true
+            han.nn.features=features(hg)
         catch
             println("Could not load weights")
         end
@@ -141,6 +142,7 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
         load_hourglass(han.nn.weight_path,hg)
         change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
+        han.nn.features=features(hg)
         han.nn.hg = hg
     end
 
@@ -167,6 +169,12 @@ function load_training(han,path)
     han.woi = read(file, "woi")
     han.nn.norm.mean_img = read(file, "mean_img")
     han.nn.norm.std_img = read(file, "std_img")
+
+    Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
+    han.tracked=trues(length(han.frame_list))
+
+    han.pole_present=falses(length(han.frame_list))
+    han.pole_loc=zeros(Float32,length(han.frame_list),2)
 
     close(file)
 
@@ -200,7 +208,7 @@ function confidence_sb_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.nn.confidence_thres=getproperty(han.dl_widgets.confidence_sb,:value,Int)
+    han.nn.confidence_thres=getproperty(han.dl_widgets.confidence_sb,:value,Float64)
 
     nothing
 end
@@ -298,4 +306,59 @@ function run_training(hg,trn::Knet.Data,this_opt,p,epochs=100,ls=Array{Float64,1
 
 
     ls
+end
+
+function predict_single_frame(han)
+
+    k_mean = convert(KnetArray,han.nn.norm.mean_img)
+    k_std = convert(KnetArray,han.nn.norm.std_img)
+    temp_frame = convert(KnetArray{Float32,4},reshape(han.current_frame,(size(han.current_frame,1),size(han.current_frame,2),1,1)))
+    temp_frame = my_imresize(temp_frame,256,256)
+
+    temp_frame = normalize_new_images(temp_frame,k_mean)
+
+    set_testing(han.nn.hg,false) #Turn off batch normalization for prediction
+    myout=han.nn.hg(temp_frame)[4]
+    set_testing(han.nn.hg,true) #Turn back on
+
+    hi=argmax(myout,dims=(1,2))
+    preds=zeros(Float32,2,han.nn.features)
+    confidences=zeros(Float32,han.nn.features)
+
+    for kk=1:size(hi,3)
+        confidences[kk] = myout[hi[1,1,kk,1][1],hi[1,1,kk,1][2],kk,1]
+    end
+
+    kernel_pad = create_padded_kernel(size(myout,1),size(myout,2),1)
+    #kernel_pad = convert(CuArray,kernel_pad)
+
+    k_fft = fft(kernel_pad)
+    #myout = CuArray(myout)
+    input=fft(convert(Array,myout),(1:2))
+
+    for i=1:size(myout,3)
+
+        preds[:,i]=subpixel(input[:,:,i,1],k_fft,4) .+ 32.0
+    end
+
+    (preds', confidences)
+end
+
+function draw_predictions(han)
+
+    (preds,confidences) = predict_single_frame(han)
+
+    circ_rad=5.0
+
+    ctx=Gtk.getgc(han.c)
+    Cairo.set_source_rgb(ctx,0,1,0)
+    num_points = size(preds,1)
+
+    for i=1:num_points
+        if confidences[i] > han.nn.confidence_thres
+            Cairo.arc(ctx, preds[i,1] / 64 * 640,preds[i,2] / 64 * 480, circ_rad, 0, 2*pi);
+            Cairo.stroke(ctx);
+        end
+    end
+    reveal(han.c)
 end

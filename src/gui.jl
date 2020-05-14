@@ -472,11 +472,11 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         redraw_all(han)
 
         #If whiskers were found previously, load them
-        if (length(han.wt.all_whiskers[han.frame])>0)&(han.displayed_frame == han.frame_list[han.frame])
-            han.wt.whiskers=han.wt.all_whiskers[han.frame]
-            WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
-            plot_whiskers(han)
-        end
+        #if (length(han.wt.all_whiskers[han.frame])>0)&(han.displayed_frame == han.frame_list[han.frame])
+            #han.wt.whiskers=han.wt.all_whiskers[han.frame]
+            #WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
+    #plot_whiskers(han)
+
     catch
     end
 
@@ -484,7 +484,6 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 end
 
 function load_single_frame(x::Float64,tt::AbstractArray{UInt8,2},vn::String)
-
 
     xx=open(`$(ffmpeg_path) -loglevel panic -ss $(x) -i $(vn) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
     if VERSION > v"0.7-"
@@ -685,7 +684,7 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             #add whisker WOI
             insert!(han.woi,frame_location,Whisker1())
 
-            insert!(han.wt.all_whiskers,frame_location,Array{Whisker1,1}())
+            #insert!(han.wt.all_whiskers,frame_location,Array{Whisker1,1}())
 
             #tracked array
             insert!(han.tracked,frame_location,false)
@@ -710,7 +709,7 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
             setproperty!(han.frame_advance_sb,:value,frame_location)
 
-            save_single_image(han,han.current_frame2,new_frame)
+            #save_single_image(han,han.current_frame2,new_frame)
 
             redraw_all(han)
 
@@ -815,7 +814,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         write(file,"Start_Frame", han.start_frame)
         write(file,"Touch",han.touch_frames)
         write(file,"Touch_Inds",han.touch_frames_i)
-        write(file,"all_whiskers",han.wt.all_whiskers)
+        #write(file,"all_whiskers",han.wt.all_whiskers)
 
         close(file)
 
@@ -852,7 +851,7 @@ function load_whisker_data(han,filepath)
             han.touch_frames_i=read(file,"Touch_Inds")
         end
         if JLD.exists(file,"all_whiskers")
-            han.wt.all_whiskers=read(file,"all_whiskers")
+            #han.wt.all_whiskers=read(file,"all_whiskers")
         end
         close(file)
 
@@ -1022,6 +1021,7 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
                         han.woi_id = i
                         han.tracked[han.frame]=true
                         assign_woi(han)
+                        redraw_all(han)
                         break
                     end
                 end
@@ -1158,6 +1158,10 @@ function plot_whiskers(han::Tracker_Handles)
 
     if han.show_tracked
         draw_tracked_whisker(han)
+    end
+
+    if han.nn.draw_preds
+        draw_predictions(han)
     end
 
     reveal(han.c)
