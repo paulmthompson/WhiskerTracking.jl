@@ -1,8 +1,8 @@
-if VERSION > v"0.7-"
-    __precompile__(false)
-else
+#if VERSION > v"0.7-"
+    #__precompile__(false)
+#else
 
-end
+#end
 
 module WhiskerTracking
 
@@ -52,7 +52,6 @@ include("discrete.jl")
 include("gui/whisker_pad.jl")
 include("gui/discrete.jl")
 include("gui/mask.jl")
-include("gui/roi.jl")
 include("gui/pole.jl")
 include("gui/view.jl")
 include("gui/tracing.jl")

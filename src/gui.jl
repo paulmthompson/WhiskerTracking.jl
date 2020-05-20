@@ -1,320 +1,129 @@
 
 export make_gui
 
+if Sys.iswindows()
+    const glade_path = string(dirname(Base.source_path()),"\\whiskertracking.glade")
+else
+    const glade_path = string(dirname(Base.source_path()),"/whiskertracking.glade")
+end
+
 function make_gui()
 
-    name=""
-    path=""
-    vid_name = ""
-
-    max_frames = 2
-    vid_length = 1
-    frame_list = [1]
-    start_frame = 1
+    b = Builder(filename=glade_path)
 
     c=Canvas(640,480)
-
-    grid=Grid()
-
-    grid[1,2]=c
-
-    frame_slider = Scale(false, 1,max_frames,1)
-    adj_frame = Adjustment(frame_slider)
-    setproperty!(adj_frame,:value,1)
-
-    grid[1,3]=frame_slider
-
-    ts_canvas = Canvas(640,50)
-    grid[1,4] = ts_canvas
-
-    frame_advance_sb = SpinButton(1:vid_length)
-    grid[2,4] = frame_advance_sb
-
-    control_grid=Grid()
-
-    trace_button=Button("Trace")
-    control_grid[1,4]=trace_button
-
-    erase_button=ToggleButton("Erase Mode")
-    control_grid[1,6]=erase_button
-
-    draw_button=ToggleButton("Draw Mode")
-    control_grid[1,7]=draw_button
-
-    delete_button=Button("Delete Whisker")
-    control_grid[1,8]=delete_button
-
-    touch_override = Button("Mark Contact")
-    control_grid[1,9] = touch_override
-
-    touch_no_contact = Button("Mark No Contact")
-    control_grid[1,10] = touch_no_contact
-
-    add_frame_button = Button("Add Frame To Tracking")
-    control_grid[1,11] = add_frame_button
-
-    delete_frame_button = Button("Delete Frame From Tracking")
-    control_grid[1,12] = delete_frame_button
-
-    num_whiskers_sb = SpinButton(1:1:5)
-    control_grid[1,13] = num_whiskers_sb
-    control_grid[2,13] = Label("Number of Whiskers To Track")
-
-    grid[2,2]=control_grid
-
-    #Menus
-    mb = MenuBar()
-    sortopts = MenuItem("_File")
-    sortmenu = Menu(sortopts)
-
-    load_video_ = MenuItem("Load Video")
-    push!(sortmenu,load_video_)
-
-    load_dlc_whiskers_ = MenuItem("Load DLC Tracked Whiskers")
-    push!(sortmenu,load_dlc_whiskers_)
-
-    save_whisk_ = MenuItem("Save Whiskers")
-    #push!(sortmenu,save_whisk_)
-    load_whisk_ = MenuItem("Load Whiskers")
-    #push!(sortmenu,load_whisk_)
-
-    load_previous_ = MenuItem("Load Previous Tracking Frames")
-    push!(sortmenu,load_previous_)
-
-    export_menu_ = MenuItem("Export...")
-    push!(sortmenu,export_menu_)
-
-    push!(mb,sortopts)
-
-    extraopts = MenuItem("_Extra")
-    extramenu = Menu(extraopts)
-    discrete_menu_ = MenuItem("Discretization")
-    push!(extramenu,discrete_menu_)
-
-    mask_menu_ = MenuItem("Mask")
-    push!(extramenu,mask_menu_)
-
-    pad_menu_ = MenuItem("Whisker Pad")
-    push!(extramenu,pad_menu_)
-
-    roi_menu_ = MenuItem("Region of Interest")
-    push!(extramenu,roi_menu_)
-
-    pole_menu_ = MenuItem("Pole")
-    push!(extramenu,pole_menu_)
-
-    view_menu_ = MenuItem("Viewer")
-    push!(extramenu,view_menu_)
-
-    manual_menu_ = MenuItem("Tracing")
-    push!(extramenu,manual_menu_)
-
-    dl_menu_ = MenuItem("Deep Learning")
-    push!(extramenu,dl_menu_)
-
-    push!(mb,extraopts)
-
-    imageopts = MenuItem("_Image")
-    imagemenu = Menu(imageopts)
-    crop_menu_ = MenuItem("Crop")
-    push!(imagemenu,crop_menu_)
-
-    image_adjust_menu_ = MenuItem("Image Adjustment")
-    push!(imagemenu,image_adjust_menu_)
-
-    push!(mb,imageopts)
-
-    contactopts = MenuItem("_Contact Detection")
-    contactmenu = Menu(contactopts)
-
-    labelopts = MenuItem("_Training Labels")
-    push!(contactmenu,labelopts)
-    labelmenu = Menu(labelopts)
-
-    save_contact_ = MenuItem("Save Contact Labels")
-    push!(labelmenu,save_contact_)
-    load_contact_ = MenuItem("Load Contact Labels")
-    push!(labelmenu,load_contact_)
-
-    predopts = MenuItem("_Predicted Labels")
-    push!(contactmenu,predopts)
-    label_pred_menu = Menu(predopts)
-
-    load_pred_labels = MenuItem("Load Predicted Labels")
-    push!(label_pred_menu,load_pred_labels)
-
-    classifier_ = MenuItem("Classifier for Prediction")
-    push!(contactmenu,classifier_)
-
-    push!(mb,contactopts)
-
-    otheropts = MenuItem("_Other Programs")
-    othermenu = Menu(otheropts)
-    janelia_menu_ = MenuItem("Janelia Tracker")
-    push!(othermenu,janelia_menu_)
-    dlc_menu_ = MenuItem("DeepLabCut")
-    push!(othermenu,dlc_menu_)
-
-    push!(mb,otheropts)
-
-    grid[1,1] = mb
-
-    #Menu for discrete points
-    d_widgets = _make_discrete_gui()
-
-    #Mask Menu Widgets
-    m_widgets = _make_mask_gui()
-
-    #Pad Menu Widgets
-    p_widgets=_make_pad_gui()
-
-    #ROI Menu Widgets
-    r_widgets =  _make_roi_gui()
-
-    #Pole Menu Widgets
-    pp_widgets = _make_pole_gui()
-
-    #View Window
-    v_widgets = _make_view_gui()
-
-    #Manual Tracing Menu
-    man_widgets = _make_tracing_gui()
-
-    #Image adjustment window
-    ia_widgets = _make_image_gui()
-
-    #Menu for Janelia Tracker Parameter Tweaking
-    j_widgets = _make_janelia_gui()
-
-    #DeepLabCut options
-    deep_widgets = _make_dlc_gui()
-
-    #Export options
-    e_widgets = _make_export_gui()
+    c_box = b["canvas_box"]
+    push!(c_box,c)
 
     #contact options
     c_widgets = _make_contact_gui()
 
-    dl_widgets = _make_deeplearning_gui()
+    all_whiskers=[Array{Whisker1,1}() for i=1:1]
 
-    win = Window(grid, "Whisker Tracker") |> Gtk.showall
-
-    all_whiskers=[Array{Whisker1,1}() for i=1:vid_length]
-
-    tracker_name = (vid_name)[1:(end-4)]
-
-    wt=Tracker(path,name,vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
+    wt=Tracker("","","","","",50,falses(480,640),Array{Whisker1,1}(),
     (0.0,0.0),255,0,all_whiskers)
 
     if VERSION > v"0.7-"
-        woi_array = Array{Whisker1,1}(undef,vid_length)
+        woi_array = Array{Whisker1,1}(undef,1)
     else
-        woi_array = Array{Whisker1,1}(vid_length)
+        woi_array = Array{Whisker1,1}(1)
     end
 
     these_paths = Save_Paths("",false)
 
-    handles = Tracker_Handles(1,vid_length,max_frames,win,c,frame_slider,adj_frame,trace_button,zeros(UInt32,640,480),
-    zeros(UInt8,480,640),zeros(UInt8,640,480),0,woi_array,1,num_whiskers_sb,1,
-    false,erase_button,false,0,falses(vid_length),
-    delete_button,0,Whisker1(),false,
-    start_frame,false,false,false,draw_button,false,false,touch_override,touch_no_contact,false,
-    falses(0),Array{Int64,1}(),
-    wt,true,true,2,ts_canvas,frame_list,frame_advance_sb,1,d_widgets,m_widgets,p_widgets,
-    r_widgets,pp_widgets,v_widgets,man_widgets,ia_widgets,j_widgets,deep_widgets,e_widgets,
-    c_widgets,dl_widgets,falses(vid_length),zeros(Float32,vid_length,2),zeros(UInt8,640,480),false,false,false,1,
-    false,zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
+    handles = Tracker_Handles(1,b,2,c,zeros(UInt32,640,480),
+    zeros(UInt8,480,640),zeros(UInt8,640,480),0,woi_array,1,1,
+    false,false,falses(1),0,Whisker1(),false,false,false,
+    falses(0),Array{Int64,1}(),wt,true,2,[1],1,
+    c_widgets,falses(1),zeros(Float32,1,2),zeros(UInt8,640,480),1,
+    zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
     zeros(Float64,1,1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,640,480))
-
-    signal_connect(frame_slider_cb, frame_slider, "value-changed", Void, (), false, (handles,))
-    signal_connect(frame_select, frame_advance_sb, "value-changed", Void, (), false, (handles,))
-    signal_connect(trace_cb,trace_button, "clicked", Void, (), false, (handles,))
-
-    signal_connect(erase_cb,erase_button, "clicked",Void,(),false,(handles,))
-    signal_connect(whisker_select_cb,c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-    signal_connect(delete_cb,delete_button, "clicked",Void,(),false,(handles,))
-
-    signal_connect(advance_slider_cb,win,"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
-    signal_connect(draw_cb,draw_button,"clicked",Void,(),false,(handles,))
-
-    signal_connect(touch_override_cb,touch_override,"clicked",Void,(),false,(handles,1))
-    signal_connect(touch_override_cb,touch_no_contact,"clicked",Void,(),false,(handles,0))
-
-    signal_connect(add_frame_cb,add_frame_button,"clicked",Void,(),false,(handles,))
-    signal_connect(delete_frame_cb,delete_frame_button,"clicked",Void,(),false,(handles,))
-
-    signal_connect(num_whiskers_cb,num_whiskers_sb,"value-changed",Void,(),false,(handles,))
-
-    #File Callbacks
-    signal_connect(load_video_cb, load_video_, "activate",Void,(),false,(handles,))
-    signal_connect(load_dlc_tracked_cb,load_dlc_whiskers_,"activate",Void,(),false,(handles,))
-    signal_connect(load_previous_cb,load_previous_,"activate",Void,(),false,(handles,))
-    signal_connect(save_cb, save_whisk_, "activate",Void,(),false,(handles,))
-    signal_connect(load_cb, load_whisk_, "activate",Void,(),false,(handles,))
-    signal_connect(save_contact_cb,save_contact_,"activate",Void,(),false,(handles,))
-    signal_connect(load_contact_cb,load_contact_,"activate",Void,(),false,(handles,))
-
-    #Discrete Callbacks
-    make_menu_callbacks(discrete_menu_,d_widgets.win)
-    add_discrete_callbacks(d_widgets,handles)
-
-    #Mask Callbacks
-    make_menu_callbacks(mask_menu_,m_widgets.win)
-    add_mask_callbacks(m_widgets,handles)
-
-    #Pad Callbacks
-    make_menu_callbacks(pad_menu_,p_widgets.win)
-    add_pad_callbacks(p_widgets,handles)
-
-    #ROI Callbacks
-    make_menu_callbacks(roi_menu_,r_widgets.win)
-
-    #Pole Callbacks
-    make_menu_callbacks(pole_menu_,pp_widgets.win)
-    add_pole_callbacks(pp_widgets,handles)
-
-    #View Callbacks
-    make_menu_callbacks(view_menu_,v_widgets.win)
-    add_view_callbacks(v_widgets,handles)
-
-    #Tracing Callbacks
-    make_menu_callbacks(manual_menu_,man_widgets.win)
-    add_tracing_callbacks(man_widgets,handles)
-
-    #Image Adjustment Callbacks
-    make_menu_callbacks(image_adjust_menu_,ia_widgets.win)
-    add_image_callbacks(ia_widgets,handles)
-
-    #Janelia Tweaking Callbacks
-    make_menu_callbacks(janelia_menu_,j_widgets.win)
-    add_janelia_callbacks(j_widgets,handles)
-
-    #DLC Callbacks
-    make_menu_callbacks(dlc_menu_,deep_widgets.win)
-    add_dlc_callbacks(deep_widgets,handles)
-
-    #Export
-    make_menu_callbacks(export_menu_,e_widgets.win)
-    add_export_callbacks(e_widgets,handles)
-
-    #Contact
-    make_menu_callbacks(classifier_,c_widgets.win)
-    add_contact_callbacks(c_widgets,handles)
-
-    #Deep learning
-    make_menu_callbacks(dl_menu_,dl_widgets.win)
-    add_deeplearning_callbacks(dl_widgets,handles)
-
-    handles
 end
 
-function make_menu_callbacks(menu,win)
+function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
-    signal_connect((widget,w)->visible(w[1],true),menu,"activate",Void,(),false,(win,))
-    signal_connect(win, :delete_event) do widget, event
-        visible(win, false)
-        true
-    end
+    signal_connect(frame_slider_cb, b["frame_slider"], "value-changed", Void, (), false, (handles,))
+    signal_connect(frame_select, b["frame_advance_sb"], "value-changed", Void, (), false, (handles,))
+    signal_connect(trace_cb,b["trace_button"], "clicked", Void, (), false, (handles,))
+
+    signal_connect(erase_cb,b["erase_button"], "clicked",Void,(),false,(handles,))
+    signal_connect(whisker_select_cb,handles.c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+    signal_connect(delete_cb,b["delete_button"], "clicked",Void,(),false,(handles,))
+
+    signal_connect(advance_slider_cb,b["win"],"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
+    signal_connect(draw_cb,b["draw_button"],"clicked",Void,(),false,(handles,))
+
+    signal_connect(touch_override_cb,b["contact_button"],"clicked",Void,(),false,(handles,1))
+    signal_connect(touch_override_cb,b["no_contact_button"],"clicked",Void,(),false,(handles,0))
+
+    signal_connect(add_frame_cb,b["add_frame_button"],"clicked",Void,(),false,(handles,))
+    signal_connect(delete_frame_cb,b["delete_frame_button"],"clicked",Void,(),false,(handles,))
+
+    #signal_connect(num_whiskers_cb,b["num_whiskers_sb"],"value-changed",Void,(),false,(handles,))
+
+    #File Callbacks
+    signal_connect(load_video_cb, b["load_video_"], "activate",Void,(),false,(handles,))
+    signal_connect(save_contact_cb,b["save_contact_"],"activate",Void,(),false,(handles,))
+    signal_connect(load_contact_cb,b["load_contact_"],"activate",Void,(),false,(handles,))
+end
+
+function add_additional_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
+    #Mask Callbacks
+    make_menu_callbacks(b["mask_menu_"],b["mask_win"])
+    add_mask_callbacks(b,handles)
+
+    #Pad Callbacks
+    make_menu_callbacks(b["pad_menu_"],b["pad_win"])
+    add_pad_callbacks(b,handles)
+
+    #Pole Callbacks
+    make_menu_callbacks(b["pole_menu_"],b["pole_win"])
+    add_pole_callbacks(b,handles)
+
+    #View Callbacks
+    make_menu_callbacks(b["view_menu_"],b["view_win"])
+    add_view_callbacks(b,handles)
+
+    #Tracing Callbacks
+    make_menu_callbacks(b["manual_menu_"],b["tracing_win"])
+    add_tracing_callbacks(b,handles)
+
+    #Image Adjustment Callbacks
+    make_menu_callbacks(b["image_adjust_menu_"],b["image_adjust_window"])
+    add_image_callbacks(b,handles)
+
+    #Export
+    make_menu_callbacks(b["export_menu_"],b["export_win"])
+    add_export_callbacks(b,handles)
+
+    #Contact
+    make_menu_callbacks(b["classifier_"],handles.contact_widgets.win)
+    add_contact_callbacks(handles.contact_widgets,handles)
+
+    #Deep learning
+    make_menu_callbacks(b["dl_menu_"],b["deep_learning_win"])
+    add_deeplearning_callbacks(b,handles)
+
+    Gtk.showall(handles.b["win"])
+
+    nothing
+end
+
+function make_menu_callbacks(menu::Gtk.GtkMenuItem,win::Gtk.GtkWindowLeaf)
+
+    signal_connect(open_window_cb,menu,"activate",Void,(),false,(win,))
+    signal_connect(delete_makes_invisible_cb,win,"delete-event",Void,(),false,())
+end
+
+function open_window_cb(w::Ptr,user_data)
+    win, = user_data
+    visible(win,true)
+    nothing
+end
+
+function delete_makes_invisible_cb(w::Ptr,user_data)
+    visible(convert(Window,w),false)
+    nothing
 end
 
 function redraw_all(han::Tracker_Handles)
@@ -322,21 +131,11 @@ function redraw_all(han::Tracker_Handles)
     plot_whiskers(han)
 end
 
-function determine_viewers(han::Tracker_Handles)
-
-    han.view_pad = getproperty(han.view_widgets.whisker_pad_button,:active,Bool)
-    han.view_roi = getproperty(han.view_widgets.roi_button,:active,Bool)
-    han.view_pole = getproperty(han.view_widgets.pole_button,:active,Bool)
-    han.discrete_draw = getproperty(han.view_widgets.discrete_button,:active,Bool)
-
-    nothing
-end
-
 function load_video_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    filepath = open_dialog("Load Whisker Tracking",han.win)
+    filepath = open_dialog("Load Whisker Tracking",han.b["win"])
 
     if filepath != ""
 
@@ -346,9 +145,8 @@ function load_video_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handles;frame_range = (false,0.0,0),image_stack=false)
+function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handles)
 
-    name=""
     vid_name = string(path,vid_title)
 
     #load first frame
@@ -358,20 +156,17 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
         load_single_frame(frame_time,temp,vid_name)
     catch
     end
-    vid_length = 1
-    frame_list=[1]
-    start_frame=1
 
     handles.max_frames = get_max_frames(vid_name)
 
     #Adjust Frame Slider Scale
-    Gtk.GAccessor.range(handles.frame_slider,1,handles.max_frames)
+    set_gtk_property!(handles.b["adj_frame"],:upper,handles.max_frames)
 
-    all_whiskers=[Array{Whisker1,1}() for i=1:vid_length]
+    all_whiskers=[Array{Whisker1,1}() for i=1:1]
 
     tracker_name = (vid_name)[1:(end-4)]
 
-    handles.wt=Tracker(path,name,vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
+    handles.wt=Tracker(path,"",vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
     (0.0,0.0),255,0,all_whiskers)
 
     #Update these paths
@@ -382,7 +177,7 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     these_paths = Save_Paths(t_folder)
     handles.paths = these_paths
 
-    save_single_image(handles,temp',1)
+    #save_single_image(handles,temp',1)
 
     handles.current_frame=temp'
     handles.current_frame2=deepcopy(handles.current_frame)
@@ -396,7 +191,7 @@ function load_dlc_tracked_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     try
-        filepath = open_dialog("Load DLC Whisker File",han.win)
+        filepath = open_dialog("Load DLC Whisker File",han.b["win"])
 
         if filepath != ""
             (xxx,yyy,lll)=dlc_hd5_to_array(filepath,0.2,true);
@@ -454,11 +249,11 @@ end
 #=
 Frame Drawing
 =#
-function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+function frame_slider_cb(w::Ptr,user_data)
 
     han, = user_data
 
-    han.displayed_frame = getproperty(han.adj_frame,:value,Int64)
+    han.displayed_frame = round(Int,get_gtk_property(han.b["adj_frame"],:value,Int))
 
     #Reset array of displayed whiskers
     han.wt.whiskers=Array{Whisker1,1}()
@@ -470,13 +265,6 @@ function frame_slider_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         han.current_frame=han.temp_frame'
         han.current_frame2=deepcopy(han.current_frame)
         redraw_all(han)
-
-        #If whiskers were found previously, load them
-        #if (length(han.wt.all_whiskers[han.frame])>0)&(han.displayed_frame == han.frame_list[han.frame])
-            #han.wt.whiskers=han.wt.all_whiskers[han.frame]
-            #WT_reorder_whisker(han.wt.whiskers,han.wt.pad_pos) #If you change pad position, from when you first tracked
-    #plot_whiskers(han)
-
     catch
     end
 
@@ -537,7 +325,7 @@ function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    config_path = open_dialog("Load Previous DLC session",han.win)
+    config_path = open_dialog("Load Previous DLC session",han.b["win"])
 
     if config_path != ""
 
@@ -577,7 +365,7 @@ function load_label_data(han::Tracker_Handles,config_path::String)
     han.frame_list = frame_list
 
     #Change frame list spin button maximum number and current index
-    Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
+    set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.frame_list))
 
     #add whisker WOI
     han.woi=[Whisker1() for i=1:length(frame_list)]
@@ -706,13 +494,10 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
             han.pole_loc = new_pole_loc
 
             #Change frame list spin button maximum number and current index
-            Gtk.GAccessor.range(han.frame_advance_sb,1,length(han.frame_list))
-            setproperty!(han.frame_advance_sb,:value,frame_location)
-
-            #save_single_image(han,han.current_frame2,new_frame)
+            set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.frame_list))
+            set_gtk_property!(han.b["labeled_frame_adj"],:value,frame_location)
 
             redraw_all(han)
-
             save_backup(han)
         end
 
@@ -772,9 +557,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    #filepath = save_dialog("Save Whisker Tracking",han.win)
-
-    dlg = Gtk.GtkFileChooserDialog("Save WhiskerTracking", han.win, Gtk.GConstants.GtkFileChooserAction.SAVE,
+    dlg = Gtk.GtkFileChooserDialog("Save WhiskerTracking", han.b["win"], Gtk.GConstants.GtkFileChooserAction.SAVE,
                                    (("_Cancel", Gtk.GConstants.GtkResponseType.CANCEL),
                                     ("_Save",   Gtk.GConstants.GtkResponseType.ACCEPT));)
        dlgp = Gtk.GtkFileChooser(dlg)
@@ -866,7 +649,7 @@ function load_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    filepath = open_dialog("Load Whisker Tracking",han.win)
+    filepath = open_dialog("Load Whisker Tracking",han.b["win"])
 
     load_whisker_data(han,filepath)
 
@@ -880,10 +663,10 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
     event = unsafe_load(param_tuple)
 
     if event.keyval == 0xff53 #Right arrow
-        setproperty!(han.adj_frame,:value,han.displayed_frame+1) #This will call the slider callback
+        setproperty!(han.b["adj_frame"],:value,han.displayed_frame+1) #This will call the slider callback
         #han.displayed_frame += 1
     elseif event.keyval == 0xff51 #Left arrow
-        setproperty!(han.adj_frame,:value,han.displayed_frame-1)
+        setproperty!(han.b["adj_frame"],:value,han.displayed_frame-1)
         #han.displayed_frame -= 1
     end
 
@@ -894,8 +677,8 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.frame = getproperty(han.frame_advance_sb,:value,Int64)
-    setproperty!(han.adj_frame,:value,han.frame_list[han.frame])
+    han.frame = getproperty(han.b["labeled_frame_adj"],:value,Int64)
+    set_gtk_property!(han.b["adj_frame"],:value,han.frame_list[han.frame])
     han.displayed_frame = han.frame_list[han.frame]
 
     frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
@@ -909,8 +692,6 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     end
 
     adjust_contrast_gui(han)
-
-    han.track_attempt=0 #Reset
 
     nothing
 end
@@ -943,7 +724,6 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
        han.plot_frame[i] = (convert(UInt32,img[i]) << 16) | (convert(UInt32,img[i]) << 8) | img[i]
     end
     stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
-    @assert stride == 4*w
     surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
                 Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
                 han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
@@ -964,19 +744,13 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
         stroke(ctx)
     end
 
-    if han.view_pad
+    if view_pad(han.b)
         set_source_rgb(ctx,0,0,1)
         arc(ctx, han.wt.pad_pos[1],han.wt.pad_pos[2], 10, 0, 2*pi);
         stroke(ctx)
     end
 
-    if han.view_roi
-        set_source_rgb(ctx,0,0,1)
-        arc(ctx, han.wt.pad_pos[1],han.wt.pad_pos[2], 100, 0, 2*pi);
-        stroke(ctx)
-    end
-
-    if han.view_pole
+    if view_pole(han.b)
         if han.pole_present[han.frame]
             set_source_rgb(ctx,0,0,1)
             arc(ctx,han.pole_loc[han.frame,1],han.pole_loc[han.frame,2],10,0,2*pi)
@@ -1072,7 +846,6 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
             println("Could not combine whiskers")
         end
     else
-        #plot_whiskers(han)
         redraw_all(han)
     end
 
@@ -1100,24 +873,23 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     try
-        if han.background_mode
+        if background_mode(han.b)
             subtract_background(han)
         end
-        if han.sharpen_mode
+        if sharpen_mode(han.b)
             sharpen_image(han)
         end
-        if han.local_contrast_mode
+        if local_contrast_mode(han.b)
             han.current_frame = round.(UInt8,local_contrast_enhance(han.current_frame))
         end
-        if han.anisotropic_mode
+        if anisotropic_mode(han.b)
             myimg=convert(Array{Float64,2},han.current_frame)
             han.current_frame = round.(UInt8,anisodiff(myimg,20,20.0,0.05,1))
         end
         han.send_frame[:,:] = han.current_frame'
         han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
-        plot_image(han,han.current_frame')
-        plot_whiskers(han)
+        redraw_all(han)
 
     catch
         println("Could not perform tracing")
@@ -1141,6 +913,7 @@ function plot_whiskers(han::Tracker_Handles)
         stroke(ctx)
     end
 
+
     if (han.tracked[han.frame])&(han.frame_list[han.frame]==han.displayed_frame)
         set_source_rgb(ctx,1.0,0.0,0.0)
 
@@ -1150,14 +923,13 @@ function plot_whiskers(han::Tracker_Handles)
         end
         stroke(ctx)
 
-        if han.discrete_draw
+        if view_discrete(han.b)
             draw_discrete(han)
         end
-
     end
 
-    if han.show_tracked
-        draw_tracked_whisker(han)
+    if show_tracked(han.b)
+        #draw_tracked_whisker(han)
     end
 
     if han.nn.draw_preds

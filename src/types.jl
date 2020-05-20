@@ -48,64 +48,6 @@ mutable struct discrete_widgets
     delete_button::Gtk.GtkButtonLeaf
 end
 
-mutable struct mask_widgets
-    win::Gtk.GtkWindowLeaf
-    gen_button::Gtk.GtkCheckButtonLeaf
-    max_button::Gtk.GtkSpinButtonLeaf
-    min_button::Gtk.GtkSpinButtonLeaf
-end
-
-mutable struct pad_widgets
-    win::Gtk.GtkWindowLeaf
-    gen_button::Gtk.GtkCheckButtonLeaf
-end
-
-mutable struct roi_widgets
-    win::Gtk.GtkWindowLeaf
-    gen_button::Gtk.GtkCheckButtonLeaf
-    height_button::Gtk.GtkSpinButtonLeaf
-    width_button::Gtk.GtkSpinButtonLeaf
-    tilt_button::Gtk.GtkSpinButtonLeaf
-end
-
-mutable struct pole_widgets
-    win::Gtk.GtkWindowLeaf
-    pole_mode_button::Gtk.GtkCheckButtonLeaf
-    gen_button::Gtk.GtkCheckButtonLeaf
-    auto_button::Gtk.GtkButtonLeaf
-    touch_button::Gtk.GtkCheckButtonLeaf
-    delete_button::Gtk.GtkButtonLeaf
-    use_pole_tracked_button::Gtk.GtkButtonLeaf
-end
-
-mutable struct view_widgets
-    win::Gtk.GtkWindowLeaf
-    whisker_pad_button::Gtk.GtkCheckButtonLeaf
-    roi_button::Gtk.GtkCheckButtonLeaf
-    discrete_button::Gtk.GtkCheckButtonLeaf
-    pole_button::Gtk.GtkCheckButtonLeaf
-    tracked_button::Gtk.GtkCheckButtonLeaf
-end
-
-mutable struct manual_widgets
-    win::Gtk.GtkWindowLeaf
-    connect_button::Gtk.GtkButtonLeaf
-    combine_button::Gtk.GtkToggleButtonLeaf
-end
-
-mutable struct image_adj_widgets
-    win::Gtk.GtkWindowLeaf
-    hist_c::Gtk.GtkCanvasLeaf
-    contrast_min_slider::Gtk.GtkScaleLeaf
-    adj_contrast_min::Gtk.GtkAdjustmentLeaf
-    contrast_max_slider::Gtk.GtkScaleLeaf
-    adj_contrast_max::Gtk.GtkAdjustmentLeaf
-    background_button::Gtk.GtkCheckButtonLeaf
-    sharpen_button::Gtk.GtkCheckButtonLeaf
-    anisotropic_button::Gtk.GtkCheckButtonLeaf
-    local_contrast_button::Gtk.GtkCheckButtonLeaf
-end
-
 mutable struct janelia_widgets
     win::Gtk.GtkWindowLeaf
     jt_seed_thres_button::Gtk.GtkSpinButtonLeaf
@@ -125,15 +67,6 @@ mutable struct dlc_widgets
     select_network_button::Gtk.GtkButtonLeaf
 end
 
-mutable struct export_widgets
-    win::Gtk.GtkWindowLeaf
-    face_axis::Gtk.GtkComboBoxTextLeaf
-    angle_button::Gtk.GtkCheckButtonLeaf
-    curve_button::Gtk.GtkCheckButtonLeaf
-    phase_button::Gtk.GtkCheckButtonLeaf
-    export_button::Gtk.GtkButtonLeaf
-end
-
 mutable struct contact_widgets
     win::Gtk.GtkWindowLeaf
     training_num_label::Gtk.GtkLabelLeaf
@@ -145,21 +78,6 @@ mutable struct contact_widgets
     pred_pole_button::Gtk.GtkCheckButtonLeaf
     pred_pole_position::Gtk.GtkCheckButtonLeaf
     pred_curv::Gtk.GtkCheckButtonLeaf
-end
-
-mutable struct deep_learning_widgets
-    win::Gtk.GtkWindowLeaf
-    prog::Gtk.GtkProgressBar
-    create_button::Gtk.GtkButtonLeaf
-    load_weights_button::Gtk.GtkButtonLeaf
-    use_existing_weights::Bool
-    weights_label::Gtk.GtkLabelLeaf
-    load_labels_button::Gtk.GtkButtonLeaf
-    use_existing_labels::Bool
-    labels_label::Gtk.GtkLabelLeaf
-    train_button::Gtk.GtkButtonLeaf
-    epochs_sb::Gtk.GtkSpinButtonLeaf
-    confidence_sb::Gtk.GtkSpinButtonLeaf
 end
 
 mutable struct classifier
@@ -200,10 +118,12 @@ mutable struct NeuralNetwork
     weight_path::String
     features::Int64
     draw_preds::Bool
+    use_existing_weights::Bool
+    use_existing_labels::Bool
 end
 
 NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5,false,
-true,"quad_hourglass_64.mat",1,false)
+true,"quad_hourglass_64.mat",1,false,false,false)
 
 mutable struct Save_Paths
     path::String
@@ -240,13 +160,11 @@ end
 
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
-    kept_frames::Int64
+
+    b::Gtk.GtkBuilder
     max_frames::Int64
-    win::Gtk.GtkWindowLeaf
+
     c::Gtk.GtkCanvasLeaf
-    frame_slider::Gtk.GtkScaleLeaf
-    adj_frame::Gtk.GtkAdjustmentLeaf
-    trace_button::Gtk.GtkButtonLeaf
 
     plot_frame::Array{UInt32,2}
 
@@ -256,75 +174,40 @@ mutable struct Tracker_Handles
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
     woi::Array{Whisker1,1} #Array of properties for whisker of interest for every frame
     num_whiskers::Int64
-    num_whiskers_sb::Gtk.GtkSpinButtonLeaf
     sw::Int64 #Selected Whisker
 
     auto_mode::Bool
-    erase_button::Gtk.GtkToggleButtonLeaf
     erase_mode::Bool
 
-    track_attempt::Int64
     tracked::BitArray{1} #Array of true/false to specify if corresponding frame has been tracked
-
-    delete_button::Gtk.GtkButtonLeaf
 
     combine_mode::Int64
     partial::Whisker1
 
-    background_mode::Bool
-
-    start_frame::Int64
-
-    sharpen_mode::Bool
-    anisotropic_mode::Bool
-    local_contrast_mode::Bool
-
-    draw_button::Gtk.GtkToggleButtonLeaf
     draw_mode::Bool
 
     touch_mode::Bool
 
-    touch_override::Gtk.GtkButtonLeaf
-    touch_no_contact::Gtk.GtkButtonLeaf
     touch_override_mode::Bool
     touch_frames::BitArray{1}
     touch_frames_i::Array{Int64,1}
     wt::Tracker
 
-    discrete_draw::Bool
     discrete_auto_calc::Bool
     d_spacing::Int64
 
-    ts_canvas::Gtk.GtkCanvasLeaf
     frame_list::Array{Int64,1}
-    frame_advance_sb::Gtk.GtkSpinButtonLeaf
+
     displayed_frame::Int64
 
-    d_widgets::discrete_widgets
-    mask_widgets::mask_widgets
-    pad_widgets::pad_widgets
-    roi_widgets::roi_widgets
-    pole_widgets::pole_widgets
-    view_widgets::view_widgets
-    manual_widgets::manual_widgets
-    image_adj_widgets::image_adj_widgets
-    janelia_widgets::janelia_widgets
-    dlc_widgets::dlc_widgets
-    export_widgets::export_widgets
     contact_widgets::contact_widgets
-    dl_widgets::deep_learning_widgets
 
     pole_present::BitArray{1}
     pole_loc::Array{Float32,2}
     send_frame::Array{UInt8,2}
 
-    view_pad::Bool
-    view_roi::Bool
-    view_pole::Bool
-
     selection_mode::Int64 #What the mouse will do when you click
 
-    show_tracked::Bool
     tracked_whiskers_x::Array{Float64,2}
     tracked_whiskers_y::Array{Float64,2}
     tracked_whiskers_l::BitArray{2}

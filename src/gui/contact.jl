@@ -73,9 +73,6 @@ function add_contact_callbacks(w,handles)
     signal_connect(contact_fit_cb,w.fit_button,"clicked",Void,(),false,(handles,))
     signal_connect(contact_load_predicted_cb,w.load_predicted_button,"clicked",Void,(),false,(handles,))
 
-    signal_connect(contact_estimators_cb,w.n_estimators_button,"value-changed",Void,(),false,(handles,))
-    signal_connect(contact_depth_cb,w.forest_depth_button,"value-changed",Void,(),false,(handles,))
-
     nothing
 end
 
@@ -97,7 +94,7 @@ function contact_fit_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if getproperty(han.c_widgets.pred_curv,:active,Bool)
 
     end
-    
+
     #Remove NaNs
     #han.class.predictors[isnan.(han.class.predictors)] .= 0.0
 
@@ -116,23 +113,8 @@ end
 
 #Predict Function
 
-function contact_estimators_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.class.n_estimators=getproperty(han.c_widgets.n_estimators_button,:value,Int64)
-
-    nothing
-end
-
-function contact_depth_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.class.forest_depth=getproperty(han.c_widgets.forest_depth_button,:value,Int64)
-
-    nothing
-end
+contact_estimators(han)=getproperty(han.c_widgets.n_estimators_button,:value,Int64)
+contact_depth(han)=getproperty(han.c_widgets.forest_depth_button,:value,Int64)
 
 #Load labels
 function load_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})

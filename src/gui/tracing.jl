@@ -1,26 +1,8 @@
 
+function add_tracing_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
-function _make_tracing_gui()
-
-    manual_grid=Grid()
-
-    connect_button=Button("Connect to Pad")
-    manual_grid[1,1]=connect_button
-
-    combine_button=ToggleButton("Combine Segments")
-    manual_grid[1,2]=combine_button
-
-    manual_win = Window(manual_grid)
-    Gtk.showall(manual_win)
-    visible(manual_win,false)
-
-    man_widgets=manual_widgets(manual_win,connect_button,combine_button)
-end
-
-function add_tracing_callbacks(w::manual_widgets,handles::Tracker_Handles)
-
-    signal_connect(combine_cb,w.combine_button,"clicked",Void,(),false,(handles,))
-    signal_connect(connect_cb,w.connect_button,"clicked",Void,(),false,(handles,))
+    signal_connect(combine_cb,b["tracing_combine_button"],"clicked",Void,(),false,(handles,))
+    signal_connect(connect_cb,b["tracing_connect_button"],"clicked",Void,(),false,(handles,))
 
     nothing
 end
@@ -73,7 +55,7 @@ function combine_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.combine_mode = getproperty(han.manual_widgets.combine_button,:active,Bool)
+    han.combine_mode = getproperty(han.b["tracing_combine_button"],:active,Bool)
 
     nothing
 end
