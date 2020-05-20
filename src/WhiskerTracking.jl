@@ -6,8 +6,11 @@
 
 module WhiskerTracking
 
-using Gtk.ShortNames, Cairo, Images, StatsBase, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, DelimitedFiles,ScikitLearn, FFMPEG, Knet, FFTW, CuArrays, CuArrays.CUFFT, Random, IterTools
+#Standard Library
+using StatsBase,Random,Distributed,SharedArrays,DelimitedFiles
+
+using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
+Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, ScikitLearn, FFMPEG, Knet, FFTW, Random, IterTools
 
 @sk_import ensemble: RandomForestClassifier
 

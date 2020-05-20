@@ -10,6 +10,8 @@ function add_deeplearning_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     signal_connect(epochs_sb_cb,b["dl_epoch_button"],"value-changed",Void,(),false,(handles,))
     signal_connect(confidence_sb_cb,b["dl_confidence_sb"],"value-changed",Void,(),false,(handles,))
 
+    signal_connect(predict_frames_cb,b["dl_predict_button"],"clicked",Void,(),false,(handles,))
+
     nothing
 end
 
@@ -121,7 +123,7 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     myadam=Adam(lr=1e-3)
     @async begin
-        run_training(han.nn.hg,dtrn,myadam,han.dl_widgets.prog,han.nn.epochs,han.nn.losses)
+        run_training(han.nn.hg,dtrn,myadam,han.b["dl_prog"],han.nn.epochs,han.nn.losses)
     end
     #save_hourglass(string(han.paths.backup,"weights.jld"),han.nn.hg)
 
@@ -145,6 +147,111 @@ function confidence_sb_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     nothing
 end
+
+function predict_frames_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    @async begin
+        han.nn.predicted=calculate_whiskers(han,5000)
+    end
+
+    nothing
+end
+
+function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading_size=128)
+
+    w=size(han.nn.imgs,1)
+    h=size(han.nn.imgs,2)
+
+    batch_per_load = div(loading_size,batch_size)
+
+    k_mean = convert(KnetArray,han.nn.norm.mean_img)
+
+    temp_frames=zeros(UInt8,640,480,1,loading_size)
+    temp_frames_p=zeros(UInt8,480,640,1,loading_size)
+    temp_frames2 = convert(KnetArray{Float32,4},zeros(Float32,480,640,1,loading_size))
+    temp_frames2_f = zeros(Float32,480,640,1,loading_size)
+
+    sub_input_images=convert(KnetArray{Float32,4},zeros(Float32,256,256,1,batch_size))
+
+    input_f=convert(KnetArray{Float32,4},zeros(Float32,64,64,han.nn.features,loading_size))
+    input=zeros(Float32,64,64,han.nn.features,loading_size)
+    input_fft=zeros(Complex{Float32},64,64,han.nn.features,loading_size)
+
+    preds=zeros(Float32,han.nn.features,3,total_frames)
+    preds=convert(SharedArray,preds)
+
+    kernel_pad = WhiskerTracking.create_padded_kernel(size(han.nn.labels,1),size(han.nn.labels,2),1)
+    k_fft = fft(kernel_pad)
+
+    set_gtk_property!(han.b["dl_predict_prog"],:fraction,0.0)
+    WhiskerTracking.set_testing(han.nn.hg,false)
+
+    frame_num = 1
+
+    while (frame_num < div(total_frames,loading_size)*loading_size)
+
+        run(WhiskerTracking.ffmpeg_cmd(frame_num/25,han.wt.vid_name,loading_size,"test5.yuv"))
+        read!("test5.yuv",temp_frames)
+        permutedims!(temp_frames_p,temp_frames,[2,1,3,4])
+        @inbounds for i=1:length(temp_frames_p)
+            temp_frames2_f[i] = temp_frames_p[i] ./ 1.0f0
+        end
+        temp_frames2[:] = convert(KnetArray{Float32,4},temp_frames2_f)
+
+        input_images = WhiskerTracking.my_imresize(temp_frames2,w,h)
+        input_images = WhiskerTracking.normalize_new_images(input_images,k_mean)
+
+        for k=0:(batch_per_load-1)
+
+            myrange = (1+k*batch_size):((k+1)*batch_size)
+
+            copyto!(sub_input_images,1,input_images,k*256*256*batch_size+1,256*256*batch_size)
+            myout=han.nn.hg(sub_input_images)[4]
+            copyto!(input_f,k*64*64*han.nn.features*batch_size+1,myout,1,length(myout))
+        end
+
+        input[:]=convert(Array,input_f)
+        for i=1:length(input)
+            input_fft[i] = convert(Complex{Float32},input[i])
+        end
+        fft!(input_fft,(1,2))
+
+        hi=argmax(input,dims=(1,2))
+        for jj=1:size(hi,4)
+            for kk=1:size(hi,3)
+                preds[kk,3,jj + frame_num] = input[hi[1,1,kk,jj][1],hi[1,1,kk,jj][2],kk,jj]
+            end
+        end
+
+        calculate_subpixel(preds,frame_num,input_fft,k_fft)
+
+        frame_num += loading_size
+        set_gtk_property!(han.b["dl_predict_prog"],:fraction,frame_num/total_frames)
+        sleep(0.0001)
+    end
+
+    preds[:,1,:] = preds[:,1,:] ./ 64 .* 640
+    preds[:,2,:] = preds[:,2,:] ./ 64 .* 480
+
+    set_gtk_property!(han.b["dl_predict_prog"],:fraction,1.0)
+
+    WhiskerTracking.set_testing(han.nn.hg,true)
+
+    convert(Array,preds)
+end
+
+function calculate_subpixel(preds,offset,input,k_fft)
+
+    @distributed for jj=1:size(input,4)
+        for kk=1:size(input,3)
+            preds[kk,1:2,jj+offset] = convert(Array{Float32,1},WhiskerTracking.subpixel(input[:,:,kk,jj],k_fft,4)) .+ 32.0f0
+        end
+    end
+    nothing
+end
+
 
 function mean_std_video_gpu(han::Tracker_Handles,total_frame_num)
     mean_std_video_gpu(han.wt.vid_name,total_frame_num)
@@ -215,7 +322,6 @@ function make_training_batch(img,ll,batch_size=8)
     dtrn=minibatch(img,ll,batch_size,xtype=KnetArray,ytype=KnetArray)
 end
 
-
 function run_training(hg,trn::Knet.Data,this_opt,p,epochs=100,ls=Array{Float64,1}())
 
     total_length=length(trn) * epochs
@@ -232,11 +338,10 @@ function run_training(hg,trn::Knet.Data,this_opt,p,epochs=100,ls=Array{Float64,1
             if complete > last_update
                 Gtk.set_gtk_property!(p, :fraction, complete)
                 last_update = complete
-                sleep(0.0001)
                 reveal(p,true)
             end
+            sleep(0.0001)
         end
-
 
     ls
 end
@@ -263,10 +368,8 @@ function predict_single_frame(han)
     end
 
     kernel_pad = create_padded_kernel(size(myout,1),size(myout,2),1)
-    #kernel_pad = convert(CuArray,kernel_pad)
 
     k_fft = fft(kernel_pad)
-    #myout = CuArray(myout)
     input=fft(convert(Array,myout),(1:2))
 
     for i=1:size(myout,3)
@@ -290,6 +393,24 @@ function draw_predictions(han)
     for i=1:num_points
         if confidences[i] > han.nn.confidence_thres
             Cairo.arc(ctx, preds[i,1] / 64 * 640,preds[i,2] / 64 * 480, circ_rad, 0, 2*pi);
+            Cairo.stroke(ctx);
+        end
+    end
+    reveal(han.c)
+end
+
+function draw_predicted_whisker(han)
+
+    circ_rad=5.0
+
+    ctx=Gtk.getgc(han.c)
+    Cairo.set_source_rgb(ctx,0,1,0)
+    num_points = size(han.nn.predicted,1)
+
+    d=han.displayed_frame
+    for i=1:num_points
+        if han.nn.predicted[i,3,d] > han.nn.confidence_thres
+            Cairo.arc(ctx, han.nn.predicted[i,1,d],han.nn.predicted[i,2,d], circ_rad, 0, 2*pi);
             Cairo.stroke(ctx);
         end
     end

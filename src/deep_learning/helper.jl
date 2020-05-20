@@ -1,4 +1,5 @@
 
+#=
 function run_training(hg,trn::Knet.Data,this_opt,epochs=100,ls=Array{Float64,1}())
 
     minimizer = Knet.minimize(hg,ncycle(trn,epochs),this_opt)
@@ -10,7 +11,7 @@ function run_training(hg,trn::Knet.Data,this_opt,epochs=100,ls=Array{Float64,1}(
 
     ls
 end
-
+=#
 function pixel_mse(truth::KnetArray{Float32,4},pred::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     loss = sum((pred .- truth).^2)
     loss / (size(pred,3) * size(pred,4))

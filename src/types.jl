@@ -120,10 +120,11 @@ mutable struct NeuralNetwork
     draw_preds::Bool
     use_existing_weights::Bool
     use_existing_labels::Bool
+    predicted::Array{Float32,3}
 end
 
 NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5,false,
-true,"quad_hourglass_64.mat",1,false,false,false)
+true,"quad_hourglass_64.mat",1,false,false,false,zeros(Float32,0,3,0))
 
 mutable struct Save_Paths
     path::String

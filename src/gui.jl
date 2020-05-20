@@ -65,6 +65,8 @@ function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     signal_connect(load_video_cb, b["load_video_"], "activate",Void,(),false,(handles,))
     signal_connect(save_contact_cb,b["save_contact_"],"activate",Void,(),false,(handles,))
     signal_connect(load_contact_cb,b["load_contact_"],"activate",Void,(),false,(handles,))
+
+    add_additional_callbacks(b,handles)
 end
 
 function add_additional_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -304,7 +306,6 @@ function draw_frame_list(han::Tracker_Handles)
     end
 
     reveal(han.ts_canvas)
-
 end
 
 #=

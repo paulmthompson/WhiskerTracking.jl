@@ -125,7 +125,7 @@ features(hg::HG2)=size(hg.merge_preds[1].w,3)
 function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     temp=h.fb(x)
 
-    preds=Array{Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}},1}()
+    preds=Array{Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}},1}() #Can this be typed to be the same as input?
 
     for i=1:h.nstack
         hg=h.hg[i](temp)
@@ -138,6 +138,24 @@ function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float3
     end
     preds
 end
+
+function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
+    temp=h.fb(x)
+
+    preds=Array{Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}},1}() #Can this be typed to be the same as input?
+
+    for i=1:h.nstack
+        hg=h.hg[i](temp)
+        features=h.o1[i](hg)
+        pred=h.c1[i](features)
+        push!(preds,pred)
+        if i<h.nstack
+            temp = temp + h.merge_features[i](features) + h.merge_preds[i](pred)
+        end
+    end
+    preds
+end
+
 function (h::HG2)(x,y)
     preds=h(x)
     loss=0.0
