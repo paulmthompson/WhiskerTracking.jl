@@ -1,16 +1,14 @@
-#if VERSION > v"0.7-"
-    #__precompile__(false)
-#else
-
-#end
 
 module WhiskerTracking
 
 #Standard Library
-using StatsBase,Random,Distributed,SharedArrays,DelimitedFiles
+using StatsBase,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra
+
+#Deep Learning Libraries
+using CuArrays, CUDAnative, Knet
 
 using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD, Interpolations, Distances, DSP, Polynomials,
-Pandas, HDF5, PyPlot, PyCall, LinearAlgebra, ScikitLearn, FFMPEG, Knet, FFTW, Random, IterTools
+Pandas, HDF5, PyPlot, PyCall, ScikitLearn, FFMPEG, FFTW, IterTools
 
 @sk_import ensemble: RandomForestClassifier
 
@@ -41,6 +39,7 @@ include("types.jl")
 include("deep_learning/helper.jl")
 include("deep_learning/load.jl")
 include("deep_learning/subpixel.jl")
+include("deep_learning/cuda_files.jl")
 
 include("gui.jl")
 include("janelia_tracker.jl")

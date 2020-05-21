@@ -159,19 +159,21 @@ function predict_frames_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading_size=128)
+function calculate_whiskers(han,total_frames=han.max_frames,batch_size=6,loading_size=128)
 
     w=size(han.nn.imgs,1)
     h=size(han.nn.imgs,2)
 
     batch_per_load = div(loading_size,batch_size)
 
-    k_mean = convert(KnetArray,han.nn.norm.mean_img)
+    k_mean = convert(CuArray,han.nn.norm.mean_img)
 
     temp_frames=zeros(UInt8,640,480,1,loading_size)
     temp_frames_p=zeros(UInt8,480,640,1,loading_size)
-    temp_frames2 = convert(KnetArray{Float32,4},zeros(Float32,480,640,1,loading_size))
     temp_frames2_f = zeros(Float32,480,640,1,loading_size)
+
+    input_images_cu = convert(CuArray,zeros(Float32,480,640,1,loading_size))
+    input_images_cu_r = convert(CuArray,zeros(Float32,256,256,1,loading_size))
 
     sub_input_images=convert(KnetArray{Float32,4},zeros(Float32,256,256,1,batch_size))
 
@@ -198,22 +200,21 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
         @inbounds for i=1:length(temp_frames_p)
             temp_frames2_f[i] = temp_frames_p[i] ./ 1.0f0
         end
-        temp_frames2[:] = convert(KnetArray{Float32,4},temp_frames2_f)
+        input_images_cu[:] = convert(CuArray{Float32,4},temp_frames2_f)
+        CUDA_resize4(input_images_cu,input_images_cu_r)
 
-        input_images = WhiskerTracking.my_imresize(temp_frames2,w,h)
-        input_images = WhiskerTracking.normalize_new_images(input_images,k_mean)
+        CUDA_normalize_images(input_images_cu_r,k_mean)
 
+        input_images = convert(KnetArray,input_images_cu_r)
         for k=0:(batch_per_load-1)
 
-            myrange = (1+k*batch_size):((k+1)*batch_size)
-
-            copyto!(sub_input_images,1,input_images,k*256*256*batch_size+1,256*256*batch_size)
+            copyto!(sub_input_images,1,input_images,k*w*h*batch_size+1,w*h*batch_size)
             myout=han.nn.hg(sub_input_images)[4]
             copyto!(input_f,k*64*64*han.nn.features*batch_size+1,myout,1,length(myout))
         end
 
         input[:]=convert(Array,input_f)
-        for i=1:length(input)
+        @inbounds for i=1:length(input)
             input_fft[i] = convert(Complex{Float32},input[i])
         end
         fft!(input_fft,(1,2))
@@ -221,11 +222,11 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
         hi=argmax(input,dims=(1,2))
         for jj=1:size(hi,4)
             for kk=1:size(hi,3)
-                preds[kk,3,jj + frame_num] = input[hi[1,1,kk,jj][1],hi[1,1,kk,jj][2],kk,jj]
+                preds[kk,3,jj + frame_num-1] = input[hi[1,1,kk,jj][1],hi[1,1,kk,jj][2],kk,jj]
             end
         end
 
-        calculate_subpixel(preds,frame_num,input_fft,k_fft)
+        calculate_subpixel(preds,frame_num-1,input_fft,k_fft)
 
         frame_num += loading_size
         set_gtk_property!(han.b["dl_predict_prog"],:fraction,frame_num/total_frames)
