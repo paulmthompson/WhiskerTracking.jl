@@ -12,10 +12,8 @@ function pad_gen_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
 
     if getproperty(han.b["pad_check_button"],:active,Bool)
         han.selection_mode = 10
-        han.view_pad = true
     else
         han.selection_mode = 1
-        determine_viewers(han)
     end
 
     redraw_all(han)
