@@ -3,6 +3,7 @@ function add_deeplearning_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(load_weights_cb,b["dl_load_weights"],"clicked",Void,(),false,(handles,))
     signal_connect(load_labels_cb,b["dl_load_labels"],"clicked",Void,(),false,(handles,))
+    signal_connect(dl_save_weights_cb,b["dl_save_weights"],"clicked",Void,(),false,(handles,))
 
     signal_connect(create_training_cb,b["dl_create_model_button"],"clicked",Void,(),false,(handles,))
 
@@ -144,6 +145,21 @@ function confidence_sb_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.nn.confidence_thres=getproperty(han.b["dl_confidence_adjustment"],:value,Float64)
+
+    nothing
+end
+
+get_draw_predictions(b)=get_gtk_property(b["dl_show_predictions"],:active,Bool)
+
+function dl_save_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    save_path = save_dialog("Save Weights",han.b["win"])
+
+    if save_path != ""
+        save_hourglass(save_path,han.nn.hg)
+    end
 
     nothing
 end

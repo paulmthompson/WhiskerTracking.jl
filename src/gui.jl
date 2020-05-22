@@ -933,7 +933,7 @@ function plot_whiskers(han::Tracker_Handles)
         #draw_tracked_whisker(han)
     end
 
-    if han.nn.draw_preds
+    if (han.nn.draw_preds)|(get_draw_predictions(han.b))
         draw_predictions(han)
     end
 

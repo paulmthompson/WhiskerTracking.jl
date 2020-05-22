@@ -12,7 +12,9 @@ end
 function (c::Conv1)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     bn=batchnorm(x,c.ms,c.bn_p,training=c.training)
     relu.(bn)
-    conv4(c.w,bn,stride=c.stride,padding=c.padding) .+ c.b
+    output=conv4(c.w,bn,stride=c.stride,padding=c.padding) .+ c.b
+    bn=nothing
+    output
 end
 
 function Conv1(in_dim,out_dim,k_s,stride,padding)
@@ -52,7 +54,11 @@ struct Residual <: NN
 end
 
 function (r::Residual)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
-    r.c3(r.c2(r.c1(x))) .+ x
+    c1=r.c1(x)
+    c2=r.c2(c1)
+    output=r.c3(c2) .+ x
+    c1=nothing; c2=nothing
+    output
 end
 
 function Residual(in_dim,out_dim)
@@ -79,7 +85,11 @@ end
 
 function (r::Residual_skip)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     residual = conv4(r.w,x,stride=1) .+ r.b
-    r.c3(r.c2(r.c1(x))) .+ residual
+    c1=r.c1(x)
+    c2=r.c2(c1)
+    output=r.c3(c2) .+ residual
+    c1=nothing; c2=nothing; residual=nothing
+    output
 end
 
 function Residual_skip(in_dim,out_dim)

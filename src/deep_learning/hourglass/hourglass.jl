@@ -88,6 +88,10 @@ function (h::Hourglass)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{
     low2 = h.low2(low1)
     low3 = h.low3(low2)
     up2 = h.up2(low3)
+
+    pool1 = nothing; low1=nothing; low2=nothing; low3=nothing;
+    #Knet.gc()
+
     up1 .+ up2
 end
 
@@ -135,23 +139,8 @@ function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float3
         if i<h.nstack
             temp = temp + h.merge_features[i](features) + h.merge_preds[i](pred)
         end
-    end
-    preds
-end
-
-function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
-    temp=h.fb(x)
-
-    preds=Array{Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}},1}() #Can this be typed to be the same as input?
-
-    for i=1:h.nstack
-        hg=h.hg[i](temp)
-        features=h.o1[i](hg)
-        pred=h.c1[i](features)
-        push!(preds,pred)
-        if i<h.nstack
-            temp = temp + h.merge_features[i](features) + h.merge_preds[i](pred)
-        end
+        hg=nothing; features=nothing; pred=nothing;
+        #Knet.gc()
     end
     preds
 end
