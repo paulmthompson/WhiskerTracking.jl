@@ -188,27 +188,6 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     nothing
 end
 
-function load_dlc_tracked_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    try
-        filepath = open_dialog("Load DLC Whisker File",han.b["win"])
-
-        if filepath != ""
-            (xxx,yyy,lll)=dlc_hd5_to_array(filepath,0.2,true);
-            dlc_smooth_liklihood(xxx,yyy,15,lll,50.0)
-            han.tracked_whiskers_x=xxx
-            han.tracked_whiskers_y=yyy
-            han.tracked_whiskers_l=lll;
-        end
-    catch
-        println("Could not load whiskers")
-    end
-
-    nothing
-end
-
 function get_max_frames(vid_name::String)
 
     yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
@@ -322,84 +301,6 @@ function num_whiskers_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function load_previous_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    config_path = open_dialog("Load Previous DLC session",han.b["win"])
-
-    if config_path != ""
-
-        change_save_paths(han,config_path)
-        han.dlc.config_path = config_path
-        try
-            load_label_data(han,config_path)
-        catch
-            println("Could not load labeled data")
-        end
-
-        #update_discrete(han)
-
-        println("Previous Session Loaded")
-    end
-
-    nothing
-end
-
-function load_label_data(han::Tracker_Handles,config_path::String)
-
-    label_path=get_label_path_from_config(config_path)
-
-    (w_p,frame_list)=load_labels(label_path)
-
-    #If one of the whiskers doesn't exist, delete it
-    keep = trues(length(frame_list))
-    for i=1:length(frame_list)
-        if all(isnan.(w_p[:,i]))
-            keep[i] = false
-        end
-    end
-
-    frame_list = frame_list[keep]
-    w_p = w_p[:,keep]
-
-    han.frame_list = frame_list
-
-    #Change frame list spin button maximum number and current index
-    set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.frame_list))
-
-    #add whisker WOI
-    han.woi=[Whisker1() for i=1:length(frame_list)]
-    for i=1:length(frame_list)
-        x=reverse(w_p[1:2:(end-1),i])
-        y=reverse(w_p[2:2:end,i])
-        x=x[.!isnan.(x)]
-        y=y[.!isnan.(y)]
-        if length(x) != length(y)
-            println("Error")
-        end
-
-        (xx,yy) = get_woi_x_y(x,y,5.0,(x[end],y[end]))
-
-        n_points=length(xx)
-
-        han.woi[i] = Whisker1(1,han.frame_list[i],n_points,xx,yy,zeros(Float32,n_points),zeros(Float32,n_points))
-    end
-
-    han.wt.all_whiskers = [Array{Whisker1,1}() for i=1:length(frame_list)]
-    for i=1:length(frame_list)
-        han.wt.all_whiskers[i] = [deepcopy(han.woi[i])]
-    end
-
-    han.tracked = trues(length(frame_list))
-
-    han.pole_present = zeros(Float64,length(frame_list))
-
-    han.pole_loc = zeros(Float32,length(frame_list),2)
-
-    nothing
-end
-
 function get_label_path_from_config(config_path::String)
 
     dlc_folder_path = dirname(config_path)
@@ -409,38 +310,6 @@ function get_label_path_from_config(config_path::String)
     vid_dir=string(label_dir,"/",readdir(label_dir)[1])
 
     label_path=string(vid_dir,"/",filter(x->occursin(".h5",x), readdir(vid_dir))[1])
-end
-
-function load_labels(label_path::String)
-    myfile=h5open(label_path)
-    mytable=read(myfile,"df_with_missing")["table"]
-
-    d_points_length=length(mytable[1].data[2])-2 #subtract pole
-
-    frame_num=length(mytable)
-
-    w_p=zeros(Float32,d_points_length,frame_num)
-
-    frame_list=zeros(Int64,frame_num)
-
-    for i=1:frame_num
-        for j=1:d_points_length
-            w_p[j,i] = mytable[i].data[2][j]
-        end
-        frame_list[i] = parse(Int64,basename(mytable[i].data[1])[4:(end-4)])
-    end
-
-    close(myfile)
-
-    #Check for duplicates. This can happen on windows with / \ confusion
-    if length(unique(frame_list)) < length(frame_list)
-        unique_inds=findfirst.(isequal.(unique(frame_list)), [frame_list])
-
-        frame_list=unique(frame_list)
-        w_p = w_p[:,unique_inds]
-    end
-
-    (w_p,frame_list)
 end
 
 function change_save_paths(han::Tracker_Handles,config_path::String)

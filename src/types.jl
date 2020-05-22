@@ -54,19 +54,6 @@ mutable struct janelia_widgets
     jt_seed_iterations_button::Gtk.GtkSpinButtonLeaf
 end
 
-mutable struct dlc_widgets
-    win::Gtk.GtkWindowLeaf
-    create_button::Gtk.GtkButtonLeaf
-    export_button::Gtk.GtkButtonLeaf
-    with_pole_button::Gtk.GtkCheckButtonLeaf
-    train_button::Gtk.GtkButtonLeaf
-    analyze_button::Gtk.GtkButtonLeaf
-    weights_label::Gtk.GtkLabelLeaf
-    load_weights_button::Gtk.GtkButtonLeaf
-    create_training_button::Gtk.GtkButtonLeaf
-    select_network_button::Gtk.GtkButtonLeaf
-end
-
 mutable struct contact_widgets
     win::Gtk.GtkWindowLeaf
     training_num_label::Gtk.GtkLabelLeaf
