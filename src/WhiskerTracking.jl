@@ -2,7 +2,7 @@
 module WhiskerTracking
 
 #Standard Library
-using StatsBase,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra
+using Statistics,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra
 
 #Deep Learning Libraries
 using CuArrays, CUDAnative, Knet

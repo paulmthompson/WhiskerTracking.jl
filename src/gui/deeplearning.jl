@@ -69,6 +69,7 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if !han.nn.use_existing_labels
         set_up_training(han) #heatmaps, labels, normalize, augment
         save_training(han)
+        han.nn.use_existing_labels=true
     else
         set_up_training(han,false)
         save_training(han)
@@ -80,6 +81,7 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
         han.nn.features=features(hg)
         han.nn.hg = hg
+        han.nn.use_existing_weights=true
     end
 
     nothing
