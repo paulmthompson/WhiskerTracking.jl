@@ -11,9 +11,14 @@ end
 
 function (c::Out_Layer)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     r1=c.r1(x)
-    out=conv4(c.w,r1) .+ c.b
-    bn=batchnorm(out,c.ms,c.bn_p,training=c.training)
-    relu.(bn)
+    out1 = conv4(c.w,r1)
+    out2 = out1 .+ c.b
+    bn=batchnorm(out2,c.ms,c.bn_p,training=c.training)
+    out3 = relu.(bn)
+
+    Knet.freeKnetPtr(r1.ptr); Knet.freeKnetPtr(out1.ptr); Knet.freeKnetPtr(out2.ptr); Knet.freeKnetPtr(bn.ptr)
+
+    out3
 end
 
 function Out_Layer(in_dim)
@@ -46,6 +51,9 @@ function (f::FirstBlock)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray
     p1=f.p1(r1)
     r2=f.r2(p1)
     r3=f.r3(r2)
+
+    Knet.freeKnetPtr(c1.ptr); Knet.freeKnetPtr(r1.ptr); Knet.freeKnetPtr(p1.ptr); Knet.freeKnetPtr(r2.ptr)
+    r3
 end
 
 function set_testing(f::FirstBlock,training=false)
@@ -88,11 +96,12 @@ function (h::Hourglass)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{
     low2 = h.low2(low1)
     low3 = h.low3(low2)
     up2 = h.up2(low3)
+    out = up1 .+ up2
+    
+    Knet.freeKnetPtr(pool1.ptr); Knet.freeKnetPtr(low1.ptr); Knet.freeKnetPtr(low2.ptr); Knet.freeKnetPtr(low3.ptr);
+    Knet.freeKnetPtr(up1.ptr); Knet.freeKnetPtr(up2.ptr)
 
-    pool1 = nothing; low1=nothing; low2=nothing; low3=nothing;
-    #Knet.gc()
-
-    up1 .+ up2
+    out
 end
 
 function set_testing(f::Hourglass,training=false)
@@ -139,7 +148,8 @@ function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float3
         if i<h.nstack
             temp = temp + h.merge_features[i](features) + h.merge_preds[i](pred)
         end
-        hg=nothing; features=nothing; pred=nothing;
+        #hg=nothing; features=nothing; pred=nothing;
+        #Knet.freeKnetPtr(hg); Knet.freeKnetPtr(features); Knet.freeKnetPtr(pred)
         #Knet.gc()
     end
     preds

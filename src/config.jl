@@ -15,3 +15,9 @@ else
     const ffmpeg_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffmpeg")
     const ffprobe_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffprobe")
 end
+
+if is_unix()
+    #const hourglass_path = string(homedir(),"/Programs/ffmpeg/ffmpeg")
+else
+    #const hourglass_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffmpeg")
+end

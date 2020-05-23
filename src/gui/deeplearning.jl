@@ -232,9 +232,13 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
         for k=0:(batch_per_load-1)
 
             copyto!(sub_input_images,1,input_images,k*w*h*batch_size+1,w*h*batch_size)
-            myout=han.nn.hg(sub_input_images)[4]
-            copyto!(input_f,k*64*64*han.nn.features*batch_size+1,myout,1,length(myout))
+            myout=han.nn.hg(sub_input_images)
+            copyto!(input_f,k*64*64*han.nn.features*batch_size+1,myout[4],1,length(myout[4]))
+            for kk=1:length(myout)
+                Knet.freeKnetPtr(myout[kk].ptr)
+            end
         end
+        Knet.freeKnetPtr(input_images.ptr)
 
         input[:]=convert(Array,input_f)
         @inbounds for i=1:length(input)
@@ -254,6 +258,7 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
         frame_num += loading_size
         set_gtk_property!(han.b["dl_predict_prog"],:fraction,frame_num/total_frames)
         sleep(0.0001)
+        Knet.gc()
     end
 
     preds[:,1,:] = preds[:,1,:] ./ 64 .* 640

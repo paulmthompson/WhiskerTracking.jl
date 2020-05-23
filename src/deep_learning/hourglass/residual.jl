@@ -10,11 +10,13 @@ mutable struct Conv1 <: NN
 end
 
 function (c::Conv1)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
-    bn=batchnorm(x,c.ms,c.bn_p,training=c.training)
-    relu.(bn)
-    output=conv4(c.w,bn,stride=c.stride,padding=c.padding) .+ c.b
-    bn=nothing
-    output
+    bn = batchnorm(x,c.ms,c.bn_p,training=c.training)
+    relu_out = relu.(bn)
+    output1 = conv4(c.w,relu_out,stride=c.stride,padding=c.padding)
+    output2 = output1 .+ c.b
+
+    Knet.freeKnetPtr(bn.ptr); Knet.freeKnetPtr(relu_out.ptr); Knet.freeKnetPtr(output1.ptr)
+    output2
 end
 
 function Conv1(in_dim,out_dim,k_s,stride,padding)
@@ -38,7 +40,12 @@ mutable struct Conv0 <: NN
 end
 
 function (c::Conv0)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
-    conv4(c.w,x,stride=c.stride,padding=c.padding) .+ c.b
+    out1=conv4(c.w,x,stride=c.stride,padding=c.padding)
+    out2 = out1 .+ c.b
+
+    Knet.freeKnetPtr(out1.ptr)
+
+    out2
 end
 
 function Conv0(in_dim,out_dim,k_s,stride,padding)
@@ -56,8 +63,9 @@ end
 function (r::Residual)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     c1=r.c1(x)
     c2=r.c2(c1)
-    output=r.c3(c2) .+ x
-    c1=nothing; c2=nothing
+    output = r.c3(c2) .+ x
+
+    Knet.freeKnetPtr(c1.ptr); Knet.freeKnetPtr(c2.ptr);
     output
 end
 
@@ -87,8 +95,9 @@ function (r::Residual_skip)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetAr
     residual = conv4(r.w,x,stride=1) .+ r.b
     c1=r.c1(x)
     c2=r.c2(c1)
-    output=r.c3(c2) .+ residual
-    c1=nothing; c2=nothing; residual=nothing
+    output = r.c3(c2) .+ residual
+
+    Knet.freeKnetPtr(c1.ptr); Knet.freeKnetPtr(c2.ptr); Knet.freeKnetPtr(residual.ptr)
     output
 end
 
