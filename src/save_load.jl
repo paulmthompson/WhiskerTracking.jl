@@ -111,6 +111,45 @@ function convert_whisker_points_to_janelia(xx,yy,tracked)
     woi
 end
 
+function convert_discrete_to_janelia(preds::Array,conf_thres::Float64,pad_pos::Tuple)
+    woi=[WhiskerTracking.Whisker1() for i=1:size(preds,3)]
+    tracked=trues(size(preds,3))
+
+    myinds=falses(size(preds,1))
+    for i=1:size(preds,3)
+        num_points=0
+        myinds[:]=falses(size(preds,1))
+        for j=1:size(preds,1)
+            if preds[j,3,i]>conf_thres
+                myinds[j]=true
+                num_points+=1
+            end
+        end
+
+        woi[i]=WhiskerTracking.Whisker1(0,i,num_points,preds[myinds,1,i],preds[myinds,2,i],ones(Float64,num_points),ones(Float64,num_points))
+
+        if num_points<5
+            tracked[i]=false
+        end
+
+        #Points need to have a nearest neighbor at least 20 pixels away, otherwise they are just assumed
+        #to be stray noise.
+        for j=2:length(woi[i].x)
+            if sqrt((woi[i].x[j]-woi[i].x[j-1])^2+(woi[i].y[j]-woi[i].y[j-1])^2) > 20.0
+                tracked[i]=false
+                break
+            end
+        end
+
+        if tracked[i]
+            WhiskerTracking.WT_reorder_whisker(woi[i],pad_pos)
+        end
+    end
+
+    (woi,tracked)
+end
+
+
 function read_whisker_hdf5(path;l_thres=0.5,pole=true)
 
     (xx,yy,ll)=dlc_hd5_to_array(path,l_thres,pole)

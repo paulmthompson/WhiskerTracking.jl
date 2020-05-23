@@ -170,7 +170,15 @@
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkLabel" id="create_model_label">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">No model created</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">3</property>
+                      </packing>
                     </child>
                     <child>
                       <placeholder/>

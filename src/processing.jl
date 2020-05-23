@@ -140,17 +140,23 @@ function WT_reorder_whisker(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,F
 
     #order whiskers so that the last index is closest to the whisker pad
     for i=1:length(whiskers)
-        front_dist = (whiskers[i].x[1]-pad_pos[1])^2+(whiskers[i].y[1]-pad_pos[2])^2
-        end_dist = (whiskers[i].x[end]-pad_pos[1])^2+(whiskers[i].y[end]-pad_pos[2])^2
-
-        if front_dist < end_dist #
-            reverse!(whiskers[i].x,1)
-            reverse!(whiskers[i].y,1)
-            reverse!(whiskers[i].scores,1)
-            reverse!(whiskers[i].thick,1)
-        end
+        WT_reorder_whisker(whiskers[i],pad_pos)
     end
 
+    nothing
+end
+
+function WT_reorder_whisker(whisker::Whisker1,pad_pos::Tuple{Float32,Float32})
+
+    front_dist = (whisker.x[1]-pad_pos[1])^2+(whisker.y[1]-pad_pos[2])^2
+    end_dist = (whisker.x[end]-pad_pos[1])^2+(whisker.y[end]-pad_pos[2])^2
+
+    if front_dist < end_dist #
+        reverse!(whisker.x,1)
+        reverse!(whisker.y,1)
+        reverse!(whisker.scores,1)
+        reverse!(whisker.thick,1)
+    end
     nothing
 end
 

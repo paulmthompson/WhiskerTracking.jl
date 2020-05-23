@@ -84,6 +84,8 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         han.nn.use_existing_weights=true
     end
 
+    set_gtk_property!(han.b["create_model_label"],:label,string("model created at ", Dates.Time(Dates.now())))
+
     nothing
 end
 
@@ -171,7 +173,7 @@ function predict_frames_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     @async begin
-        han.nn.predicted=calculate_whiskers(han,5000)
+        han.nn.predicted=calculate_whiskers(han)
     end
 
     nothing

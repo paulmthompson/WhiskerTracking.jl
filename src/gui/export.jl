@@ -16,15 +16,8 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     e_curve = getproperty(han.b["curvature_export_button"],:active,Bool)
     e_phase = getproperty(han.b["phase_export"],:active,Bool)
 
-    #try
-    myrange_i = (1,size(han.tracked_whiskers_x,2))
-    interp_resolution=5.0
-
-    (wx,wy,mytracked)=interpolate_dlc(han.tracked_whiskers_x,han.tracked_whiskers_y,
-    han.tracked_whiskers_l,myrange_i,interp_resolution)
-
     #Convert to Janelia
-    my_whiskers=convert_whisker_points_to_janelia(wx,wy,mytracked);
+    (my_whiskers,mytracked)=convert_discrete_to_janelia(han.nn.predicted,han.nn.confidence_thres,han.wt.pad_pos);
 
     face_axis_num=getproperty(han.b["face_axis_combo"],:active,Int64)
 
@@ -52,9 +45,6 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         end
     write(file,"Tracked",mytracked)
     close(file)
-
-    #catch
-    #end
 
     setproperty!(han.b["export_button"],:label,"Export")
     println("Export complete")

@@ -60,7 +60,7 @@ l is the liklihood for each point
 inds is the range of indexes to interpolate between
 interp_res is the desired interpixel distance for interpolation
 =#
-function interpolate_dlc(w_x_in::Array{Float64,2},w_y_in::Array{Float64,2},l::BitArray{2},inds::Tuple,interp_res::Float64)
+function interpolate_dlc(w_x_in::Array{T,2},w_y_in::Array{T,2},l::BitArray{2},inds::Tuple,interp_res::Float64) where {T}
 
     #Interpolate DLC points and generate line of values spaced 1 unit apart (for better visualization)
     wx=[Array{Float64,1}() for i=1:size(w_x_in,2)]
