@@ -179,7 +179,9 @@ function predict_frames_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function calculate_whiskers(han,total_frames=han.max_frames,batch_size=6,loading_size=128)
+function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading_size=128)
+
+    @assert rem(loading_size,batch_size) == 0
 
     w=size(han.nn.imgs,1)
     h=size(han.nn.imgs,2)
@@ -193,13 +195,14 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=6,loading
     temp_frames2_f = zeros(Float32,480,640,1,loading_size)
 
     input_images_cu = convert(CuArray,zeros(Float32,480,640,1,loading_size))
-    input_images_cu_r = convert(CuArray,zeros(Float32,256,256,1,loading_size))
+    input_images_cu_r = convert(CuArray,zeros(Float32,w,h,1,loading_size))
 
-    sub_input_images=convert(KnetArray{Float32,4},zeros(Float32,256,256,1,batch_size))
+    sub_input_images=convert(KnetArray{Float32,4},zeros(Float32,w,h,1,batch_size))
 
     input_f=convert(KnetArray{Float32,4},zeros(Float32,64,64,han.nn.features,loading_size))
     input=zeros(Float32,64,64,han.nn.features,loading_size)
     input_fft=zeros(Complex{Float32},64,64,han.nn.features,loading_size)
+    input_fft=convert(SharedArray,input_fft)
 
     preds=zeros(Float32,han.nn.features,3,total_frames)
     preds=convert(SharedArray,preds)
@@ -262,17 +265,6 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=6,loading
 
     convert(Array,preds)
 end
-
-function calculate_subpixel(preds,offset,input,k_fft)
-
-    @distributed for jj=1:size(input,4)
-        for kk=1:size(input,3)
-            preds[kk,1:2,jj+offset] = convert(Array{Float32,1},WhiskerTracking.subpixel(input[:,:,kk,jj],k_fft,4)) .+ 32.0f0
-        end
-    end
-    nothing
-end
-
 
 function mean_std_video_gpu(han::Tracker_Handles,total_frame_num)
     mean_std_video_gpu(han.wt.vid_name,total_frame_num)

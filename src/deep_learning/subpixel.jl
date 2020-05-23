@@ -103,3 +103,13 @@ function dftups(inp::AbstractArray{T,N},no,usfac::Int=1,offset=zeros(N)) where {
     end
     permutedims(inp,collect(ndims(inp):-1:1))
 end
+
+function calculate_subpixel(preds,offset,input,k_fft)
+
+    @distributed for jj=1:size(input,4)
+        for kk=1:size(input,3)
+            preds[kk,1:2,jj+offset] = convert(Array{Float32,1},subpixel(input[:,:,kk,jj],k_fft,4)) .+ 32.0f0
+        end
+    end
+    nothing
+end
