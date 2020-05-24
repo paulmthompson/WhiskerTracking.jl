@@ -15,7 +15,7 @@ function draw_start(han::Tracker_Handles,x,y)
     Cairo.save(r)
     ctxcopy = copy(r)
 
-    if han.tracked[han.frame]
+    #if han.tracked[han.frame]
         new_whisker=Whisker1()
 
         push!(new_whisker.x,x)
@@ -27,7 +27,7 @@ function draw_start(han::Tracker_Handles,x,y)
 
         han.wt.whiskers=[new_whisker]
         han.woi_id = 1
-    end
+    #end
 
     plot_whiskers(han)
 

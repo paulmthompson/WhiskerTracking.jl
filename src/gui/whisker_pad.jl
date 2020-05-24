@@ -6,6 +6,8 @@ function add_pad_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     nothing
 end
 
+view_pad(b::Gtk.GtkBuilder)=getproperty(b["pad_check_button"],:active,Bool)
+
 function pad_gen_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
 
     han, = user_data
