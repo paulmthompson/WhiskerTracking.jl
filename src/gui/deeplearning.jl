@@ -179,7 +179,7 @@ function predict_frames_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading_size=128)
+function calculate_whiskers(han,total_frames=han.max_frames,batch_size=8,loading_size=128)
 
     @assert rem(loading_size,batch_size) == 0
 
@@ -191,10 +191,7 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
     k_mean = convert(CuArray,han.nn.norm.mean_img)
 
     temp_frames=zeros(UInt8,640,480,1,loading_size)
-    temp_frames_p=zeros(UInt8,480,640,1,loading_size)
-    temp_frames2_f = zeros(Float32,480,640,1,loading_size)
-
-    input_images_cu = convert(CuArray,zeros(Float32,480,640,1,loading_size))
+    temp_frames_cu=convert(CuArray,zeros(UInt8,640,480,1,loading_size))
     input_images_cu_r = convert(CuArray,zeros(Float32,w,h,1,loading_size))
 
     sub_input_images=convert(KnetArray{Float32,4},zeros(Float32,w,h,1,batch_size))
@@ -203,6 +200,9 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
     input=zeros(Float32,64,64,han.nn.features,loading_size)
     input_fft=zeros(Complex{Float32},64,64,han.nn.features,loading_size)
     input_fft=convert(SharedArray,input_fft)
+
+    input_cu = convert(CuArray,zeros(Float32,64,64,han.nn.features,loading_size))
+    input_cu_com = convert(CuArray,zeros(Complex{Float32},64,64,han.nn.features,loading_size))
 
     preds=zeros(Float32,han.nn.features,3,total_frames)
     preds=convert(SharedArray,preds)
@@ -219,16 +219,13 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
 
         run(WhiskerTracking.ffmpeg_cmd(frame_num/25,han.wt.vid_name,loading_size,"test5.yuv"))
         read!("test5.yuv",temp_frames)
-        permutedims!(temp_frames_p,temp_frames,[2,1,3,4])
-        @inbounds for i=1:length(temp_frames_p)
-            temp_frames2_f[i] = temp_frames_p[i] ./ 1.0f0
-        end
-        input_images_cu[:] = convert(CuArray{Float32,4},temp_frames2_f)
-        CUDA_resize4(input_images_cu,input_images_cu_r)
 
+        temp_frames_cu[:]=convert(CuArray,temp_frames)
+        CUDA_preprocess(temp_frames_cu,input_images_cu_r)
         CUDA_normalize_images(input_images_cu_r,k_mean)
 
         input_images = convert(KnetArray,input_images_cu_r)
+
         for k=0:(batch_per_load-1)
 
             copyto!(sub_input_images,1,input_images,k*w*h*batch_size+1,w*h*batch_size)
@@ -240,12 +237,11 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=4,loading
         end
         Knet.freeKnetPtr(input_images.ptr)
 
-        input[:]=convert(Array,input_f)
-        @inbounds for i=1:length(input)
-            input_fft[i] = convert(Complex{Float32},input[i])
-        end
-        fft!(input_fft,(1,2))
+        input_cu[:]=(CuArray(input_f))
+        input_cu_com[:]=fft(input_cu,(1,2))
+        input_fft[:] = convert(Array{Complex{Float32},4},input_cu_com)
 
+        input[:]=convert(Array,input_f)
         hi=argmax(input,dims=(1,2))
         for jj=1:size(hi,4)
             for kk=1:size(hi,3)
