@@ -11,12 +11,12 @@ end
 
 function (c::Out_Layer)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     r1=c.r1(x)
-    out1 = conv4(c.w,r1)
-    out2 = out1 .+ c.b
-    bn=batchnorm(out2,c.ms,c.bn_p,training=c.training)
-    out3 = relu.(bn)
+    out1 = conv4(c.w,r1); myfree(r1);
+    out2 = out1 .+ c.b; myfree(out1);
+    bn=batchnorm(out2,c.ms,c.bn_p,training=c.training); myfree(out2);
+    out3 = relu.(bn);
 
-    Knet.freeKnetPtr(r1.ptr); Knet.freeKnetPtr(out1.ptr); Knet.freeKnetPtr(out2.ptr); Knet.freeKnetPtr(bn.ptr)
+     myfree(bn)
 
     out3
 end
@@ -47,12 +47,11 @@ FirstBlock(N)=FirstBlock(Conv1(3,64,7,2,3),Residual_skip(64,128),Pool(),Residual
 
 function (f::FirstBlock)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}})
     c1=f.c1(x)
-    r1=f.r1(c1)
-    p1=f.p1(r1)
-    r2=f.r2(p1)
-    r3=f.r3(r2)
+    r1=f.r1(c1); myfree(c1);
+    p1=f.p1(r1); myfree(r1);
+    r2=f.r2(p1); myfree(p1);
+    r3=f.r3(r2); myfree(r2)
 
-    Knet.freeKnetPtr(c1.ptr); Knet.freeKnetPtr(r1.ptr); Knet.freeKnetPtr(p1.ptr); Knet.freeKnetPtr(r2.ptr)
     r3
 end
 
@@ -92,14 +91,13 @@ function (h::Hourglass)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{
 
     up1 = h.up1(x)
     pool1 = h.pool1(x)
-    low1 = h.low1(pool1)
-    low2 = h.low2(low1)
-    low3 = h.low3(low2)
-    up2 = h.up2(low3)
+    low1 = h.low1(pool1); myfree(pool1);
+    low2 = h.low2(low1); myfree(low1);
+    low3 = h.low3(low2); myfree(low2);
+    up2 = h.up2(low3); myfree(low3);
     out = up1 .+ up2
-    
-    Knet.freeKnetPtr(pool1.ptr); Knet.freeKnetPtr(low1.ptr); Knet.freeKnetPtr(low2.ptr); Knet.freeKnetPtr(low3.ptr);
-    Knet.freeKnetPtr(up1.ptr); Knet.freeKnetPtr(up2.ptr)
+
+    myfree(up1); myfree(up2)
 
     out
 end
@@ -146,12 +144,17 @@ function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float3
         pred=h.c1[i](features)
         push!(preds,pred)
         if i<h.nstack
-            temp = temp + h.merge_features[i](features) + h.merge_preds[i](pred)
+            m_features = h.merge_features[i](features)
+            m_preds = h.merge_preds[i](pred)
+            temp1 = m_features + m_preds
+            temp = temp1 + temp
+            myfree(m_features); myfree(m_preds); myfree(temp1)
         end
-        #hg=nothing; features=nothing; pred=nothing;
-        #Knet.freeKnetPtr(hg); Knet.freeKnetPtr(features); Knet.freeKnetPtr(pred)
-        #Knet.gc()
+
+        myfree(hg); myfree(features);
     end
+    myfree(temp)
+
     preds
 end
 

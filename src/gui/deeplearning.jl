@@ -366,12 +366,14 @@ end
 
 function predict_single_frame(han)
 
-    k_mean = convert(KnetArray,han.nn.norm.mean_img)
-    k_std = convert(KnetArray,han.nn.norm.std_img)
-    temp_frame = convert(KnetArray{Float32,4},reshape(han.current_frame,(size(han.current_frame,1),size(han.current_frame,2),1,1)))
-    temp_frame = my_imresize(temp_frame,256,256)
+    k_mean = han.nn.norm.mean_img
 
-    temp_frame = normalize_new_images(temp_frame,k_mean)
+    temp_frame = temp_frame = convert(Array{Float32,2},han.current_frame)
+    temp_frame = imresize(temp_frame,(256,256))
+
+    temp_frame = WhiskerTracking.normalize_new_images(temp_frame,k_mean)
+
+    temp_frame = convert(KnetArray,reshape(temp_frame,(256,256,1,1)))
 
     set_testing(han.nn.hg,false) #Turn off batch normalization for prediction
     myout=han.nn.hg(temp_frame)[4]
@@ -391,7 +393,6 @@ function predict_single_frame(han)
     input=fft(convert(Array,myout),(1:2))
 
     for i=1:size(myout,3)
-
         preds[:,i]=subpixel(input[:,:,i,1],k_fft,4) .+ 32.0
     end
 

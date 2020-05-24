@@ -4,6 +4,14 @@ function pixel_mse(truth::KnetArray{Float32,4},pred::Union{KnetArray{Float32,4},
     loss / (size(pred,3) * size(pred,4))
 end
 
+function myfree(x::AutoGrad.Result)
+    #myfree(x.value)
+end
+
+function myfree(x::KnetArray)
+    Knet.freeKnetPtr(x.ptr)
+end
+
 gaussian_2d(x,y,x0,y0)=[1/sqrt.(2 .* pi) .* exp.(-1 .* ((xi .- x0).^2 + (yi .- y0).^2)) for xi in x, yi in y]
 
 function create_padded_kernel(size_x,size_y,kl)
