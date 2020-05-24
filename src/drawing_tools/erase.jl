@@ -3,7 +3,7 @@ function erase_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.erase_mode = getproperty(han.erase_button,:active,Bool)
+    han.erase_mode = getproperty(han.b["erase_button"],:active,Bool)
 
     nothing
 end

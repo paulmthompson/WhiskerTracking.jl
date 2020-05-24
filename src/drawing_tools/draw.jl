@@ -3,7 +3,7 @@ function draw_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.draw_mode = getproperty(han.draw_button,:active,Bool)
+    han.draw_mode = getproperty(han.b["draw_button"],:active,Bool)
 
     nothing
 end
