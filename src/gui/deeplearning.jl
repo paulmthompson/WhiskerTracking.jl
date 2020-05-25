@@ -329,6 +329,8 @@ function set_up_training(han,get_mean=true)
         han.nn.norm.mean_img = reshape(imresize(han.nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
     end
 
+    WT_reorder_whisker(han.woi,han.wt.pad_pos)
+
     han.nn.labels=make_heatmap_labels(han)
     han.nn.imgs=get_labeled_frames(han);
 
@@ -408,11 +410,11 @@ function draw_predictions(han)
     circ_rad=5.0
 
     ctx=Gtk.getgc(han.c)
-    Cairo.set_source_rgb(ctx,0,1,0)
     num_points = size(preds,1)
 
     for i=1:num_points
         if confidences[i] > han.nn.confidence_thres
+            Cairo.set_source_rgba(ctx,0,1,0,1-0.025*i)
             Cairo.arc(ctx, preds[i,1] / 64 * 640,preds[i,2] / 64 * 480, circ_rad, 0, 2*pi);
             Cairo.stroke(ctx);
         end
@@ -425,12 +427,12 @@ function draw_predicted_whisker(han)
     circ_rad=5.0
 
     ctx=Gtk.getgc(han.c)
-    Cairo.set_source_rgb(ctx,0,1,0)
     num_points = size(han.nn.predicted,1)
 
     d=han.displayed_frame
     for i=1:num_points
         if han.nn.predicted[i,3,d] > han.nn.confidence_thres
+            Cairo.set_source_rgba(ctx,0,1,0,1-0.025*i)
             Cairo.arc(ctx, han.nn.predicted[i,1,d],han.nn.predicted[i,2,d], circ_rad, 0, 2*pi);
             Cairo.stroke(ctx);
         end
