@@ -185,8 +185,10 @@ function predict_frames_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function calculate_whiskers(han,total_frames=han.max_frames,batch_size=8,loading_size=128)
+function calculate_whiskers(han,total_frames=han.max_frames,batch_size=32,loading_size=128)
 
+    Knet.knetgcinit(Knet._tape)
+    Knet.gc()
     @assert rem(loading_size,batch_size) == 0
 
     w=size(han.nn.imgs,1)
@@ -257,10 +259,10 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=8,loading
 
         calculate_subpixel(preds,frame_num-1,input_fft,k_fft)
 
-        frame_num += loading_size
         set_gtk_property!(han.b["dl_predict_prog"],:fraction,frame_num/total_frames)
+        frame_num += loading_size
         sleep(0.0001)
-        Knet.gc()
+        #Knet.gc()
     end
 
     preds[:,1,:] = preds[:,1,:] ./ 64 .* 640

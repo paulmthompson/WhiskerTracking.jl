@@ -137,9 +137,10 @@ function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float3
     temp=h.fb(x)
 
     preds=Array{Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}},1}() #Can this be typed to be the same as input?
-
+    temps=Array{Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float32,4}}},1}(undef,h.nstack) #Can this be typed to be the same as input?
+    temps[1]=temp
     for i=1:h.nstack
-        hg=h.hg[i](temp)
+        hg=h.hg[i](temps[i])
         features=h.o1[i](hg)
         pred=h.c1[i](features)
         push!(preds,pred)
@@ -147,13 +148,16 @@ function (h::HG2)(x::Union{KnetArray{Float32,4},AutoGrad.Result{KnetArray{Float3
             m_features = h.merge_features[i](features)
             m_preds = h.merge_preds[i](pred)
             temp1 = m_features + m_preds
-            temp = temp1 + temp
+            temps[i+1] = temp1 + temps[i]
             myfree(m_features); myfree(m_preds); myfree(temp1)
         end
 
         myfree(hg); myfree(features);
     end
     myfree(temp)
+    for i=1:h.nstack
+        myfree(temps[i])
+    end
 
     preds
 end
