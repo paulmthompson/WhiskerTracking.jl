@@ -66,29 +66,35 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    if !han.nn.use_existing_labels
-        set_up_training(han) #heatmaps, labels, normalize, augment
-        save_training(han)
-        han.nn.use_existing_labels=true
-    else
-        set_up_training(han,false)
-        save_training(han)
-    end
+    try
+        if !han.nn.use_existing_labels
+            set_up_training(han) #heatmaps, labels, normalize, augment
+            save_training(han)
+            han.nn.use_existing_labels=true
+        else
+            set_up_training(han,false)
+            save_training(han)
+        end
 
-    if !han.nn.use_existing_weights
-        hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
-        load_hourglass(han.nn.weight_path,hg)
-        change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
-        han.nn.features=features(hg)
-        han.nn.hg = hg
-        han.nn.use_existing_weights=true
-    end
+        if !han.nn.use_existing_weights
+            hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
+            load_hourglass(han.nn.weight_path,hg)
+            change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
+            han.nn.features=features(hg)
+            han.nn.hg = hg
+            han.nn.use_existing_weights=true
+        end
 
-    set_gtk_property!(han.b["create_model_label"],:label,string("model created at ", Dates.Time(Dates.now())))
+        set_gtk_property!(han.b["create_model_label"],:label,string("model created at ", Dates.Time(Dates.now())))
+    catch
+        println("Could not create new training model")
+    end
 
     nothing
 end
 
+#https://github.com/JuliaIO/HDF5.jl/issues/470
+#WTF? doesn't work if saving twice in the same session
 function save_training(han)
 
     file = jldopen(string(han.paths.backup,"/labels.jld"), "w")
@@ -329,7 +335,7 @@ function set_up_training(han,get_mean=true)
     #Normalize
     han.nn.imgs=normalize_new_images(han.nn.imgs,han.nn.norm.mean_img);
 
-    (han.nn.imgs,han.nn.labels)=WhiskerTracking.augment_images(han.nn.imgs,han.nn.labels);
+    (han.nn.imgs,han.nn.labels)=augment_images(han.nn.imgs,han.nn.labels);
 end
 
 function make_training_batch(img,ll,batch_size=8)

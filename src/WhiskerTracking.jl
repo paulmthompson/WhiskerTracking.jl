@@ -10,7 +10,7 @@ using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
 #Python Stuff
 using PyCall, ScikitLearn
 
-using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD, Interpolations, DSP,
+using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD2, Interpolations, DSP,
 FFTW, IterTools
 
 #Deprecated
