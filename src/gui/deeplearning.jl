@@ -406,38 +406,29 @@ function predict_single_frame(han)
 end
 
 function draw_predictions(han)
-
     (preds,confidences) = predict_single_frame(han)
-
-    circ_rad=5.0
-
-    ctx=Gtk.getgc(han.c)
-    num_points = size(preds,1)
-
-    for i=1:num_points
-        if confidences[i] > han.nn.confidence_thres
-            Cairo.set_source_rgba(ctx,0,1,0,1-0.025*i)
-            Cairo.arc(ctx, preds[i,1] / 64 * 640,preds[i,2] / 64 * 480, circ_rad, 0, 2*pi);
-            Cairo.stroke(ctx);
-        end
-    end
-    reveal(han.c)
+    _draw_predicted_whisker(preds[:,1] ./ 64 .* 640,preds[:,2] ./ 64 .* 480,confidences,han.c,han.nn.confidence_thres)
 end
 
 function draw_predicted_whisker(han)
+    d=han.displayed_frame
+    x=han.nn.predicted[:,1,d]; y=han.nn.predicted[:,2,d]; conf=han.nn.predicted[:,3,d]
+    _draw_predicted_whisker(x,y,conf,han.c,han.nn.confidence_thres)
+end
+
+function _draw_predicted_whisker(x,y,c,canvas,thres)
 
     circ_rad=5.0
 
-    ctx=Gtk.getgc(han.c)
-    num_points = size(han.nn.predicted,1)
+    ctx=Gtk.getgc(canvas)
+    num_points = length(x)
 
-    d=han.displayed_frame
     for i=1:num_points
-        if han.nn.predicted[i,3,d] > han.nn.confidence_thres
+        if c[i] > thres
             Cairo.set_source_rgba(ctx,0,1,0,1-0.025*i)
-            Cairo.arc(ctx, han.nn.predicted[i,1,d],han.nn.predicted[i,2,d], circ_rad, 0, 2*pi);
+            Cairo.arc(ctx, x[i],y[i], circ_rad, 0, 2*pi);
             Cairo.stroke(ctx);
         end
     end
-    reveal(han.c)
+    reveal(canvas)
 end
