@@ -11,10 +11,10 @@ using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
 using PyCall, ScikitLearn
 
 using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD2, Interpolations, DSP,
-FFTW, IterTools
+FFTW, IterTools, FFMPEG
 
 #Deprecated
-#using Polynomials, Distances, HDF5, FFMPEG
+#using Polynomials, Distances
 
 @sk_import ensemble: RandomForestClassifier
 

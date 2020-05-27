@@ -254,7 +254,7 @@ end
 
 function load_single_frame(x::Float64,tt::AbstractArray{UInt8,2},vn::String)
 
-    xx=open(`$(ffmpeg_path) -loglevel panic -ss $(x) -i $(vn) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
+    xx=@ffmpeg_env open(`$(FFMPEG.ffmpeg) -loglevel panic -ss $(x) -i $(vn) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
     if VERSION > v"0.7-"
         read!(xx,tt)
     else

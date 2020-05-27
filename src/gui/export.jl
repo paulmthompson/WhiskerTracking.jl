@@ -15,6 +15,7 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     e_angle = getproperty(han.b["angle_export_button"],:active,Bool)
     e_curve = getproperty(han.b["curvature_export_button"],:active,Bool)
     e_phase = getproperty(han.b["phase_export"],:active,Bool)
+    e_whisker = getproperty(han.b["whisker_export"],:active,Bool)
 
     #Convert to Janelia
     (my_whiskers,mytracked)=convert_discrete_to_janelia(han.nn.predicted,han.nn.confidence_thres,han.wt.pad_pos);
@@ -42,6 +43,9 @@ function export_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         end
         if e_phase
             write(file,"Phase",myphase)
+        end
+        if e_whisker
+            write(file,"Whisker",han.nn.predicted)
         end
     write(file,"Tracked",mytracked)
     close(file)

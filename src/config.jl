@@ -9,11 +9,11 @@ end
 #libwhisk = Libdl.dlopen(libwhisk_path,Libdl.RTLD_NOW)
 
 if is_unix()
-    const ffmpeg_path = string(homedir(),"/Programs/ffmpeg/ffmpeg")
-    const ffprobe_path = string(homedir(),"/Programs/ffmpeg/ffprobe")
+    #const ffmpeg_path = string(homedir(),"/Programs/ffmpeg/ffmpeg")
+    #const ffprobe_path = string(homedir(),"/Programs/ffmpeg/ffprobe")
 else
-    const ffmpeg_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffmpeg")
-    const ffprobe_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffprobe")
+    #const ffmpeg_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffmpeg")
+    #const ffprobe_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffprobe")
 end
 
 if is_unix()

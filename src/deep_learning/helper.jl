@@ -126,7 +126,7 @@ function normalize_images(ii)
 end
 
 function ffmpeg_cmd(st,vid_name,num_frames,temp_file)
-`$(ffmpeg_path) -y -loglevel panic -ss $(st) -i $(vid_name) -frames:v $(num_frames) -f rawvideo -pix_fmt gray $(temp_file)`
+`$(FFMPEG.ffmpeg) -y -loglevel panic -ss $(st) -i $(vid_name) -frames:v $(num_frames) -f rawvideo -pix_fmt gray $(temp_file)`
 end
 
 function normalize_new_images(ii::KnetArray,mean_img::Array,std_img,min_ref,max_ref)

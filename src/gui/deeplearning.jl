@@ -225,7 +225,7 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=32,loadin
 
     while (frame_num < div(total_frames,loading_size)*loading_size)
 
-        run(WhiskerTracking.ffmpeg_cmd(frame_num/25,han.wt.vid_name,loading_size,"test5.yuv"))
+        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(frame_num/25,han.wt.vid_name,loading_size,"test5.yuv"))
         read!("test5.yuv",temp_frames)
 
         temp_frames_cu[:]=convert(CuArray,temp_frames)
@@ -292,14 +292,14 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,max_int
     running_std = convert(KnetArray,zeros(Float32,w,h,1))
     running_std_i = convert(KnetArray,zeros(Float32,w,h,1))
 
-    run(WhiskerTracking.ffmpeg_cmd(0,vid_name,loading_size,"test5.yuv"))
+    @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(0,vid_name,loading_size,"test5.yuv"))
     read!("test5.yuv",temp_frames)
 
     temp_frames2[:]=convert(KnetArray{Float32,3},temp_frames)
     running_mean_i[:,:,1] = mean(temp_frames2,dims=3) ./ max_intensity
 
     for i=1:load_number
-        run(WhiskerTracking.ffmpeg_cmd(i*loading_size / 25,vid_name,loading_size,"test5.yuv"))
+        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(i*loading_size / 25,vid_name,loading_size,"test5.yuv"))
         read!("test5.yuv",temp_frames)
         temp_frames2[:]=convert(KnetArray{Float32,3},temp_frames)
 
