@@ -130,6 +130,14 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    #Check if the number of features in your training data set matches your number of features
+    #in the model. If they do not, remove the features at the end of the loaded model,
+    #and replace with blanks
+    if size(han.nn.labels,3) != features(han.nn.hg)
+        change_hourglass_output(han.nn.hg,size(han.nn.labels,1),size(han.nn.labels,3))
+        han.nn.features = features(han.nn.hg)
+    end
+
     dtrn=make_training_batch(han.nn.imgs,han.nn.labels);
 
     myadam=Adam(lr=1e-3)

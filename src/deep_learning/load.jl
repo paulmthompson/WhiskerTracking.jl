@@ -131,11 +131,24 @@ end
 
 function change_hourglass(hg,feature_num,input_dim,output_dim)
 
+    change_hourglass_input(hg,feature_num,input_dim)
+    change_hourglass_output(hg,feature_num,output_dim)
+
+    nothing
+end
+
+function change_hourglass_input(hg,feature_num,input_dim)
+
     #Input transform
     hg.fb.c1.w = Param(convert(KnetArray,xavier_normal(Float32,7,7,input_dim,64)))
     hg.fb.c1.b = Param(convert(KnetArray,xavier_normal(Float32,1,1,64,1)))
     hg.fb.c1.bn_p = Param(convert(KnetArray{Float32,1},bnparams(1)))
     hg.fb.c1.ms = bnmoments()
+
+    nothing
+end
+
+function change_hourglass_output(hg,feature_num,output_dim)
 
     for i=1:length(hg.c1)
         hg.c1[i].w = Param(convert(KnetArray,xavier_normal(Float32,1,1,feature_num,output_dim)))

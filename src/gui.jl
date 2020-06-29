@@ -190,7 +190,7 @@ end
 
 function get_max_frames(vid_name::String)
 
-    yy=read(`$(ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
+    yy=read(`$(FFMPEG.ffprobe) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
     if is_windows()
         max_frames=parse(Int64,String(yy[1:(end-2)]))
     else
