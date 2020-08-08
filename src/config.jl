@@ -1,9 +1,9 @@
 if is_unix()
-    const libwhisk_path = string(homedir(),"/Programs/whisk/build/libwhisk.so")
-    jt_parameters = string(homedir(),"/Programs/whisk/build/default.parameters")
+    jt_parameters = string(dirname(Base.source_path()),"/../lib/default.parameters")
+    const libwhisk_path=string(dirname(Base.source_path()),"/../deps/whisk/lib/whisk/libwhisk.so")
 else
-    const libwhisk_path = "C:\\Program Files\\WhiskerTracking\\lib\\whisk.dll"
-    jt_parameters = "C:\\Program Files\\WhiskerTracking\\default.parameters"
+    const libwhisk_path=string(dirname(Base.source_path()),"\\..\\deps\\whisk\\whisker\\lib\\whisk.dll")
+    jt_parameters = string(dirname(Base.source_path()),"\\..\\lib\\default.parameters")
 end
 
 #libwhisk = Libdl.dlopen(libwhisk_path,Libdl.RTLD_NOW)
