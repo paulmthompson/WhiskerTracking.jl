@@ -121,7 +121,7 @@ function load_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    filepath = open_dialog("Load Contact Data",han.win)
+    filepath = open_dialog("Load Contact Data",han.b["win"])
 
     if filepath != ""
         file = matopen(filepath,"r")
@@ -144,7 +144,7 @@ function save_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    filepath = save_dialog("Save Contact Data",han.win)
+    filepath = save_dialog("Save Contact Data",han.b["win"])
 
     if filepath != ""
         if filepath[end-3:end]==".mat"
@@ -166,7 +166,7 @@ function contact_load_predicted_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     #Load Contact
-    filepath = open_dialog("Load Predicted Labels",han.win)
+    filepath = open_dialog("Load Predicted Labels",han.b["win"])
 
     if filepath != ""
 
@@ -177,7 +177,7 @@ function contact_load_predicted_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         end
     end
 
-    filepath = open_dialog("Load Tracked Pole",han.win)
+    filepath = open_dialog("Load Tracked Pole",han.b["win"])
 
     if filepath != ""
 
