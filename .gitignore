@@ -1,3 +1,4 @@
 src/__pycache__/
 docs/_build/
 deps/whisk/
+deps/quad_hourglass_64.mat
