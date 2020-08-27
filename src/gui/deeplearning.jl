@@ -4,6 +4,7 @@ function add_deeplearning_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     signal_connect(load_weights_cb,b["dl_load_weights"],"clicked",Void,(),false,(handles,))
     signal_connect(load_labels_cb,b["dl_load_labels"],"clicked",Void,(),false,(handles,))
     signal_connect(dl_save_weights_cb,b["dl_save_weights"],"clicked",Void,(),false,(handles,))
+    signal_connect(dl_save_labels_cb,b["dl_save_labels"],"clicked",Void,(),false,(handles,))
 
     signal_connect(create_training_cb,b["dl_create_model_button"],"clicked",Void,(),false,(handles,))
 
@@ -62,6 +63,18 @@ function load_labels_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+function save_labels_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    save_path = save_dialog("Save Labels",han.b["win"])
+
+    if save_path != ""
+        save_training(han,save_path)
+    end
+
+end
+
 function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -95,9 +108,9 @@ end
 
 #https://github.com/JuliaIO/HDF5.jl/issues/470
 #WTF? doesn't work if saving twice in the same session
-function save_training(han)
+function save_training(han,mypath=string(han.paths.backup,"/labels.jld"))
 
-    file = jldopen(string(han.paths.backup,"/labels.jld"), "w")
+    file = jldopen(mypath, "w")
     write(file, "frame_list",han.frame_list)
     write(file, "woi",han.woi)
     write(file, "mean_img",han.nn.norm.mean_img)
