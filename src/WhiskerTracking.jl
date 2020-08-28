@@ -68,4 +68,7 @@ include("analysis/forces.jl")
 include("analysis/touch.jl")
 include("analysis/math.jl")
 
+include("precompile.jl")
+_precompile()
+
 end
