@@ -12,6 +12,8 @@ Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 SharedArrays = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 CuArrays = "3a865a2d-5b23-5a0f-bc46-62713ec82fae"
 CUDAnative = "be33ccc6-a3ff-5ff2-a52e-74243cff1e17"

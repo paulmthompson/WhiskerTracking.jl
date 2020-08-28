@@ -2,7 +2,7 @@
 module WhiskerTracking
 
 #Standard Library
-using Statistics,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra
+using Statistics,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra, Libdl, Dates
 
 #Deep Learning Libraries
 using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
@@ -16,7 +16,6 @@ FFTW, IterTools, FFMPEG
 @sk_import ensemble: RandomForestClassifier
 
 if VERSION > v"0.7-"
-    using SharedArrays, Libdl, Dates
     const Void = Nothing
     const setproperty! = set_gtk_property!
     const getproperty = get_gtk_property
