@@ -11,7 +11,10 @@ function make_gui()
 
     b = Builder(filename=glade_path)
 
-    c=Canvas(640,480)
+    h=480
+    w=640
+
+    c=Canvas(w,h)
     c_box = b["canvas_box"]
     push!(c_box,c)
 
@@ -20,8 +23,8 @@ function make_gui()
 
     all_whiskers=[Array{Whisker1,1}() for i=1:1]
 
-    wt=Tracker("","","","","",50,falses(480,640),Array{Whisker1,1}(),
-    (0.0,0.0),255,0,all_whiskers)
+    wt=Tracker("","","","","",50,falses(h,w),Array{Whisker1,1}(),
+    (0.0,0.0),255,0,h,w,all_whiskers)
 
     if VERSION > v"0.7-"
         woi_array = Array{Whisker1,1}(undef,1)
@@ -31,13 +34,13 @@ function make_gui()
 
     these_paths = Save_Paths("",false)
 
-    handles = Tracker_Handles(1,b,2,c,zeros(UInt32,640,480),
-    zeros(UInt8,480,640),zeros(UInt8,640,480),0,woi_array,1,1,
+    handles = Tracker_Handles(1,b,2,h,w,25.0,c,zeros(UInt32,w,h),
+    zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,false,falses(1),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,true,2,[1],1,
-    c_widgets,falses(1),zeros(Float32,1,2),zeros(UInt8,640,480),1,
+    c_widgets,falses(1),zeros(Float32,1,2),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,640,480))
+    zeros(Float64,1,1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -147,13 +150,69 @@ function load_video_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+#https://stackoverflow.com/questions/35414020/parse-input-to-rational-in-julia/35414995
+function myparse(xx)
+    ms,ns=split(xx,'/',keepempty=false)
+    m=parse(Int,ms)
+    n=parse(Int,ns)
+    m/n
+end
+
+function get_vid_dims(vid_name::String)
+    ww=@ffmpeg_env read(`$(FFMPEG.ffprobe_path) -v error -select_streams v:0 -show_entries stream=width -of default=nw=1:nk=1 $(vid_name)`)
+    hh=@ffmpeg_env read(`$(FFMPEG.ffprobe_path) -v error -select_streams v:0 -show_entries stream=height -of default=nw=1:nk=1 $(vid_name)`)
+    ff=@ffmpeg_env read(`$(FFMPEG.ffprobe_path) -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate $(vid_name)`)
+
+    width=0
+    height=0
+    fps=0
+    if is_windows()
+        width=parse(Int64,String(ww[1:(end-2)]))
+        height=parse(Int64,String(hh[1:(end-2)]))
+        fps=myparse(String(ff[1:(end-2)]))
+    else
+        width=parse(Int64,String(ww[1:(end-1)]))
+        height=parse(Int64,String(hh[1:(end-1)]))
+        fps = myparse(String(ff[1:(end-1)]))
+    end
+
+    println("width = ", width)
+    println("height = ", height)
+    println("fps = ", fps)
+
+    (width,height,fps)
+end
+
+function resize_for_video(han::Tracker_Handles,w,h,fps)
+
+    han.wt.h = h
+    han.wt.w = w
+    han.wt.mask = falses(h,w)
+
+    han.h = h
+    han.w = w
+    han.fps = fps
+
+    han.plot_frame = zeros(UInt32,w,h)
+    han.current_frame = zeros(UInt8,h,w)
+    han.current_frame2 = zeros(UInt8,w,h)
+
+    han.send_frame = zeros(UInt8,w,h)
+    han.temp_frame = zeros(UInt8,w,h)
+
+    Gtk.GAccessor.size_request(han.c,w,h)
+
+end
+
 function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handles)
 
     vid_name = string(path,vid_title)
 
     #load first frame
-    temp=zeros(UInt8,640,480)
-    frame_time = 1  /  25 #Number of frames in a second of video
+    (width,height,fps)=get_vid_dims(vid_name)
+    resize_for_video(handles,width,height,fps)
+    temp=zeros(UInt8,width,height)
+    frame_time = 1  /  fps #Number of frames in a second of video
     try
         load_single_frame(frame_time,temp,vid_name)
     catch
@@ -168,8 +227,8 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
 
     tracker_name = (vid_name)[1:(end-4)]
 
-    handles.wt=Tracker(path,"",vid_name,path,tracker_name,50,falses(480,640),Array{Whisker1,1}(),
-    (0.0,0.0),255,0,all_whiskers)
+    handles.wt=Tracker(path,"",vid_name,path,tracker_name,50,falses(height,width),Array{Whisker1,1}(),
+    (0.0,0.0),255,0,height,width,all_whiskers)
 
     #Update these paths
     date_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
@@ -240,7 +299,7 @@ function frame_slider_cb(w::Ptr,user_data)
     han.wt.whiskers=Array{Whisker1,1}()
 
     #If equal to frame we already acquired, don't get it again
-    frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
+    frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
     try
         load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
         han.current_frame=han.temp_frame'
@@ -551,7 +610,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     set_gtk_property!(han.b["adj_frame"],:value,han.frame_list[han.frame])
     han.displayed_frame = han.frame_list[han.frame]
 
-    frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
+    frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
     try
         load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
         han.current_frame=han.temp_frame'
@@ -571,7 +630,7 @@ function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.tracked[han.frame]=false
-    frame_time = han.displayed_frame  /  25 #Number of frames in a second of video
+    frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
     try
         load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
         han.current_frame=han.temp_frame'

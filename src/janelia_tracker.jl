@@ -1,12 +1,13 @@
 
-const background_img = zeros(UInt8,640*480)
+#const background_img = zeros(UInt8,640*480)
 
-const background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(background_img)))
+#const background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(background_img)))
 
-function JT_trace(iFrame::Int,image_data::AbstractArray{UInt8,2})
+#1st dim = w
+#2nd dim = h
+function JT_trace(iFrame::Int,image_data::AbstractArray{UInt8,2},background_img=zeros(UInt8,length(image_data)),background=Ref{WT_Image}(WT_Image(1,size(image_data,1),size(image_data,2),C_NULL,pointer(background_img))))
 
-    img=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(image_data)))
-    #background=Ref{WT_Image}(WT_Image(1,640,480,C_NULL,pointer(zeros(UInt8,640*480))))
+    img=Ref{WT_Image}(WT_Image(1,size(image_data,1),size(image_data,2),C_NULL,pointer(image_data)))
 
     pnseg=Ref{Int32}(0)
 
@@ -139,16 +140,16 @@ function JT_find_segments(img,h,th,s,facemask)
 
     mystride = img[].height
 
-    s_j=unsafe_wrap(Array,convert(Ptr{Float32},s[].array),(480*640,))
-    h_j=unsafe_wrap(Array,h[].array,(480*640,))
-    th_j=unsafe_wrap(Array,convert(Ptr{Float32},th[].array),(480*640,))
+    s_j=unsafe_wrap(Array,convert(Ptr{Float32},s[].array),(length(img),))
+    h_j=unsafe_wrap(Array,h[].array,(length(img),))
+    th_j=unsafe_wrap(Array,convert(Ptr{Float32},th[].array),(length(img),))
     for i=1:length(h_j)
         if h_j[i]>0
             th_j[i] = th_j[i] / convert(Float32,h_j[i])
         end
     end
 
-    mask=falses(480*640)
+    mask=falses(length(img))
 
     nseeds=0
     for i=1:length(h_j)
