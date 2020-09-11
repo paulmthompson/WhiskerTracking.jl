@@ -156,6 +156,8 @@ mutable struct Tracker_Handles
     h::Int64
     w::Int64
     fps::Float64
+    frame_loaded::Bool
+    requested_frame::Int64
 
     c::Gtk.GtkCanvasLeaf
 

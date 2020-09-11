@@ -34,7 +34,7 @@ function make_gui()
 
     these_paths = Save_Paths("",false)
 
-    handles = Tracker_Handles(1,b,2,h,w,25.0,c,zeros(UInt32,w,h),
+    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,false,falses(1),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,true,2,[1],1,
@@ -293,29 +293,45 @@ function frame_slider_cb(w::Ptr,user_data)
 
     han, = user_data
 
-    han.displayed_frame = round(Int,get_gtk_property(han.b["adj_frame"],:value,Int))
+    sleep(0.002) #make sure that asynchronous tasks arrive in order
 
-    #Reset array of displayed whiskers
-    han.wt.whiskers=Array{Whisker1,1}()
-
-    update_new_frame(han)
+    @async update_new_frame(han)
 
     nothing
 end
 
 function update_new_frame(han)
 
-    #If equal to frame we already acquired, don't get it again
-    frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
-    try
-        load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
-        han.current_frame=han.temp_frame'
-        han.current_frame2=deepcopy(han.current_frame)
-        redraw_all(han)
+    han.requested_frame = round(Int,get_gtk_property(han.b["adj_frame"],:value,Int))
 
-        set_gtk_property!(han.b["frame_id_label"],:label,string(han.displayed_frame))
-        set_gtk_property!(han.b["time_label"],:label,string(round(frame_time,digits=2), " s"))
-    catch
+    #If equal to frame we already acquired, don't get it again
+    if han.frame_loaded == true
+
+        han.frame_loaded = false
+
+        han.displayed_frame = round(Int,get_gtk_property(han.b["adj_frame"],:value,Int))
+
+        #Reset array of displayed whiskers
+        han.wt.whiskers=Array{Whisker1,1}()
+
+        frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
+        try
+            load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
+            han.current_frame=han.temp_frame'
+            han.current_frame2=deepcopy(han.current_frame)
+            redraw_all(han)
+
+            set_gtk_property!(han.b["frame_id_label"],:label,string(han.displayed_frame))
+            set_gtk_property!(han.b["time_label"],:label,string(round(frame_time,digits=2), " s"))
+        catch
+        end
+        han.frame_loaded = true
+
+        if han.requested_frame != han.displayed_frame
+            update_new_frame(han)
+        end
+    else
+
     end
 
 end
@@ -601,10 +617,10 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
     event = unsafe_load(param_tuple)
 
     if event.keyval == 0xff53 #Right arrow
-        setproperty!(han.b["adj_frame"],:value,han.displayed_frame+1) #This will call the slider callback
+        setproperty!(han.b["adj_frame"],:value,han.requested_frame + 1) #This will call the slider callback
         #han.displayed_frame += 1
     elseif event.keyval == 0xff51 #Left arrow
-        setproperty!(han.b["adj_frame"],:value,han.displayed_frame-1)
+        setproperty!(han.b["adj_frame"],:value,han.requested_frame - 1)
         #han.displayed_frame -= 1
     end
 
@@ -617,11 +633,10 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han.frame = getproperty(han.b["labeled_frame_adj"],:value,Int64)
     set_gtk_property!(han.b["adj_frame"],:value,han.frame_list[han.frame])
-    han.displayed_frame = han.frame_list[han.frame]
 
-    update_new_frame(han)
+    #update_new_frame(han)
 
-    adjust_contrast_gui(han)
+    #adjust_contrast_gui(han)
 
     nothing
 end
