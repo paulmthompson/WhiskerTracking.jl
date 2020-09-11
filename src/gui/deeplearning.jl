@@ -14,6 +14,9 @@ function add_deeplearning_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(predict_frames_cb,b["dl_predict_button"],"clicked",Void,(),false,(handles,))
 
+    signal_connect(create_training_config_cb,b["dl_export_training"],"clicked",Void,(),false,(handles,))
+    signal_connect(create_prediction_config_cb,b["dl_export_prediction"],"clicked",Void,(),false,(handles,))
+
     nothing
 end
 
@@ -452,4 +455,18 @@ function _draw_predicted_whisker(x,y,c,canvas,thres)
         end
     end
     reveal(canvas)
+end
+
+function create_training_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    nothing
+end
+
+function create_prediction_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    nothing
 end
