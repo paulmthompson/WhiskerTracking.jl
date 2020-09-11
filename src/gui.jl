@@ -314,7 +314,7 @@ function update_new_frame(han)
         redraw_all(han)
 
         set_gtk_property!(han.b["frame_id_label"],:label,string(han.displayed_frame))
-        set_gtk_property!(han.b["time_label"],:label,string(round(frame_time,digits=2)))
+        set_gtk_property!(han.b["time_label"],:label,string(round(frame_time,digits=2), " s"))
     catch
     end
 
