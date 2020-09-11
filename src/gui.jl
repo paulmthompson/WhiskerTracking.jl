@@ -298,6 +298,13 @@ function frame_slider_cb(w::Ptr,user_data)
     #Reset array of displayed whiskers
     han.wt.whiskers=Array{Whisker1,1}()
 
+    update_new_frame(han)
+
+    nothing
+end
+
+function update_new_frame(han)
+
     #If equal to frame we already acquired, don't get it again
     frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
     try
@@ -305,10 +312,12 @@ function frame_slider_cb(w::Ptr,user_data)
         han.current_frame=han.temp_frame'
         han.current_frame2=deepcopy(han.current_frame)
         redraw_all(han)
+
+        set_gtk_property!(han.b["frame_id_label"],:label,string(han.displayed_frame))
+        set_gtk_property!(han.b["time_label"],:label,string(round(frame_time,digits=2)))
     catch
     end
 
-    nothing
 end
 
 function load_single_frame(x::Float64,tt::AbstractArray{UInt8,2},vn::String)
@@ -610,15 +619,7 @@ function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
     set_gtk_property!(han.b["adj_frame"],:value,han.frame_list[han.frame])
     han.displayed_frame = han.frame_list[han.frame]
 
-    frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
-    try
-        load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
-        han.current_frame=han.temp_frame'
-        han.current_frame2=deepcopy(han.current_frame)
-        redraw_all(han)
-    catch
-
-    end
+    update_new_frame(han)
 
     adjust_contrast_gui(han)
 
@@ -630,15 +631,7 @@ function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     han.tracked[han.frame]=false
-    frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
-    try
-        load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
-        han.current_frame=han.temp_frame'
-        han.current_frame2=deepcopy(han.current_frame)
-        redraw_all(han)
-    catch
-
-    end
+    update_new_frame(han)
 
     nothing
 end
