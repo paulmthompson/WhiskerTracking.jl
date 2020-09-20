@@ -357,7 +357,7 @@ function set_up_training(han,get_mean=true)
 
     WT_reorder_whisker(han.woi,han.wt.pad_pos)
 
-    han.nn.labels=make_heatmap_labels(han)
+    han.nn.labels=make_heatmap_labels(han.woi,han.wt.pad_pos)
     han.nn.imgs=get_labeled_frames(han);
 
     #Normalize
@@ -461,7 +461,37 @@ function create_training_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    filepath=string(han.wt.data_path,"config.jld")
+    file=jldopen(filepath,"w")
+
+    write(file,"Video_Name",han.wt.vid_name)
+    write(file,"Tracking_Frames",han.frame_list)
+    write(file, "WOI",han.woi)
+    write(file,"Pad_Pos",han.wt.pad_pos)
+    write(file,"Max_Frames",han.max_frames)
+
+
+    close(file)
+
     nothing
+end
+
+function training_from_config(filepath)
+
+
+    set_up_training(han) #heatmaps, labels, normalize, augment
+    save_training(han)
+
+    if !han.nn.use_existing_weights
+        hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
+        load_hourglass(han.nn.weight_path,hg)
+        change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
+        han.nn.features=features(hg)
+        han.nn.hg = hg
+        han.nn.use_existing_weights=true
+    end
+
+
 end
 
 function create_prediction_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})

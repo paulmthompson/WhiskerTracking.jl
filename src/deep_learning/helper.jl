@@ -142,10 +142,14 @@ end
 Convert Discrete points to heatmap for deep learning
 =#
 function make_heatmap_labels(han,real_w=640,real_h=480,label_img_size=64)
+    make_heatmap_labels(han.woi,han.wt.pad_pos,real_w,real_h,label_img_size)
+end
 
-    d_points=make_discrete_all_whiskers(han)
+function make_heatmap_labels(woi,pad_pos,real_w=640,real_h=480,label_img_size=64)
 
-    labels=zeros(Float32,label_img_size,label_img_size,size(d_points,1),size(han.woi,1))
+    d_points=make_discrete_all_whiskers(woi,pad_pos)
+
+    labels=zeros(Float32,label_img_size,label_img_size,size(d_points,1),size(woi,1))
 
     for i=1:size(labels,4)
         for j=1:size(labels,3)
@@ -162,7 +166,9 @@ function make_heatmap_labels(han,real_w=640,real_h=480,label_img_size=64)
     labels
 end
 
-function get_labeled_frames(han,out_hw=256,h=480,w=640,frame_rate=25)
+function get_labeled_frames(han,out_hw=256)
+
+    (w,h,frame_rate)=get_vid_dims(han.wt.vid_name)
 
     imgs=zeros(Float32,out_hw,out_hw,1,length(han.frame_list))
 
