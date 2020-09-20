@@ -112,12 +112,16 @@ end
 #https://github.com/JuliaIO/HDF5.jl/issues/470
 #WTF? doesn't work if saving twice in the same session
 function save_training(han,mypath=string(han.paths.backup,"/labels.jld"))
+    save_training(mypath,han.frame_list,han.woi,han.nn)
+end
+
+function save_training(mypath,frame_list,woi,nn)
 
     file = jldopen(mypath, "w")
-    write(file, "frame_list",han.frame_list)
-    write(file, "woi",han.woi)
-    write(file, "mean_img",han.nn.norm.mean_img)
-    write(file, "std_img",han.nn.norm.std_img)
+    write(file, "frame_list",frame_list)
+    write(file, "woi",woi)
+    write(file, "mean_img",nn.norm.mean_img)
+    write(file, "std_img",nn.norm.std_img)
 
     close(file)
 
@@ -343,27 +347,31 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,max_int
 end
 
 function set_up_training(han,get_mean=true)
+    set_up_training(han.nn,han.wt.vid_name,han.max_frames,han.woi,han.wt.pad_pos,han.frame_list,get_mean)
+end
+
+function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=true)
 
     if get_mean
-        (mean_img,std_img)=mean_std_video_gpu(han,han.max_frames)
-        han.nn.norm.min_ref = 0
-        han.nn.norm.max_ref = 255
-        han.nn.norm.mean_img = mean_img
-        han.nn.norm.std_img = std_img
+        (mean_img,std_img)=mean_std_video_gpu(vid_name,max_frames)
+        nn.norm.min_ref = 0
+        nn.norm.max_ref = 255
+        nn.norm.mean_img = mean_img
+        nn.norm.std_img = std_img
 
         #Rotate and Reshape to 256 256
-        han.nn.norm.mean_img = reshape(imresize(han.nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
+        nn.norm.mean_img = reshape(imresize(nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
     end
 
-    WT_reorder_whisker(han.woi,han.wt.pad_pos)
+    WT_reorder_whisker(woi,pad_pos)
 
-    han.nn.labels=make_heatmap_labels(han.woi,han.wt.pad_pos)
-    han.nn.imgs=get_labeled_frames(han);
+    nn.labels=make_heatmap_labels(woi,pad_pos)
+    nn.imgs=get_labeled_frames(vid_name,frame_list);
 
     #Normalize
-    han.nn.imgs=normalize_new_images(han.nn.imgs,han.nn.norm.mean_img);
+    nn.imgs=normalize_new_images(nn.imgs,nn.norm.mean_img);
 
-    (han.nn.imgs,han.nn.labels)=augment_images(han.nn.imgs,han.nn.labels);
+    (nn.imgs,nn.labels)=augment_images(nn.imgs,nn.labels);
 end
 
 function make_training_batch(img,ll,batch_size=8)
@@ -390,6 +398,19 @@ function run_training(hg,trn::Knet.Data,this_opt,p,epochs=100,ls=Array{Float64,1
             end
             sleep(0.0001)
         end
+
+    ls
+end
+
+function run_training_no_gui(hg,trn::Knet.Data,this_opt,epochs=100,ls=Array{Float64,1}())
+
+    total_length=length(trn) * epochs
+    minimizer = Knet.minimize(hg,ncycle(trn,epochs),this_opt)
+
+    for x in takenth(minimizer,1)
+        push!(ls,x)
+        sleep(0.0001)
+    end
 
     ls
 end
@@ -468,8 +489,8 @@ function create_training_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     write(file,"Tracking_Frames",han.frame_list)
     write(file, "WOI",han.woi)
     write(file,"Pad_Pos",han.wt.pad_pos)
-    write(file,"Max_Frames",han.max_frames)
-
+    write(file,"Training_Path",string(han.paths.path,"/labels.jld")))
+    write(file,"Epochs",han.nn.epochs)
 
     close(file)
 
@@ -478,19 +499,40 @@ end
 
 function training_from_config(filepath)
 
+    file=jldopen(filepath,"r")
+    vid_name = read(file,"Video_Name")
+    frame_list = read(file,"Tracking_Frames")
+    woi=read(file,"WOI")
+    pad_pos=read(file,"Pad_Pos")
+    training_path=read(file,"Training_Path")
+    epochs=read(file,"Epochs")
+    close(file)
 
-    set_up_training(han) #heatmaps, labels, normalize, augment
-    save_training(han)
+    nn=NeuralNetwork()
+    nn.epochs=epochs
+    max_frames = get_max_frames(vid_name)
 
-    if !han.nn.use_existing_weights
-        hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
-        load_hourglass(han.nn.weight_path,hg)
-        change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
-        han.nn.features=features(hg)
-        han.nn.hg = hg
-        han.nn.use_existing_weights=true
+    set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list) #heatmaps, labels, normalize, augment
+    save_training(training_path,frame_list,woi,nn)
+
+    if !nn.use_existing_weights
+        hg=HG2(size(nn.labels,1),size(nn.labels,3),4);
+        load_hourglass(nn.weight_path,hg)
+        change_hourglass(hg,size(nn.labels,1),1,size(nn.labels,3))
+        nn.features=features(hg)
+        nn.hg = hg
+        nn.use_existing_weights=true
     end
 
+    if size(nn.labels,3) != features(nn.hg)
+        change_hourglass_output(nn.hg,size(nn.labels,1),size(nn.labels,3))
+        nn.features = features(nn.hg)
+    end
+
+    dtrn=make_training_batch(nn.imgs,nn.labels);
+
+    myadam=Adam(lr=1e-3)
+    run_training_no_gui(nn.hg,dtrn,myadam,nn.epochs,nn.losses)
 
 end
 

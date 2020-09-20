@@ -167,15 +167,19 @@ function make_heatmap_labels(woi,pad_pos,real_w=640,real_h=480,label_img_size=64
 end
 
 function get_labeled_frames(han,out_hw=256)
+    get_labeled_frames(han.wt.vid_name,han.frame_list,out_hw=256)
+end
 
-    (w,h,frame_rate)=get_vid_dims(han.wt.vid_name)
+function get_labeled_frames(vid_name,frame_list,out_hw=256)
 
-    imgs=zeros(Float32,out_hw,out_hw,1,length(han.frame_list))
+    (w,h,frame_rate)=get_vid_dims(vid_name)
+
+    imgs=zeros(Float32,out_hw,out_hw,1,length(frame_list))
 
     temp=zeros(UInt8,w,h)
-    for i=1:length(han.frame_list)
-        frame_time = han.frame_list[i] / frame_rate
-        WhiskerTracking.load_single_frame(frame_time,temp,han.wt.vid_name)
+    for i=1:length(frame_list)
+        frame_time = frame_list[i] / frame_rate
+        load_single_frame(frame_time,temp,vid_name)
         imgs[:,:,1,i]=Images.imresize(temp',(out_hw,out_hw))
     end
     imgs
