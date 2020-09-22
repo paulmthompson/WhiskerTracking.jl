@@ -213,47 +213,58 @@ function predict_frames_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function calculate_whiskers(han,total_frames=han.max_frames,batch_size=32,loading_size=128)
+function calculate_whiskers(han::Tracker_Handles,total_frames=han.max_frames,batch_size=32,loading_size=128)
+
+    calculate_whiskers(han.nn,han.wt.vid_name,total_frames,batch_size,loading_size,prog_bar=han.b["dl_predict_prog"])
+end
+
+function calculate_whiskers(nn,vid_name,total_frames,batch_size=32,loading_size=128; prog_bar=nothing)
+
+    vid_w=640
+    vid_h=480
+    fps=25
 
     Knet.knetgcinit(Knet._tape)
     Knet.gc()
     @assert rem(loading_size,batch_size) == 0
 
-    w=size(han.nn.imgs,1)
-    h=size(han.nn.imgs,2)
+    w=size(nn.imgs,1)
+    h=size(nn.imgs,2)
 
     batch_per_load = div(loading_size,batch_size)
 
-    k_mean = convert(CuArray,han.nn.norm.mean_img)
+    k_mean = convert(CuArray,nn.norm.mean_img)
 
-    temp_frames=zeros(UInt8,640,480,1,loading_size)
-    temp_frames_cu=convert(CuArray,zeros(UInt8,640,480,1,loading_size))
+    temp_frames=zeros(UInt8,vid_w,vid_h,1,loading_size)
+    temp_frames_cu=convert(CuArray,zeros(UInt8,vid_w,vid_h,1,loading_size))
     input_images_cu_r = convert(CuArray,zeros(Float32,w,h,1,loading_size))
 
     sub_input_images=convert(KnetArray{Float32,4},zeros(Float32,w,h,1,batch_size))
 
-    input_f=convert(KnetArray{Float32,4},zeros(Float32,64,64,han.nn.features,loading_size))
-    input=zeros(Float32,64,64,han.nn.features,loading_size)
-    input_fft=zeros(Complex{Float32},64,64,han.nn.features,loading_size)
+    input_f=convert(KnetArray{Float32,4},zeros(Float32,64,64,nn.features,loading_size))
+    input=zeros(Float32,64,64,nn.features,loading_size)
+    input_fft=zeros(Complex{Float32},64,64,nn.features,loading_size)
     input_fft=convert(SharedArray,input_fft)
 
-    input_cu = convert(CuArray,zeros(Float32,64,64,han.nn.features,loading_size))
-    input_cu_com = convert(CuArray,zeros(Complex{Float32},64,64,han.nn.features,loading_size))
+    input_cu = convert(CuArray,zeros(Float32,64,64,nn.features,loading_size))
+    input_cu_com = convert(CuArray,zeros(Complex{Float32},64,64,nn.features,loading_size))
 
-    preds=zeros(Float32,han.nn.features,3,total_frames)
+    preds=zeros(Float32,nn.features,3,total_frames)
     preds=convert(SharedArray,preds)
 
-    kernel_pad = WhiskerTracking.create_padded_kernel(size(han.nn.labels,1),size(han.nn.labels,2),1)
+    kernel_pad = create_padded_kernel(size(nn.labels,1),size(nn.labels,2),1)
     k_fft = fft(kernel_pad)
 
-    set_gtk_property!(han.b["dl_predict_prog"],:fraction,0.0)
-    WhiskerTracking.set_testing(han.nn.hg,false)
+    if prog_bar != nothing
+        set_gtk_property!(prog_bar,:fraction,0.0)
+    end
+    WhiskerTracking.set_testing(nn.hg,false)
 
     frame_num = 1
 
     while (frame_num < div(total_frames,loading_size)*loading_size)
 
-        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(frame_num/25,han.wt.vid_name,loading_size,"test5.yuv"))
+        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(frame_num/fps,vid_name,loading_size,"test5.yuv"))
         read!("test5.yuv",temp_frames)
 
         temp_frames_cu[:]=convert(CuArray,temp_frames)
@@ -265,8 +276,8 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=32,loadin
         for k=0:(batch_per_load-1)
 
             copyto!(sub_input_images,1,input_images,k*w*h*batch_size+1,w*h*batch_size)
-            myout=han.nn.hg(sub_input_images)
-            copyto!(input_f,k*64*64*han.nn.features*batch_size+1,myout[4],1,length(myout[4]))
+            myout=nn.hg(sub_input_images)
+            copyto!(input_f,k*64*64*nn.features*batch_size+1,myout[4],1,length(myout[4]))
             for kk=1:length(myout)
                 Knet.freeKnetPtr(myout[kk].ptr)
             end
@@ -287,18 +298,21 @@ function calculate_whiskers(han,total_frames=han.max_frames,batch_size=32,loadin
 
         calculate_subpixel(preds,frame_num-1,input_fft,k_fft)
 
-        set_gtk_property!(han.b["dl_predict_prog"],:fraction,frame_num/total_frames)
+        if prog_bar != nothing
+            set_gtk_property!(prog_bar,:fraction,frame_num/total_frames)
+        end
         frame_num += loading_size
         sleep(0.0001)
-        #Knet.gc()
     end
 
-    preds[:,1,:] = preds[:,1,:] ./ 64 .* 640
-    preds[:,2,:] = preds[:,2,:] ./ 64 .* 480
+    preds[:,1,:] = preds[:,1,:] ./ 64 .* vid_w
+    preds[:,2,:] = preds[:,2,:] ./ 64 .* vid_h
 
-    set_gtk_property!(han.b["dl_predict_prog"],:fraction,1.0)
+    if prog_bar != nothing
+        set_gtk_property!(prog_bar,:fraction,1.0)
+    end
 
-    WhiskerTracking.set_testing(han.nn.hg,true)
+    WhiskerTracking.set_testing(nn.hg,true)
 
     convert(Array,preds)
 end
@@ -482,14 +496,15 @@ function create_training_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    filepath=string(han.wt.data_path,"config.jld")
+    filepath=string(han.wt.data_path,"/config.jld")
     file=jldopen(filepath,"w")
 
     write(file,"Video_Name",han.wt.vid_name)
     write(file,"Tracking_Frames",han.frame_list)
     write(file, "WOI",han.woi)
     write(file,"Pad_Pos",han.wt.pad_pos)
-    write(file,"Training_Path",string(han.paths.path,"/labels.jld")))
+    write(file,"Training_Path",string(han.wt.data_path,"/labels.jld"))
+    write(file,"Data_Path",string(han.wt.data_path))
     write(file,"Epochs",han.nn.epochs)
 
     close(file)
@@ -506,6 +521,7 @@ function training_from_config(filepath)
     pad_pos=read(file,"Pad_Pos")
     training_path=read(file,"Training_Path")
     epochs=read(file,"Epochs")
+    data_path=read(file,"Data_Path")
     close(file)
 
     nn=NeuralNetwork()
@@ -533,6 +549,8 @@ function training_from_config(filepath)
 
     myadam=Adam(lr=1e-3)
     run_training_no_gui(nn.hg,dtrn,myadam,nn.epochs,nn.losses)
+
+    save_hourglass(string(data_path,"/weights.jld"),nn.hg)
 
 end
 
