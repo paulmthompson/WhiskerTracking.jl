@@ -14,8 +14,7 @@ function add_deeplearning_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(predict_frames_cb,b["dl_predict_button"],"clicked",Void,(),false,(handles,))
 
-    signal_connect(create_training_config_cb,b["dl_export_training"],"clicked",Void,(),false,(handles,))
-    signal_connect(create_prediction_config_cb,b["dl_export_prediction"],"clicked",Void,(),false,(handles,))
+    signal_connect(create_config_cb,b["dl_export_training"],"clicked",Void,(),false,(handles,true))
 
     nothing
 end
@@ -29,17 +28,23 @@ function load_weights_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     if config_path != ""
 
         try
-            han.nn.weight_path = config_path
-            hg=HG2(64,1,4); #Dummy Numbers
-            load_hourglass(han.nn.weight_path,hg)
-            han.nn.hg = hg
+            load_hourglass_to_nn(han.nn,config_path)
             setproperty!(han.b["dl_weights_label"],:label,config_path)
-            han.nn.use_existing_weights = true
-            han.nn.features=features(hg)
         catch
             println("Could not load weights")
         end
     end
+
+    nothing
+end
+
+function load_hourglass_to_nn(nn,config_path)
+    nn.weight_path = config_path
+    hg=HG2(64,1,4); #Dummy Numbers
+    load_hourglass(nn.weight_path,hg)
+    nn.hg = hg
+    nn.use_existing_weights = true
+    nn.features=features(hg)
 
     nothing
 end
@@ -93,12 +98,7 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         end
 
         if !han.nn.use_existing_weights
-            hg=HG2(size(han.nn.labels,1),size(han.nn.labels,3),4);
-            load_hourglass(han.nn.weight_path,hg)
-            change_hourglass(hg,size(han.nn.labels,1),1,size(han.nn.labels,3))
-            han.nn.features=features(hg)
-            han.nn.hg = hg
-            han.nn.use_existing_weights=true
+            create_new_weights(han.nn)
         end
 
         set_gtk_property!(han.b["create_model_label"],:label,string("model created at ", Dates.Time(Dates.now())))
@@ -109,8 +109,16 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-#https://github.com/JuliaIO/HDF5.jl/issues/470
-#WTF? doesn't work if saving twice in the same session
+function create_new_weights(nn)
+    hg=HG2(size(nn.labels,1),size(nn.labels,3),4);
+    load_hourglass(nn.weight_path,hg)
+    change_hourglass(hg,size(nn.labels,1),1,size(nn.labels,3))
+    nn.features=features(hg)
+    nn.hg = hg
+    nn.use_existing_weights=true
+    nothing
+end
+
 function save_training(han,mypath=string(han.paths.backup,"/labels.jld"))
     save_training(mypath,han.frame_list,han.woi,han.nn)
 end
@@ -465,8 +473,10 @@ function predict_single_frame(han)
 end
 
 function draw_predictions(han)
+    h = 480
+    w = 640
     (preds,confidences) = predict_single_frame(han)
-    _draw_predicted_whisker(preds[:,1] ./ 64 .* 640,preds[:,2] ./ 64 .* 480,confidences,han.c,han.nn.confidence_thres)
+    _draw_predicted_whisker(preds[:,1] ./ 64 .* w,preds[:,2] ./ 64 .* h,confidences,han.c,han.nn.confidence_thres)
 end
 
 function draw_predicted_whisker(han)
@@ -492,52 +502,24 @@ function _draw_predicted_whisker(x,y,c,canvas,thres)
     reveal(canvas)
 end
 
-function create_training_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+function create_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Bool})
 
-    han, = user_data
+    han, training = user_data
 
-    filepath=string(han.wt.data_path,"/config.jld")
-    file=jldopen(filepath,"w")
-
-    write(file,"Video_Name",han.wt.vid_name)
-    write(file,"Tracking_Frames",han.frame_list)
-    write(file, "WOI",han.woi)
-    write(file,"Pad_Pos",han.wt.pad_pos)
-    write(file,"Training_Path",string(han.wt.data_path,"/labels.jld"))
-    write(file,"Data_Path",string(han.wt.data_path))
-    write(file,"Epochs",han.nn.epochs)
-
-    close(file)
+    create_config(han,training)
 
     nothing
 end
 
 function training_from_config(filepath)
 
-    file=jldopen(filepath,"r")
-    vid_name = read(file,"Video_Name")
-    frame_list = read(file,"Tracking_Frames")
-    woi=read(file,"WOI")
-    pad_pos=read(file,"Pad_Pos")
-    training_path=read(file,"Training_Path")
-    epochs=read(file,"Epochs")
-    data_path=read(file,"Data_Path")
-    close(file)
-
-    nn=NeuralNetwork()
-    nn.epochs=epochs
-    max_frames = get_max_frames(vid_name)
+    (vid_name,frame_list,woi,pad_pos,training_path,epochs,data_path,nn,max_frames) = load_config(filepath)
 
     set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list) #heatmaps, labels, normalize, augment
     save_training(training_path,frame_list,woi,nn)
 
     if !nn.use_existing_weights
-        hg=HG2(size(nn.labels,1),size(nn.labels,3),4);
-        load_hourglass(nn.weight_path,hg)
-        change_hourglass(hg,size(nn.labels,1),1,size(nn.labels,3))
-        nn.features=features(hg)
-        nn.hg = hg
-        nn.use_existing_weights=true
+        create_new_weights(han.nn)
     end
 
     if size(nn.labels,3) != features(nn.hg)
@@ -554,9 +536,62 @@ function training_from_config(filepath)
 
 end
 
-function create_prediction_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+function create_config(han::Tracker_Handles,training::Bool)
 
-    han, = user_data
+    filepath=string(han.wt.data_path,"/predict_config.jld")
+    file=jldopen(filepath,"w")
+
+    write(file,"Video_Name",han.wt.vid_name)
+    write(file,"Tracking_Frames",han.frame_list)
+    write(file, "WOI",han.woi)
+    write(file,"Pad_Pos",han.wt.pad_pos)
+    write(file,"Training_Path",string(han.wt.data_path,"/labels.jld"))
+    write(file,"Data_Path",string(han.wt.data_path))
+    write(file,"Epochs",han.nn.epochs)
+    write(file,"Training",training)
+
+    close(file)
 
     nothing
+end
+
+function read_training_config(filepath)
+    file=jldopen(filepath,"r")
+    training = read(file,"Training")
+    close(file)
+    training
+end
+
+function load_config(filepath)
+
+    file=jldopen(filepath,"r")
+    vid_name = read(file,"Video_Name")
+    frame_list = read(file,"Tracking_Frames")
+    woi=read(file,"WOI")
+    pad_pos=read(file,"Pad_Pos")
+    training_path=read(file,"Training_Path")
+    epochs=read(file,"Epochs")
+    data_path=read(file,"Data_Path")
+    close(file)
+
+    nn=NeuralNetwork()
+    nn.epochs=epochs
+    max_frames = get_max_frames(vid_name)
+
+    (vid_name,frame_list,woi,pad_pos,training_path,epochs,data_path,nn,max_frames)
+end
+
+function prediction_from_config(filepath)
+
+    (vid_name,frame_list,woi,pad_pos,training_path,epochs,data_path,nn,max_frames) = load_config(filepath)
+
+    config_path = string(data_path,"/weights.jld")
+    load_hourglass_to_nn(nn,config_path)
+
+    set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list) #heatmaps, labels, normalize, augment
+    save_training(training_path,frame_list,woi,nn)
+
+    nn.predicted = ncalculate_whiskers(nn,vid_name,total_frames)
+
+    #Save?
 end
