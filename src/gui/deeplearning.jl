@@ -44,7 +44,7 @@ function load_hourglass_to_nn(nn,config_path)
     load_hourglass(nn.weight_path,hg)
     nn.hg = hg
     nn.use_existing_weights = true
-    nn.features=features(hg)
+    nn.features=StackedHourglass.features(hg)
 
     nothing
 end
@@ -112,7 +112,7 @@ end
 function create_new_weights(nn)
     hg=HG2(size(nn.labels,1),size(nn.labels,3),4);
     load_hourglass(nn.weight_path,hg)
-    change_hourglass(hg,size(nn.labels,1),1,size(nn.labels,3))
+    StackedHourglass.change_hourglass(hg,size(nn.labels,1),1,size(nn.labels,3))
     nn.features=features(hg)
     nn.hg = hg
     nn.use_existing_weights=true
@@ -162,7 +162,7 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #in the model. If they do not, remove the features at the end of the loaded model,
     #and replace with blanks
     if size(han.nn.labels,3) != features(han.nn.hg)
-        change_hourglass_output(han.nn.hg,size(han.nn.labels,1),size(han.nn.labels,3))
+        StackedHourglass.change_hourglass_output(han.nn.hg,size(han.nn.labels,1),size(han.nn.labels,3))
         han.nn.features = features(han.nn.hg)
     end
 
@@ -260,13 +260,13 @@ function calculate_whiskers(nn,vid_name,total_frames,batch_size=32,loading_size=
     preds=zeros(Float32,nn.features,3,total_frames)
     preds=convert(SharedArray,preds)
 
-    kernel_pad = create_padded_kernel(size(nn.labels,1),size(nn.labels,2),1)
+    kernel_pad = StackedHourglass.create_padded_kernel(size(nn.labels,1),size(nn.labels,2),1)
     k_fft = fft(kernel_pad)
 
     if prog_bar != nothing
         set_gtk_property!(prog_bar,:fraction,0.0)
     end
-    WhiskerTracking.set_testing(nn.hg,false)
+    set_testing(nn.hg,false)
 
     frame_num = 1
 
@@ -276,8 +276,8 @@ function calculate_whiskers(nn,vid_name,total_frames,batch_size=32,loading_size=
         read!("test5.yuv",temp_frames)
 
         temp_frames_cu[:]=convert(CuArray,temp_frames)
-        CUDA_preprocess(temp_frames_cu,input_images_cu_r)
-        CUDA_normalize_images(input_images_cu_r,k_mean)
+        StackedHourglass.CUDA_preprocess(temp_frames_cu,input_images_cu_r)
+        StackedHourglass.CUDA_normalize_images(input_images_cu_r,k_mean)
 
         input_images = convert(KnetArray,input_images_cu_r)
 
@@ -304,7 +304,7 @@ function calculate_whiskers(nn,vid_name,total_frames,batch_size=32,loading_size=
             end
         end
 
-        calculate_subpixel(preds,frame_num-1,input_fft,k_fft)
+        StackedHourglass.calculate_subpixel(preds,frame_num-1,input_fft,k_fft)
 
         if prog_bar != nothing
             set_gtk_property!(prog_bar,:fraction,frame_num/total_frames)
@@ -320,7 +320,7 @@ function calculate_whiskers(nn,vid_name,total_frames,batch_size=32,loading_size=
         set_gtk_property!(prog_bar,:fraction,1.0)
     end
 
-    WhiskerTracking.set_testing(nn.hg,true)
+    set_testing(nn.hg,true)
 
     convert(Array,preds)
 end
@@ -441,7 +441,7 @@ function predict_single_frame(han)
 
     k_mean = han.nn.norm.mean_img
 
-    temp_frame = temp_frame = convert(Array{Float32,2},han.current_frame)
+    temp_frame = convert(Array{Float32,2},han.current_frame)
     temp_frame = imresize(temp_frame,(256,256))
 
     temp_frame = WhiskerTracking.normalize_new_images(temp_frame,k_mean)
@@ -460,13 +460,13 @@ function predict_single_frame(han)
         confidences[kk] = myout[hi[1,1,kk,1][1],hi[1,1,kk,1][2],kk,1]
     end
 
-    kernel_pad = create_padded_kernel(size(myout,1),size(myout,2),1)
+    kernel_pad = StackedHourglass.create_padded_kernel(size(myout,1),size(myout,2),1)
 
     k_fft = fft(kernel_pad)
     input=fft(convert(Array,myout),(1:2))
 
     for i=1:size(myout,3)
-        preds[:,i]=subpixel(input[:,:,i,1],k_fft,4) .+ 32.0
+        preds[:,i]=StackedHourglass.subpixel(input[:,:,i,1],k_fft,4) .+ 32.0
     end
 
     (preds', confidences)
@@ -523,7 +523,7 @@ function training_from_config(filepath)
     end
 
     if size(nn.labels,3) != features(nn.hg)
-        change_hourglass_output(nn.hg,size(nn.labels,1),size(nn.labels,3))
+        StackedHourglass.change_hourglass_output(nn.hg,size(nn.labels,1),size(nn.labels,3))
         nn.features = features(nn.hg)
     end
 
@@ -591,7 +591,7 @@ function prediction_from_config(filepath)
     set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list) #heatmaps, labels, normalize, augment
     save_training(training_path,frame_list,woi,nn)
 
-    nn.predicted = ncalculate_whiskers(nn,vid_name,total_frames)
+    nn.predicted = calculate_whiskers(nn,vid_name,total_frames)
 
     #Save?
 end

@@ -11,7 +11,7 @@ using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
 using PyCall, ScikitLearn
 
 using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD2, Interpolations, DSP,
-FFTW, IterTools, FFMPEG
+FFTW, IterTools, FFMPEG, StackedHourglass
 
 @sk_import ensemble: RandomForestClassifier
 
@@ -35,9 +35,6 @@ end
 include("types.jl")
 
 include("deep_learning/helper.jl")
-include("deep_learning/load.jl")
-include("deep_learning/subpixel.jl")
-include("deep_learning/cuda_files.jl")
 
 include("gui.jl")
 include("janelia_tracker.jl")

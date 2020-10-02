@@ -89,16 +89,11 @@ end
 
 Normalize_Parameters() = Normalize_Parameters(zeros(Float32,0,0,0),zeros(Float32,0,0,0),0,0,10000)
 
-abstract type NN end;
-
-include("deep_learning/hourglass/residual.jl")
-include("deep_learning/hourglass/hourglass.jl")
-
 mutable struct NeuralNetwork
     labels::Array{Float32,4} #Labels for training
     imgs::Array{Float32,4} #Images for training
     norm::Normalize_Parameters #Reference values to scale input images
-    hg::NN #Deep Learning weights
+    hg::StackedHourglass.NN #Deep Learning weights
     epochs::Int64
     losses::Array{Float32,1}
     confidence_thres::Float64
