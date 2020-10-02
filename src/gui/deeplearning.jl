@@ -391,7 +391,7 @@ function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=
     nn.imgs=get_labeled_frames(vid_name,frame_list);
 
     #Normalize
-    nn.imgs=normalize_new_images(nn.imgs,nn.norm.mean_img);
+    nn.imgs=StackedHourglass.normalize_new_images(nn.imgs,nn.norm.mean_img);
 
     (nn.imgs,nn.labels)=augment_images(nn.imgs,nn.labels);
 end
@@ -444,7 +444,7 @@ function predict_single_frame(han)
     temp_frame = convert(Array{Float32,2},han.current_frame)
     temp_frame = imresize(temp_frame,(256,256))
 
-    temp_frame = WhiskerTracking.normalize_new_images(temp_frame,k_mean)
+    temp_frame = StackedHourglass.normalize_new_images(temp_frame,k_mean)
 
     temp_frame = convert(KnetArray,reshape(temp_frame,(256,256,1,1)))
 
