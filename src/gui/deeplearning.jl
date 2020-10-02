@@ -326,10 +326,10 @@ function calculate_whiskers(nn,vid_name,total_frames,batch_size=32,loading_size=
 end
 
 function mean_std_video_gpu(han::Tracker_Handles,total_frame_num)
-    mean_std_video_gpu(han.wt.vid_name,total_frame_num)
+    mean_std_video_gpu(han.wt.vid_name,total_frame_num,han.w,han.h,han.fps)
 end
 
-function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,max_intensity=255,loading_size=500)
+function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,fps=25,max_intensity=255,loading_size=500)
     load_number = div(total_frame_num, loading_size)-1
 
     temp_frames=zeros(UInt8,w,h,loading_size)
@@ -349,7 +349,7 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,max_int
     running_mean_i[:,:,1] = mean(temp_frames2,dims=3) ./ max_intensity
 
     for i=1:load_number
-        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(i*loading_size / 25,vid_name,loading_size,"test5.yuv"))
+        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(i*loading_size / han.fps,vid_name,loading_size,"test5.yuv"))
         read!("test5.yuv",temp_frames)
         temp_frames2[:]=convert(KnetArray{Float32,3},temp_frames)
 
@@ -368,14 +368,16 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,max_int
     (convert(Array,running_mean), convert(Array,running_std))
 end
 
-function set_up_training(han,get_mean=true)
+function set_up_training(han::Tracker_Handles,get_mean=true)
     set_up_training(han.nn,han.wt.vid_name,han.max_frames,han.woi,han.wt.pad_pos,han.frame_list,get_mean)
 end
 
 function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=true)
 
+    (w,h,fps)=get_vid_dims(vid_name)
+
     if get_mean
-        (mean_img,std_img)=mean_std_video_gpu(vid_name,max_frames)
+        (mean_img,std_img)=mean_std_video_gpu(vid_name,max_frames,w,h,fps)
         nn.norm.min_ref = 0
         nn.norm.max_ref = 255
         nn.norm.mean_img = mean_img
@@ -473,10 +475,8 @@ function predict_single_frame(han)
 end
 
 function draw_predictions(han)
-    h = 480
-    w = 640
     (preds,confidences) = predict_single_frame(han)
-    _draw_predicted_whisker(preds[:,1] ./ 64 .* w,preds[:,2] ./ 64 .* h,confidences,han.c,han.nn.confidence_thres)
+    _draw_predicted_whisker(preds[:,1] ./ 64 .* han.w,preds[:,2] ./ 64 .* han.h,confidences,han.c,han.nn.confidence_thres)
 end
 
 function draw_predicted_whisker(han)
