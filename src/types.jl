@@ -162,14 +162,14 @@ mutable struct Tracker_Handles
     current_frame2::Array{UInt8,2}
 
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
-    woi::Array{Whisker1,1} #Array of properties for whisker of interest for every frame
+    woi::Dict{Int64,WhiskerTracking.Whisker1} #Dictionary of properties for whisker of interest for every frame
     num_whiskers::Int64
     sw::Int64 #Selected Whisker
 
     auto_mode::Bool
     erase_mode::Bool
 
-    tracked::BitArray{1} #Array of true/false to specify if corresponding frame has been tracked
+    tracked::Dict{Int64,Bool} #Array of true/false to specify if corresponding frame has been tracked
 
     combine_mode::Int64
     partial::Whisker1
@@ -192,8 +192,8 @@ mutable struct Tracker_Handles
 
     contact_widgets::contact_widgets
 
-    pole_present::BitArray{1}
-    pole_loc::Array{Float32,2}
+    pole_present::Dict{Int64,Bool}
+    pole_loc::Dict{Int64,Array{Float32,1}}
     send_frame::Array{UInt8,2}
 
     selection_mode::Int64 #What the mouse will do when you click

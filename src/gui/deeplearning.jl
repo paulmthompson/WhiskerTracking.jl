@@ -139,16 +139,28 @@ end
 function load_training(han,path)
 
     file = jldopen(path, "r")
-    han.frame_list = read(file, "frame_list")
-    han.woi = read(file, "woi")
+    frame_list = read(file, "frame_list")
+
+    if typeof(frame_list) == Array
+        frame_list = read(file, "frame_list")
+        woi = read(file, "woi")
+
+        han.woi = Dict{Int64,Whisker1}(frame_list,woi)
+
+
+        set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.frame_list))
+        han.tracked=trues(length(han.frame_list))
+
+        han.pole_present=falses(length(han.frame_list))
+        han.pole_loc=zeros(Float32,length(han.frame_list),2)
+
+    else # New Version
+
+
+    end
+
     han.nn.norm.mean_img = read(file, "mean_img")
     han.nn.norm.std_img = read(file, "std_img")
-
-    set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.frame_list))
-    han.tracked=trues(length(han.frame_list))
-
-    han.pole_present=falses(length(han.frame_list))
-    han.pole_loc=zeros(Float32,length(han.frame_list),2)
 
     close(file)
 
@@ -158,13 +170,7 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    #Check if the number of features in your training data set matches your number of features
-    #in the model. If they do not, remove the features at the end of the loaded model,
-    #and replace with blanks
-    if size(han.nn.labels,3) != features(han.nn.hg)
-        StackedHourglass.change_hourglass_output(han.nn.hg,size(han.nn.labels,1),size(han.nn.labels,3))
-        han.nn.features = features(han.nn.hg)
-    end
+    check_hg_features(han.nn)
 
     dtrn=make_training_batch(han.nn.imgs,han.nn.labels);
 
@@ -175,6 +181,18 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     #save_hourglass(string(han.paths.backup,"weights.jld"),han.nn.hg)
 
     nothing
+end
+
+#=
+Make sure that dimensions of model weights match label dimensions
+=#
+function check_hg_features(nn)
+
+    #Output features
+    if size(nn.labels,3) != features(nn.hg)
+        StackedHourglass.change_hourglass_output(nn.hg,size(nn.labels,1),size(nn.labels,3))
+        nn.features = features(nn.hg)
+    end
 end
 
 function epochs_sb_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -349,7 +367,7 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,fps=25,
     running_mean_i[:,:,1] = mean(temp_frames2,dims=3) ./ max_intensity
 
     for i=1:load_number
-        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(i*loading_size / han.fps,vid_name,loading_size,"test5.yuv"))
+        @ffmpeg_env run(WhiskerTracking.ffmpeg_cmd(i*loading_size / fps,vid_name,loading_size,"test5.yuv"))
         read!("test5.yuv",temp_frames)
         temp_frames2[:]=convert(KnetArray{Float32,3},temp_frames)
 
@@ -369,7 +387,8 @@ function mean_std_video_gpu(vid_name::String,total_frame_num,w=640,h=480,fps=25,
 end
 
 function set_up_training(han::Tracker_Handles,get_mean=true)
-    set_up_training(han.nn,han.wt.vid_name,han.max_frames,han.woi,han.wt.pad_pos,han.frame_list,get_mean)
+    woi=get_woi_array(han)
+    set_up_training(han.nn,han.wt.vid_name,han.max_frames,woi,han.wt.pad_pos,han.frame_list,get_mean)
 end
 
 function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=true)
@@ -387,15 +406,45 @@ function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=
         nn.norm.mean_img = reshape(imresize(nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
     end
 
-    WT_reorder_whisker(woi,pad_pos)
+    (new_woi, new_frame_list) = check_whiskers(woi,frame_list,max_frames)
 
-    nn.labels=make_heatmap_labels(woi,pad_pos)
-    nn.imgs=get_labeled_frames(vid_name,frame_list);
+    WT_reorder_whisker(new_woi,pad_pos)
+
+    nn.labels = make_heatmap_labels(new_woi,pad_pos)
+    nn.imgs = get_labeled_frames(vid_name,new_frame_list);
 
     #Normalize
-    nn.imgs=StackedHourglass.normalize_new_images(nn.imgs,nn.norm.mean_img);
+    nn.imgs = StackedHourglass.normalize_new_images(nn.imgs,nn.norm.mean_img);
 
     (nn.imgs,nn.labels)=augment_images(nn.imgs,nn.labels);
+end
+
+function check_whiskers(woi,frame_list,max_frames)
+
+    #Make sure all of the frames actually have a tracked whisker
+    empty=trues(length(woi))
+    for i=1:length(woi)
+        if empty_whiskers(woi[i])
+            empty[i] = false
+            println("You have an untraced whisker at index: ", i)
+        end
+    end
+
+    #Last frames don't always work
+    if (frame_list[end] == max_frames)
+        empty[end] = false
+    end
+
+    new_woi = woi[empty]
+    new_frame_list = frame_list[empty]
+
+    (new_woi, new_frame_list)
+end
+
+function empty_whiskers(w)
+
+    (length(w.x)==0)|(length(w.y)==0)
+
 end
 
 function make_training_batch(img,ll,batch_size=8)

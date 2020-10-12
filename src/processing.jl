@@ -100,12 +100,21 @@ end
 
 function assign_woi(han::Tracker_Handles)
 
-    han.woi[han.frame] = deepcopy(han.wt.whiskers[han.woi_id])
+    han.woi[han.displayed_frame] = deepcopy(han.wt.whiskers[han.woi_id])
 
-    #if han.discrete_auto_calc
-        #make_discrete(han.wt.w_p,han.frame,han.woi[han.frame],han.d_spacing)
-    #end
     nothing
+end
+
+function get_frame_list(han::Tracker_Handles)
+    sort(collect(keys(han.woi)))
+end
+
+function get_woi_array(han::Tracker_Handles)
+    [han.woi[i] for i in get_frame_list(han)]
+end
+
+function get_frame_index(woi,frame_num)
+    findfirst(sort(collect(keys(woi))).==frame_num)
 end
 
 function WT_length_constraint(whiskers::Array{Whisker1,1},min_length::Int)

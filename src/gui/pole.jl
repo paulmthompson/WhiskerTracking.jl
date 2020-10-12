@@ -13,10 +13,10 @@ function pole_select_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     if getproperty(han.b["select_pole_button"],:active,Bool)
         han.selection_mode = 12
-        han.view_pole = true
+        #han.view_pole = true
     else
         han.selection_mode = 1
-        determine_viewers(han)
+        #determine_viewers(han)
     end
 
     nothing

@@ -113,11 +113,11 @@ function combine_end(han,x,y)
     new_y = [han.wt.whiskers[han.woi_id].y[1:out2]; han.partial.y[out1:end]]
     new_scores = [han.wt.whiskers[han.woi_id].scores[1:out2]; han.partial.scores[out1:end]]
     new_thick = [han.wt.whiskers[han.woi_id].thick[1:out2]; han.partial.thick[out1:end]]
-    han.woi[han.frame].x=new_x
-    han.woi[han.frame].y=new_y
-    han.woi[han.frame].thick=new_thick
-    han.woi[han.frame].scores=new_scores
-    han.woi[han.frame].len = length(new_thick)
+    han.woi[han.displayed_frame].x=new_x
+    han.woi[han.displayed_frame].y=new_y
+    han.woi[han.displayed_frame].thick=new_thick
+    han.woi[han.displayed_frame].scores=new_scores
+    han.woi[han.displayed_frame].len = length(new_thick)
 
     han.combine_mode = 1
     redraw_all(han)

@@ -60,7 +60,8 @@ function make_discrete_woi(wt,woi,tracked,spacing)
 end
 
 function make_discrete_all_whiskers(han::Tracker_Handles,spacing=15.0)
-    make_discrete_all_whiskers(han.woi,han.wt.pad_pos,spacing)
+    woi=get_woi_array(han)
+    make_discrete_all_whiskers(woi,han.wt.pad_pos,spacing)
 end
 
 function make_discrete_all_whiskers(woi,pad_pos,spacing=15.0)

@@ -26,19 +26,15 @@ function make_gui()
     wt=Tracker("","","","","",50,falses(h,w),Array{Whisker1,1}(),
     (0.0,0.0),255,0,h,w,all_whiskers)
 
-    if VERSION > v"0.7-"
-        woi_array = Array{Whisker1,1}(undef,1)
-    else
-        woi_array = Array{Whisker1,1}(1)
-    end
+    woi_array = Dict{Int64,WhiskerTracking.Whisker1}()
 
     these_paths = Save_Paths("",false)
 
     handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
-    false,false,falses(1),0,Whisker1(),false,false,false,
+    false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,true,2,[1],1,
-    c_widgets,falses(1),zeros(Float32,1,2),zeros(UInt8,w,h),1,
+    c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
     zeros(Float64,1,1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
 end
@@ -414,46 +410,27 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     new_frame=han.displayed_frame
 
     try
-        if isempty(findall(han.frame_list.==new_frame))
 
-            frame_location=findfirst(han.frame_list.>new_frame)
-            if frame_location==nothing
-                frame_location = length(han.frame_list) + 1
-            end
+        #add whisker WOI
+        han.woi[new_frame]=Whisker1()
 
-            insert!(han.frame_list,frame_location,new_frame)
+        han.frame_list = sort(collect(keys(han.woi)))
 
-            #add whisker WOI
-            insert!(han.woi,frame_location,Whisker1())
+        #tracked array
+        han.tracked[new_frame]=false
 
-            #insert!(han.wt.all_whiskers,frame_location,Array{Whisker1,1}())
+        #pole present
+        han.pole_present[new_frame]=false
 
-            #tracked array
-            insert!(han.tracked,frame_location,false)
+        #pole loc
+        han.pole_loc[new_frame]=zeros(Float32,2)
 
-            #pole present
-            insert!(han.pole_present,frame_location,false)
+        #Change frame list spin button maximum number and current index
+        set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.woi))
+        set_gtk_property!(han.b["labeled_frame_adj"],:value,get_frame_index(han.woi,new_frame))
 
-            #pole loc
-            new_pole_loc=zeros(Float32,size(han.pole_loc,1)+1,2)
-            for i=1:size(han.pole_loc,1)
-                if i<frame_location
-                    new_pole_loc[i,1] = han.pole_loc[i,1]
-                    new_pole_loc[i,2] = han.pole_loc[i,2]
-                else
-                    new_pole_loc[i+1,1] = han.pole_loc[i,1]
-                    new_pole_loc[i+1,2] = han.pole_loc[i,2]
-                end
-            end
-            han.pole_loc = new_pole_loc
-
-            #Change frame list spin button maximum number and current index
-            set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.frame_list))
-            set_gtk_property!(han.b["labeled_frame_adj"],:value,frame_location)
-
-            redraw_all(han)
-            save_backup(han)
-        end
+        redraw_all(han)
+        save_backup(han)
 
     catch
         println("Could not add frame")
@@ -461,6 +438,11 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     nothing
 end
+
+function get_frame_index(woi,frame_num)
+    findfirst(sort(collect(keys(woi))).==frame_num)
+end
+
 
 function save_backup(han::Tracker_Handles)
 
@@ -539,7 +521,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         mywhiskers=Array{Whisker1}(0)
 
-        for i=1:length(han.tracked)
+        for i in keys(han.tracked)
             if han.tracked[i]
                 han.woi[i].time = i
                 push!(mywhiskers,deepcopy(han.woi[i]))
@@ -645,7 +627,7 @@ function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.tracked[han.frame]=false
+    han.tracked[han.displayed_frame]=false
     update_new_frame(han)
 
     nothing
@@ -688,9 +670,9 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
     end
 
     if view_pole(han.b)
-        if han.pole_present[han.frame]
+        if han.pole_present[han.displayed_frame]
             set_source_rgb(ctx,0,0,1)
-            arc(ctx,han.pole_loc[han.frame,1],han.pole_loc[han.frame,2],10,0,2*pi)
+            arc(ctx,han.pole_loc[han.displayed_frame][1],han.pole_loc[han.displayed_frame][2],10,0,2*pi)
             stroke(ctx)
         end
     end
@@ -730,7 +712,7 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
                 if (m_x>han.wt.whiskers[i].x[j]-5.0)&(m_x<han.wt.whiskers[i].x[j]+5.0)
                     if (m_y>han.wt.whiskers[i].y[j]-5.0)&(m_y<han.wt.whiskers[i].y[j]+5.0)
                         han.woi_id = i
-                        han.tracked[han.frame]=true
+                        han.tracked[han.displayed_frame]=true
                         assign_woi(han)
                         redraw_all(han)
                         break
@@ -798,9 +780,10 @@ end
 
 function select_pole_location(han::Tracker_Handles,x,y)
 
-    han.pole_present[han.frame] = true
-    han.pole_loc[han.frame,1] = x
-    han.pole_loc[han.frame,2] = y
+    #This should be in a temporary frame if frame isn't added yet. Otherwise, you
+    #are changing the pole position for other frames.
+    han.pole_present[han.displayed_frame] = true
+    han.pole_loc[han.displayed_frame] = [x,y]
 
     redraw_all(han)
 end
@@ -851,17 +834,19 @@ function plot_whiskers(han::Tracker_Handles)
     end
 
 
-    if (han.tracked[han.frame])&(han.frame_list[han.frame]==han.displayed_frame)
-        set_source_rgb(ctx,1.0,0.0,0.0)
+    if haskey(han.woi,han.displayed_frame)
+        if (han.tracked[han.displayed_frame])
+            set_source_rgb(ctx,1.0,0.0,0.0)
 
-        move_to(ctx,han.woi[han.frame].x[1],han.woi[han.frame].y[1])
-        for i=2:han.woi[han.frame].len
-            line_to(ctx,han.woi[han.frame].x[i],han.woi[han.frame].y[i])
-        end
-        stroke(ctx)
+            move_to(ctx,han.woi[han.displayed_frame].x[1],han.woi[han.displayed_frame].y[1])
+            for i=2:han.woi[han.displayed_frame].len
+                line_to(ctx,han.woi[han.displayed_frame].x[i],han.woi[han.displayed_frame].y[i])
+            end
+            stroke(ctx)
 
-        if view_discrete(han.b)
-            draw_discrete(han)
+            if view_discrete(han.b)
+                draw_discrete(han)
+            end
         end
     end
 
