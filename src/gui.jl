@@ -33,7 +33,7 @@ function make_gui()
     handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
-    falses(0),Array{Int64,1}(),wt,true,2,[1],1,
+    falses(0),Array{Int64,1}(),wt,true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
     zeros(Float64,1,1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
@@ -403,6 +403,10 @@ function change_save_paths(han::Tracker_Handles,config_path::String)
     nothing
 end
 
+#=
+Add and remove frames for deep learning labels
+=#
+
 function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -439,10 +443,33 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-function get_frame_index(woi,frame_num)
-    findfirst(sort(collect(keys(woi))).==frame_num)
-end
+function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
+    han, = user_data
+    new_frame=han.displayed_frame
+
+    try
+        delete!(han.woi,new_frame)
+
+        han.frame_list = sort(collect(keys(han.woi)))
+
+        delete!(han.tracked,new_frame)
+        delete!(han.pole_present,new_frame)
+        delete!(han.pole_loc,new_frame)
+
+        #Change frame list spin button maximum number and current index
+        set_gtk_property!(han.b["labeled_frame_adj"],:value,1)
+        set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.woi))
+
+        redraw_all(han)
+        save_backup(han)
+
+    catch
+        println("Could not delete frame")
+    end
+
+    nothing
+end
 
 function save_backup(han::Tracker_Handles)
 
@@ -453,34 +480,6 @@ function save_backup(han::Tracker_Handles)
     write(file, "frame_list",han.frame_list)
     write(file, "woi",han.woi)
     close(file)
-
-    nothing
-end
-
-#=
-This needs totally redone
-=#
-function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    new_frame=han.displayed_frame
-
-    try
-
-        #frame_id=find(han.frame_list.==new_frame)
-
-        #if !isempty(frame_id)
-
-            #frame_location=frame_id[1]
-
-            #deleteat!(han.frame_list,frame_location)
-
-        #end
-        println("Deleting frames is not available right now")
-    catch
-        println("Could not delete frame")
-    end
 
     nothing
 end
