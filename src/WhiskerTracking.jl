@@ -35,6 +35,10 @@ end
 include("types.jl")
 
 include("deep_learning/helper.jl")
+include("deep_learning/save_load.jl")
+include("deep_learning/prediction.jl")
+include("deep_learning/config.jl")
+include("deep_learning/training.jl")
 
 include("gui.jl")
 include("janelia_tracker.jl")
