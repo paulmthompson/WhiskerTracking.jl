@@ -39,6 +39,7 @@ include("deep_learning/save_load.jl")
 include("deep_learning/prediction.jl")
 include("deep_learning/config.jl")
 include("deep_learning/training.jl")
+include("deep_learning/mean_image.jl")
 
 include("gui.jl")
 include("janelia_tracker.jl")
