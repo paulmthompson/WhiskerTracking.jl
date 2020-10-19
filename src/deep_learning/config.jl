@@ -83,16 +83,3 @@ function prediction_from_config(filepath)
 
     #Save?
 end
-
-function run_training_no_gui(hg,trn::Knet.Data,this_opt,epochs=100,ls=Array{Float64,1}())
-
-    total_length=length(trn) * epochs
-    minimizer = Knet.minimize(hg,ncycle(trn,epochs),this_opt)
-
-    for x in takenth(minimizer,1)
-        push!(ls,x)
-        sleep(0.0001)
-    end
-
-    ls
-end

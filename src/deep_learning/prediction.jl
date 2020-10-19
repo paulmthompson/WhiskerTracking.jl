@@ -104,7 +104,7 @@ function calculate_whiskers(nn,vid_name,total_frames,batch_size=32,loading_size=
     convert(Array,preds)
 end
 
-function predict_single_frame(han)
+function predict_single_frame(han::Tracker_Handles)
 
     k_mean = han.nn.norm.mean_img
 
@@ -139,14 +139,14 @@ function predict_single_frame(han)
     (preds', confidences)
 end
 
-function draw_predictions(han)
+get_draw_predictions(b::Gtk.GtkBuilder)=get_gtk_property(b["dl_show_predictions"],:active,Bool)
+
+function draw_predictions(han::Tracker_Handles)
     (preds,confidences) = predict_single_frame(han)
     _draw_predicted_whisker(preds[:,1] ./ 64 .* han.w,preds[:,2] ./ 64 .* han.h,confidences,han.c,han.nn.confidence_thres)
 end
 
-get_draw_predictions(b)=get_gtk_property(b["dl_show_predictions"],:active,Bool)
-
-function draw_predicted_whisker(han)
+function draw_predicted_whisker(han::Tracker_Handles)
     d=han.displayed_frame
     x=han.nn.predicted[:,1,d]; y=han.nn.predicted[:,2,d]; conf=han.nn.predicted[:,3,d]
     _draw_predicted_whisker(x,y,conf,han.c,han.nn.confidence_thres)
