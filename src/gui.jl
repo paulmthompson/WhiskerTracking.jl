@@ -155,9 +155,9 @@ function myparse(xx)
 end
 
 function get_vid_dims(vid_name::String)
-    ww=@ffmpeg_env read(`$(FFMPEG.ffprobe_path) -v error -select_streams v:0 -show_entries stream=width -of default=nw=1:nk=1 $(vid_name)`)
-    hh=@ffmpeg_env read(`$(FFMPEG.ffprobe_path) -v error -select_streams v:0 -show_entries stream=height -of default=nw=1:nk=1 $(vid_name)`)
-    ff=@ffmpeg_env read(`$(FFMPEG.ffprobe_path) -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate $(vid_name)`)
+    ww=@ffmpeg_env read(`$(FFMPEG.ffprobe) -v error -select_streams v:0 -show_entries stream=width -of default=nw=1:nk=1 $(vid_name)`)
+    hh=@ffmpeg_env read(`$(FFMPEG.ffprobe) -v error -select_streams v:0 -show_entries stream=height -of default=nw=1:nk=1 $(vid_name)`)
+    ff=@ffmpeg_env read(`$(FFMPEG.ffprobe) -v error -select_streams v -of default=noprint_wrappers=1:nokey=1 -show_entries stream=r_frame_rate $(vid_name)`)
 
     width=0
     height=0
@@ -245,7 +245,7 @@ end
 
 function get_max_frames(vid_name::String)
 
-    yy=@ffmpeg_env read(`$(FFMPEG.ffprobe_path) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
+    yy=@ffmpeg_env read(`$(FFMPEG.ffprobe) -v error -select_streams v:0 -show_entries stream=nb_frames -of default=nokey=1:noprint_wrappers=1 $(vid_name)`)
     if is_windows()
         max_frames=parse(Int64,String(yy[1:(end-2)]))
     else
