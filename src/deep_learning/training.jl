@@ -13,7 +13,7 @@ function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=
     (w,h,fps)=get_vid_dims(vid_name)
 
     if get_mean
-        (mean_img,std_img)=mean_std_video_gpu(vid_name,max_frames,w,h,fps)
+        (mean_img,std_img)=mean_std_video_gpu(vid_name,max_frames)
         nn.norm.min_ref = 0
         nn.norm.max_ref = 255
         nn.norm.mean_img = mean_img
