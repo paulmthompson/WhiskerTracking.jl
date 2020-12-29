@@ -5,7 +5,7 @@ Create training file
 
 function set_up_training(han::Tracker_Handles,get_mean=true)
     woi=get_woi_array(han)
-    set_up_training(han.nn,han.wt.vid_name,han.max_frames,woi,han.wt.pad_pos,han.frame_list,get_mean)
+    set_up_training(han.nn,han.wt.vid_name,han.end_frame,woi,han.wt.pad_pos,han.frame_list,get_mean)
 end
 
 function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=true)

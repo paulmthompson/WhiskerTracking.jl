@@ -153,6 +153,8 @@ mutable struct Tracker_Handles
     fps::Float64
     frame_loaded::Bool
     requested_frame::Int64
+    start_frame::Int64 #First frame for analysis (like taking average)
+    end_frame::Int64 #last frame for analysis (like taking average)
 
     c::Gtk.GtkCanvasLeaf
 

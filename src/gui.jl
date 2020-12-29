@@ -30,7 +30,7 @@ function make_gui()
 
     these_paths = Save_Paths("",false)
 
-    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,zeros(UInt32,w,h),
+    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,1,1,c,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,true,2,zeros(Int64,0),1,
@@ -215,6 +215,9 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     end
 
     handles.max_frames = get_max_frames(vid_name)
+
+    handles.start_frame = 1
+    handles.end_frame = handles.max_frames
 
     #Adjust Frame Slider Scale
     set_gtk_property!(handles.b["adj_frame"],:upper,handles.max_frames)

@@ -77,7 +77,7 @@ function create_training_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     try
-        if !han.nn.use_existing_labels
+        if (!han.nn.use_existing_labels)|(han.nn.norm.mean_img == zeros(Float32,0,0,0))
             set_up_training(han) #heatmaps, labels, normalize, augment
             save_training(han)
             han.nn.use_existing_labels=true
