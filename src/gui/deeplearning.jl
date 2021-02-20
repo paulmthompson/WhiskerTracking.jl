@@ -104,11 +104,23 @@ function training_button_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     check_hg_features(han.nn)
 
-    dtrn=make_training_batch(han.nn.imgs,han.nn.labels);
+    try
+        dtrn=make_training_batch(han.nn.imgs,han.nn.labels);
 
-    myadam=Adam(lr=1e-3)
-    @async begin
-        run_training(han.nn.hg,dtrn,myadam,han.b["dl_prog"],han.nn.epochs,han.nn.losses)
+        myadam=Adam(lr=1e-3)
+        @async begin
+            run_training(han.nn.hg,dtrn,myadam,han.b["dl_prog"],han.nn.epochs,han.nn.losses)
+        end
+
+    catch
+
+        println("Failed to start training. Will use half the batch size and try again")
+        dtrn=make_training_batch(han.nn.imgs,han.nn.labels,4);
+
+        myadam=Adam(lr=1e-3)
+        @async begin
+            run_training(han.nn.hg,dtrn,myadam,han.b["dl_prog"],han.nn.epochs,han.nn.losses)
+        end
     end
     #save_hourglass(string(han.paths.backup,"weights.jld"),han.nn.hg)
 

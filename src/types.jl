@@ -38,7 +38,7 @@ mutable struct Tracker
     contrast_min::Int64
     h::Int64
     w::Int64
-    all_whiskers::Array{Array{Whisker1,1},1} #Whiskers on every frame
+    all_whiskers::Array{Array{Whisker1,1},1} #Whiskers on every frame - IS THIS STILL NEEDED?
 end
 
 mutable struct discrete_widgets

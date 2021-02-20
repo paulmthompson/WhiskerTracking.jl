@@ -194,21 +194,64 @@ function read_pole_and_whisker_hdf5(path,l_thres_in=0.5)
     (woi,p)
 end
 
+#=
+Snapshot
+=#
+function save_single_image(han::Tracker_Handles)
+    save_single_image(han,han.current_frame,han.displayed_frame)
+end
+
 function save_single_image(han::Tracker_Handles,img,num)
 
-    my_wd=pwd()
-    cd(han.paths.images)
-    #Deeplabcut needs left padded zeros
-    max_dig=length(digits(han.max_frames))
-    img_name = string("img",lpad(num,max_dig,"0"),".png")
+    img_name = name_img(han,"img",num)
 
-    #I think deeplabcut expects 24-bit png
-    #You create 24 bit png files with ImageMagick as follows
-    Images.save(string("png24:",img_name), img)
-
-    cd(my_wd)
+    save_img_with_dir_change(han,img_name,img)
 
     nothing
+end
+
+function save_label_image(han::Tracker_Handles)
+
+    img_name = name_img(han,"w",han.displayed_frame)
+
+    img = create_label_image(han)
+
+    save_img_with_dir_change(han,img_name,img)
+
+    nothing
+end
+
+function save_img_with_dir_change(han::Tracker_Handles,img_name,img)
+    my_wd=pwd()
+    cd(han.paths.images)
+    Images.save(img_name, img)
+    cd(my_wd)
+end
+
+function name_img(han::Tracker_Handles,name_prefix,num)
+
+    #Deeplabcut needs left padded zeros
+    max_dig=length(digits(han.max_frames))
+    img_name = string(name_prefix,lpad(num,max_dig,"0"),".png")
+end
+
+function create_label_image(han::Tracker_Handles,rad=1)
+
+    img = zeros(UInt8,size(han.current_frame))
+
+    for i=1:length(han.woi[han.displayed_frame].x)
+        x=floor(Int64,han.woi[han.displayed_frame].x[i])
+        y=floor(Int64,han.woi[han.displayed_frame].y[i])
+        for xx=-1*rad:rad
+            for yy=-1*rad:rad
+                if !(((y+yy)<0)|(y+yy>size(img,1))|((x+xx)<0)|(x+xx>size(img,2)))
+                     img[y+yy,x]=255
+                end
+            end
+        end
+
+    end
+    img
 end
 
 function load_whisker_into_gui(han,whiskers::Array{Float64,2})
