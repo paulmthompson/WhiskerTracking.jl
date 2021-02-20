@@ -25,7 +25,7 @@ function mask_min_cb(w::Ptr, user_data::Tuple{Tracker_Handles})
     mymin=getproperty(han.b["mask_min_button"],:value,Int)
     mymax=getproperty(han.b["mask_max_button"],:value,Int)
 
-    generate_mask(han.wt,han,current_frame2,mymin,mymax)
+    generate_mask(han.wt,han.current_frame2,mymin,mymax)
 
     redraw_all(han)
     plot_mask(han)
