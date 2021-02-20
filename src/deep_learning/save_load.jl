@@ -38,8 +38,10 @@ function load_training(han::Tracker_Handles,path::String)
     file = jldopen(path, "r")
     frame_list = read(file, "frame_list")
     woi = read(file, "woi")
-    if typeof(woi) == Array
-        han.woi = Dict{Int64,Whisker1}(frame_list,woi)
+    if typeof(woi) <: Array
+        for i=1:length(frame_list)
+            han.woi[frame_list[i]]=woi[i]
+        end
     else # New Version
         han.woi = woi
     end

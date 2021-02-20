@@ -221,6 +221,17 @@ function save_label_image(han::Tracker_Handles)
     nothing
 end
 
+function save_follicle_image(han::Tracker_Handles)
+
+    img_name = name_img(han,"w",han.displayed_frame)
+
+    img = create_follicle_image(han)
+
+    save_img_with_dir_change(han,img_name_img)
+
+    nothing
+end
+
 function save_img_with_dir_change(han::Tracker_Handles,img_name,img)
     my_wd=pwd()
     cd(han.paths.images)
@@ -253,6 +264,17 @@ function create_label_image(han::Tracker_Handles,rad=1)
     end
     img
 end
+
+#=
+function create_follicle_image(han::Tracker_Handles,rad=5)
+
+    img = zeros(UInt8,size(han.current_frame))
+
+    x0 = han.woi[han.displayed_frame].x[1]]
+    y0 = han.woi[han.displayed_frame].y[1]]
+
+end
+=#
 
 function load_whisker_into_gui(han,whiskers::Array{Float64,2})
 
