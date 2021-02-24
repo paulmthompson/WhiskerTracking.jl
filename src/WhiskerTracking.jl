@@ -11,7 +11,7 @@ using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
 using PyCall, ScikitLearn
 
 using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD2, Interpolations, DSP,
-FFTW, IterTools, FFMPEG, StackedHourglass
+FFTW, IterTools, FFMPEG, StackedHourglass, Polynomials
 
 @sk_import ensemble: RandomForestClassifier
 
