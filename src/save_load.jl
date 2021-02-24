@@ -197,44 +197,44 @@ end
 #=
 Snapshot
 =#
-function save_single_image(han::Tracker_Handles)
-    save_single_image(han,han.current_frame,han.displayed_frame)
+function save_single_image(han::Tracker_Handles,path=han.paths.images)
+    save_single_image(han,han.current_frame,han.displayed_frame,path)
 end
 
-function save_single_image(han::Tracker_Handles,img,num)
+function save_single_image(han::Tracker_Handles,img,num,path=han.paths.images)
 
     img_name = name_img(han,"img",num)
 
-    save_img_with_dir_change(han,img_name,img)
+    save_img_with_dir_change(han,img_name,img,path)
 
     nothing
 end
 
-function save_label_image(han::Tracker_Handles)
+function save_label_image(han::Tracker_Handles,path=han.paths.images)
 
     img_name = name_img(han,"w",han.displayed_frame)
 
     img = create_label_image(han)
 
-    save_img_with_dir_change(han,img_name,img)
+    save_img_with_dir_change(han,img_name,img,path)
 
     nothing
 end
 
-function save_follicle_image(han::Tracker_Handles)
+function save_follicle_image(han::Tracker_Handles,path=han.paths.images)
 
     img_name = name_img(han,"w",han.displayed_frame)
 
     img = create_follicle_image(han)
 
-    save_img_with_dir_change(han,img_name_img)
+    save_img_with_dir_change(han,img_name_img,path)
 
     nothing
 end
 
-function save_img_with_dir_change(han::Tracker_Handles,img_name,img)
+function save_img_with_dir_change(han::Tracker_Handles,img_name,img,path=han.paths.images)
     my_wd=pwd()
-    cd(han.paths.images)
+    cd(path)
     Images.save(img_name, img)
     cd(my_wd)
 end
@@ -255,8 +255,8 @@ function create_label_image(han::Tracker_Handles,rad=1)
         y=floor(Int64,han.woi[han.displayed_frame].y[i])
         for xx=-1*rad:rad
             for yy=-1*rad:rad
-                if !(((y+yy)<0)|(y+yy>size(img,1))|((x+xx)<0)|(x+xx>size(img,2)))
-                     img[y+yy,x]=255
+                if !(((y+yy)<1)|(y+yy>size(img,1))|((x+xx)<1)|(x+xx>size(img,2)))
+                     img[y+yy,x+xx]=255
                 end
             end
         end
