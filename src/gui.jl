@@ -857,7 +857,8 @@ function plot_whiskers(han::Tracker_Handles)
     end
 
     if (han.nn.draw_preds)|(get_draw_predictions(han.b))
-        draw_predictions(han)
+        #draw_predictions(han)
+        draw_prediction2(han,han.nn.hg,0.5)
     end
 
     reveal(han.c)

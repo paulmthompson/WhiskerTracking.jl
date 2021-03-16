@@ -168,3 +168,86 @@ function _draw_predicted_whisker(x,y,c,canvas,thres)
     end
     reveal(canvas)
 end
+
+function calculate_whisker_fit(pred_1,img)
+
+    points_1 = findall(pred_1.>0.5)
+    x = [points_1[i][1] for i=1:length(points_1)]
+    y = [points_1[i][2] for i=1:length(points_1)]
+    conf = [pred_1[points_1[i][1],points_1[i][2]] for i=1:length(points_1)]
+
+    (poly,loss) = poly_and_loss(x,y,conf)
+
+    yscale = size(img,1) / size(pred_1,1)
+    xscale = size(img,2) / size(pred_1,2)
+
+    if (loss>50.0)
+        for rot = [pi/2, pi/4, -pi/4]
+            (x_new,y_new) = rotate_mat(x,y,rot)
+            (xpoly,xloss) = poly_and_loss(x_new,y_new,conf)
+
+            if xloss < 50.0
+                x_order = sortperm(x_new)
+                y_out = [xpoly(i) for i in x_new[x_order]]
+                x_out = x_new[x_order]
+
+                (x_prime,y_prime) = rotate_mat(x_out,y_out,-1*rot)
+
+                return (y_prime .* xscale, x_prime .* yscale)
+            end
+        end
+        println("WARNING: Poor Fit")
+    end
+
+    x_order=sortperm(x)
+    return ([poly(i) for i in x[x_order]] * xscale,x[x_order] * yscale)
+end
+
+function calculate_whisker_predictions(han,hg)
+    pred=StackedHourglass.predict_single_frame(hg,han.current_frame./255)
+end
+
+function poly_and_loss(x,y,conf)
+
+    x_order=sortperm(x)
+    mypoly=Polynomials.fit(x[x_order],y[x_order],5,weights=conf[x_order])
+
+    loss = sum(abs.([(y[i]-mypoly(x[i]))*conf[i] for i=1:length(x)]))
+    (mypoly,loss,x[x_order],[mypoly(i) for i in x[x_order]])
+end
+
+function rotate_mat(x,y,theta)
+    x_prime = x .* cos(theta) .- y .* sin(theta)
+    y_prime = y .* cos(theta) .+ x .* sin(theta)
+    (x_prime,y_prime)
+end
+
+function poly_loss_rotation(x,y,rot,conf)
+    (x_new,y_new) = rotate_mat(x,y,rot)
+    (poly,loss) = poly_and_loss(x_new,y_new,conf)
+    (x_new, y_new, poly,loss)
+end
+
+function draw_prediction2(han,hg,conf)
+
+    colors=((1,0,0),(0,1,0))
+    pred = calculate_whisker_predictions(han,hg)
+    for i = 1:size(pred,3)
+        (x,y) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
+        draw_points_2(han,x,y,colors[i])
+    end
+
+    reveal(han.c)
+end
+
+function draw_points_2(han,x,y,cc)
+    ctx=Gtk.getgc(han.c)
+
+    set_source_rgb(ctx,cc...)
+
+    set_line_width(ctx, 1.0);
+    for i=1:length(x)
+        arc(ctx, x[i],y[i], 5.0, 0, 2*pi);
+        stroke(ctx);
+    end
+end
