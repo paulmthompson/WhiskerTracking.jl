@@ -169,17 +169,25 @@ function _draw_predicted_whisker(x,y,c,canvas,thres)
     reveal(canvas)
 end
 
-function calculate_whisker_fit(pred_1,img)
+function calculate_whisker_fit(pred_1::Array{T,2},img) where T
 
     points_1 = findall(pred_1.>0.5)
     x = [points_1[i][1] for i=1:length(points_1)]
     y = [points_1[i][2] for i=1:length(points_1)]
     conf = [pred_1[points_1[i][1],points_1[i][2]] for i=1:length(points_1)]
+    yscale = size(img,1) / size(pred_1,1)
+    xscale = size(img,2) / size(pred_1,2)
+
+    calculate_whisker_fit(x,y,conf,xscale,yscale)
+end
+
+function calculate_whisker_fit(x::Array{T,1},y::Array{T,1},conf,xscale,yscale,suppress=true) where T
+
+    quality_flag = true
 
     (poly,loss) = poly_and_loss(x,y,conf)
 
-    yscale = size(img,1) / size(pred_1,1)
-    xscale = size(img,2) / size(pred_1,2)
+    xloss = 100.0
 
     if (loss>50.0)
         for rot = [pi/2, pi/4, -pi/4]
@@ -196,7 +204,9 @@ function calculate_whisker_fit(pred_1,img)
                 return (y_prime .* xscale, x_prime .* yscale)
             end
         end
-        println("WARNING: Poor Fit")
+        if !suppress
+            println("WARNING: Poor Fit")
+        end
     end
 
     x_order=sortperm(x)
