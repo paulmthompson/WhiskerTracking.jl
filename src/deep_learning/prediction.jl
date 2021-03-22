@@ -190,6 +190,10 @@ function calculate_whisker_fit(x::Array{T,1},y::Array{T,1},conf,xscale,yscale,su
     xloss = 100.0
 
     if (loss>50.0)
+
+        #retry with stricker cutoff
+        #(poly,loss) = poly_and_loss(x[],y,conf)
+
         for rot = [pi/2, pi/4, -pi/4]
             (x_new,y_new) = rotate_mat(x,y,rot)
             (xpoly,xloss) = poly_and_loss(x_new,y_new,conf)
@@ -201,7 +205,7 @@ function calculate_whisker_fit(x::Array{T,1},y::Array{T,1},conf,xscale,yscale,su
 
                 (x_prime,y_prime) = rotate_mat(x_out,y_out,-1*rot)
 
-                return (y_prime .* xscale, x_prime .* yscale)
+                return (y_prime .* xscale, x_prime .* yscale,xloss)
             end
         end
         if !suppress
@@ -210,7 +214,7 @@ function calculate_whisker_fit(x::Array{T,1},y::Array{T,1},conf,xscale,yscale,su
     end
 
     x_order=sortperm(x)
-    return ([poly(i) for i in x[x_order]] * xscale,x[x_order] * yscale)
+    return ([poly(i) for i in x[x_order]] * xscale,x[x_order] * yscale,loss)
 end
 
 function calculate_whisker_predictions(han,hg)
@@ -243,7 +247,7 @@ function draw_prediction2(han,hg,conf)
     colors=((1,0,0),(0,1,0))
     pred = calculate_whisker_predictions(han,hg)
     for i = 1:size(pred,3)
-        (x,y) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
+        (x,y,loss) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
         draw_points_2(han,x,y,colors[i])
     end
 
