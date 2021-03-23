@@ -1,24 +1,4 @@
 
-
-#=
-Finds the phase over time for a given angle vs time array
-using the Hilbert Transform
-
-Kleinfeld and Deschenes 2011
-=#
-function get_phase(aa;bp_l=8.0,bp_h=30.0,sampling_rate=500.0)
-    responsetype = Bandpass(bp_l,bp_h; fs=sampling_rate)
-    designmethod=Butterworth(4)
-    df1=digitalfilter(responsetype,designmethod)
-
-    #Zero lag filtering to make sure there is no phase shift.
-    filter_aa=filtfilt(df1,aa)
-
-    hh=hilbert(filter_aa)
-
-    angle.(hh)
-end
-
 #=
 Takes an array of Janelia whiskers and finds the angle and curvature using
 their method
