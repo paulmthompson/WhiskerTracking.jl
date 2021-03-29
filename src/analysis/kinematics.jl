@@ -18,17 +18,6 @@ function get_phase(aa;bp_l=8.0,bp_h=30.0,sampling_rate=500.0)
     angle.(hh)
 end
 
-function correct_follicle(x::Array{T,1},y::Array{T,1},x_f,y_f) where T
-    d1 = sqrt((x[1]-x_f)^2 + (y[1]-y_f)^2)
-    d2 = sqrt((x[end]-x_f)^2 + (y[end]-y_f)^2)
-
-    if d2 > d1
-        reverse!(x)
-        reverse!(y)
-    end
-    nothing
-end
-
 function distance_along(x::Array{T,1},y::Array{T,1},i::Int64) where T
     sqrt((y[i]-y[i-1])^2+(x[i]-x[i-1])^2)
 end
