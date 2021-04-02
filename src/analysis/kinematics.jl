@@ -30,6 +30,19 @@ function total_length(x::Array{T,1},y::Array{T,1}) where T
     s
 end
 
+function get_ind_at_dist(x,y,thres)
+    ind = length(x)
+    s=0.0
+    for i=2:length(x)
+        s=WhiskerTracking.distance_along(x,y,i) + s
+        if s > thres
+            ind = i
+            break
+        end
+    end
+    ind
+end
+
 #=
 Angle Calculation
 =#
@@ -82,6 +95,38 @@ function get_curvature(x::Array{T,1},y::Array{T,1},points = 2.0:2.0:(total_lengt
         curv[i]=num / denom
     end
     curv
+end
+
+function least_squares_quad(x,y)
+
+    x_mat = zeros(Float64,size(x,1),3)
+    for i=1:size(x,1)
+        x_mat[i,1] = x[i] * x[i]
+        x_mat[i,2] = x[i]
+        x_mat[i,3] = 1.0
+    end
+    coeffs = x_mat \ y
+    coeffs[1]
+end
+
+function least_squares_quad_rot(x,y)
+   (my_in, mysign) = rotate_cov_eigen(x,y)
+    least_squares_quad(my_in[:,1],my_in[:,2])
+end
+
+function rotate_cov_eigen(x,y)
+
+    my_in = [x y]
+    cov_mat = cov(my_in)
+    rot_mat = eigvecs(cov_mat)
+    eig_val = eigvals(cov_mat)
+
+    max_eig = findmax(eig_val)[2]
+    min_eig = findmin(eig_val)[2]
+
+    sign_out = cross([rot_mat[:,max_eig]; 0.0],[rot_mat[:,min_eig]; 0.0])
+
+    (my_in * rot_mat[:,[max_eig,min_eig]], sign(sign_out[3]))
 end
 
 function c_diff(x::Array{T,1},i::Int64) where T

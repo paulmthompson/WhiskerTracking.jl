@@ -57,7 +57,18 @@ function contact_angle(x,y,ii)
     #y whisker coordinates
     #ii index of whisker contact
 
-    atan((y[ii]-y[ii+1]),(x[ii]-x[ii+1]))
+    theta_c = 0.0
+    s_thres = 0.1
+
+    i = ii + 1
+    while(i < length(x)) #Creep forward to make sure that point is different location
+        if sqrt((x[ii]-x[i])^2+(y[ii]-y[i])^2)>s_thres
+            theta_c = atan((y[ii]-y[i]),(x[ii]-x[i]))
+            break
+        end
+        i = i + 1
+    end
+    theta_c 
 end
 
 #Decompose force into x and y components
