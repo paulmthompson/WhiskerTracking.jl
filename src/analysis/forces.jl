@@ -7,7 +7,7 @@ SNR (Point P)
 
 =#
 
-function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0; I_p = 1.0, E=1.0)
+function calc_force(x::Array{Float64,1},y::Array{Float64,1},theta_f::Float64,curv::Float64,ii::Int,i_p::Int,curv_0=0.0; I_p = 1.0, E=1.0)
     #x, y - whisker coordinates
     #theta_f - whisker angle
     #curv - whisker curvature
@@ -52,7 +52,7 @@ function calc_force(x,y,theta_f,curv,ii,i_p,curv_0=0.0; I_p = 1.0, E=1.0)
     (M_0,F_ax,F_lat,F,theta_contact)
 end
 
-function contact_angle(x,y,ii)
+function contact_angle(x::Array{Float64,1},y::Array{Float64,1},ii::Int)
     #x whisker coordinates
     #y whisker coordinates
     #ii index of whisker contact
@@ -68,7 +68,7 @@ function contact_angle(x,y,ii)
         end
         i = i + 1
     end
-    theta_c 
+    theta_c
 end
 
 #Decompose force into x and y components

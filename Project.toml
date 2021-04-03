@@ -32,6 +32,7 @@ Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 ScikitLearn = "3646fa90-6ef7-5e7e-9f22-8aca16db6324"
 StackedHourglass = "9f277440-d667-11ea-33e8-3d6042182d56"
+StasBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 julia = "1"
