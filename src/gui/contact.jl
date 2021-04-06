@@ -213,3 +213,58 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
 
     nothing
 end
+
+#=
+Draw marker to indicate that touch has occured
+=#
+
+function draw_touch(han::Tracker_Handles)
+
+    if !isempty(find(han.touch_frames_i.==han.displayed_frame))
+
+        ctx=Gtk.getgc(han.c)
+
+        ind=find(han.touch_frames_i.==han.displayed_frame)[1]
+
+        if han.touch_frames[ind]
+            set_source_rgb(ctx,1,0,0)
+        else
+            set_source_rgb(ctx,1,1,1)
+        end
+
+        rectangle(ctx,600,0,20,20)
+        fill(ctx)
+
+        reveal(han.c)
+    end
+
+    nothing
+end
+
+function draw_touch_prediction(han::Tracker_Handles)
+
+    if (han.show_contact)
+
+        try
+            ctx = Gtk.getgc(han.c)
+
+            w = 640
+            h = 480
+
+            if han.tracked_contact[han.displayed_frame]
+                set_source_rgb(ctx,1,0,0)
+            else
+                set_source_rgb(ctx,1,1,1)
+            end
+
+            rectangle(ctx, w - 40, h - 40, 20, 20)
+            fill(ctx)
+            
+            reveal(han.c)
+        catch
+            println("Could not draw contact prediction")
+        end
+    end
+
+    nothing
+end

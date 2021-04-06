@@ -259,33 +259,6 @@ function get_max_frames(vid_name::String)
 end
 
 #=
-Draw marker to indicate that touch has occured
-=#
-
-function draw_touch(han::Tracker_Handles)
-
-    if !isempty(find(han.touch_frames_i.==han.displayed_frame))
-
-        ctx=Gtk.getgc(han.c)
-
-        ind=find(han.touch_frames_i.==han.displayed_frame)[1]
-
-        if han.touch_frames[ind]
-            set_source_rgb(ctx,1,0,0)
-        else
-            set_source_rgb(ctx,1,1,1)
-        end
-
-        rectangle(ctx,600,0,20,20)
-        fill(ctx)
-
-        reveal(han.c)
-    end
-
-    nothing
-end
-
-#=
 Frame Drawing
 =#
 function frame_slider_cb(w::Ptr,user_data)
@@ -656,7 +629,9 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
 
     fill(ctx)
 
-    draw_touch(han)
+    draw_touch(han) #Indicates manual contact classification
+
+    draw_touch_prediction(han)
 
     #If this frame is in the frame list, draw a box around the display
     if !isempty(find(han.frame_list.==han.displayed_frame))

@@ -148,6 +148,9 @@ function get_force_signs(xx,yy,tracked,p,F_t,t_c,aa,c)
     (F_lat_sign,F_ax_sign)
 end
 
+#=
+
+=#
 function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)); i_p_loc=50.0,E_in=1.0,moment_of_inertia_p=1.0)
 
     F_ax=zeros(Float64,length(c))
