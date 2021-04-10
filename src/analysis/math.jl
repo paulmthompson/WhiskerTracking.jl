@@ -100,7 +100,7 @@ end
 One implementation only calculates if points are tracked on either side
 =#
 
-function central_difference(x)
+function central_difference(x::Array{T,1}) where T
     y=zeros(Float64,length(x))
 
     for i=2:length(y)-1
@@ -109,7 +109,7 @@ function central_difference(x)
     y
 end
 
-function central_difference(x,tracked)
+function central_difference(x::Array{T,1},tracked) where T
     y=zeros(Float64,length(x))
     diff_tracked=deepcopy(tracked)
 
@@ -152,7 +152,7 @@ function count_consecutive_bits(x,con_thres)
     interp_inds
 end
 
-function remove_two_sided_outlier(x,t,min_p,max_p)
+function remove_two_sided_outlier(x::Array{T,1},t,min_p,max_p) where T
 
     min_x = percentile(x[t],min_p)
     max_x = percentile(x[t],max_p)
@@ -168,17 +168,19 @@ function remove_two_sided_outlier(x,t,min_p,max_p)
     nothing
 end
 
-function interpolate_forward(x,t,interp_ids)
+function interpolate_forward(x::Array{T,1},t,interp_ids::Array{Int64,1}) where T
 
     interp_x = interpolate((findall(t),),x[t],Gridded(Linear()))
 
     for i in interp_ids
-
-        x[i] = interp_x(i)
+        try
+            x[i] = interp_x(i)
+        catch
+        end
     end
 end
 
-function reset_tracked(t,interp_ids)
+function reset_tracked(t,interp_ids::Array{Int64,1})
    t[interp_ids] .= true
 end
 

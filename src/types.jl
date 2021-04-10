@@ -208,6 +208,9 @@ mutable struct Tracker_Handles
     tracked_contact::BitArray{1}
     tracked_pole::Array{Float64,2}
 
+    show_event::Bool
+    event_array::BitArray{1}
+
     class::classifier
     nn::NeuralNetwork
 

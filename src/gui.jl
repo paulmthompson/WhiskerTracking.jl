@@ -36,7 +36,7 @@ function make_gui()
     falses(0),Array{Int64,1}(),wt,true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
+    zeros(Float64,1,1),false,falses(1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -633,6 +633,8 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
 
     draw_touch_prediction(han)
 
+    draw_event(han)
+
     #If this frame is in the frame list, draw a box around the display
     if !isempty(find(han.frame_list.==han.displayed_frame))
         set_source_rgb(ctx,0,1,0)
@@ -655,6 +657,31 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
     end
 
     reveal(han.c)
+end
+
+function draw_event(han::Tracker_Handles)
+
+    if (han.show_event)
+
+        try
+
+            if han.event_array[han.displayed_frame]
+                ctx = Gtk.getgc(han.c)
+
+                w = 640
+                h = 480
+                set_source_rgb(ctx,1,0,0)
+                rectangle(ctx, 40, h - 40, 20, 20)
+                fill(ctx)
+
+                reveal(han.c)
+            end
+        catch
+            println("Could not draw event")
+        end
+    end
+
+    nothing
 end
 
 #=
@@ -833,7 +860,11 @@ function plot_whiskers(han::Tracker_Handles)
 
     if (han.nn.draw_preds)|(get_draw_predictions(han.b))
         #draw_predictions(han)
-        draw_prediction2(han,han.nn.hg,0.5)
+        try
+            draw_prediction2(han,han.nn.hg,0.5)
+        catch
+            println("Could not predict")
+        end
     end
 
     reveal(han.c)
