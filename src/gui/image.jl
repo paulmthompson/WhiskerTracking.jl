@@ -13,10 +13,8 @@ function adjust_contrast_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     try
 
-        #han.wt.contrast_min = getproperty(han.image_adj_widgets.adj_contrast_min,:value,Int64)
-        #han.wt.contrast_max = getproperty(han.image_adj_widgets.adj_contrast_max,:value,Int64)
-
-        adjust_contrast_gui(han)
+        han.contrast_min = get_gtk_property(han.b["adj_contrast_min"],:value,Int64)
+        han.contrast_max = get_gtk_property(han.b["adj_contrast_max"],:value,Int64)
 
         plot_image(han,han.current_frame')
 

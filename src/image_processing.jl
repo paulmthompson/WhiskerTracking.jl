@@ -147,7 +147,11 @@ function sharpen_image(img::Array{UInt8,2}) where T
     255 .- round.(UInt8,newimg .* 255)
 end
 
-function adjust_contrast(img::Array{T,2},min_c::Real,max_c::Real) where T
+function adjust_contrast(han::Tracker_Handles,min_c,max_c)
+    adjust_contrast(han.current_frame,han.wt.contrast_min,han.wt.contrast_max)
+end
+
+function adjust_contrast(img::AbstractArray{T,2},min_c::Real,max_c::Real) where T
 
     out_max = 255
     out_min = 0

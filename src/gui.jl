@@ -24,7 +24,7 @@ function make_gui()
     all_whiskers=[Array{Whisker1,1}() for i=1:1]
 
     wt=Tracker("","","","","",50,falses(h,w),Array{Whisker1,1}(),
-    (0.0,0.0),255,0,h,w,all_whiskers)
+    (0.0,0.0),h,w,all_whiskers)
 
     woi_array = Dict{Int64,WhiskerTracking.Whisker1}()
 
@@ -33,7 +33,7 @@ function make_gui()
     handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,1,1,c,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
-    falses(0),Array{Int64,1}(),wt,true,2,zeros(Int64,0),1,
+    falses(0),Array{Int64,1}(),wt,0,255,true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
     zeros(Float64,1,1),false,falses(1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
@@ -227,7 +227,7 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     tracker_name = (vid_name)[1:(end-4)]
 
     handles.wt=Tracker(path,"",vid_name,path,tracker_name,50,falses(height,width),Array{Whisker1,1}(),
-    (0.0,0.0),255,0,height,width,all_whiskers)
+    (0.0,0.0),height,width,all_whiskers)
 
     #Update these paths
     date_folder=Dates.format(now(),"yyyy-mm-dd-HH-MM-SS")
@@ -613,9 +613,11 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
    ctx=Gtk.getgc(han.c)
 
     w,h = size(img)
+    img2 = deepcopy(img)
+    adjust_contrast(img2,han.contrast_min,han.contrast_max)
 
-    for i=1:length(img)
-       han.plot_frame[i] = (convert(UInt32,img[i]) << 16) | (convert(UInt32,img[i]) << 8) | img[i]
+    for i=1:length(img2)
+       han.plot_frame[i] = (convert(UInt32,img2[i]) << 16) | (convert(UInt32,img2[i]) << 8) | img2[i]
     end
     stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
     surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
@@ -799,6 +801,7 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     try
 
         han.send_frame[:,:] = han.current_frame'
+        adjust_contrast(han.send_frame,han.contrast_min,han.contrast_max)
         han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
         redraw_all(han)

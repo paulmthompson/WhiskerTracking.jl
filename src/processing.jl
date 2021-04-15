@@ -1,9 +1,4 @@
 
-function adjust_contrast_gui(han::Tracker_Handles)
-    han.current_frame=adjust_contrast(han.current_frame,han.wt.contrast_min,han.wt.contrast_max)
-    nothing
-end
-
 #=
 Only Whiskers are identified that are inside a region of interest (ROI)
 That ROI is a circle centered on the whisker pad of radius 100

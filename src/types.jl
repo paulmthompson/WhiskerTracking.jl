@@ -34,8 +34,6 @@ mutable struct Tracker
     mask::BitArray{2}
     whiskers::Array{Whisker1,1} #Properties of whiskers in active frame
     pad_pos::Tuple{Float32,Float32}
-    contrast_max::Int64
-    contrast_min::Int64
     h::Int64
     w::Int64
     all_whiskers::Array{Array{Whisker1,1},1} #Whiskers on every frame - IS THIS STILL NEEDED?
@@ -184,6 +182,9 @@ mutable struct Tracker_Handles
     touch_frames::BitArray{1}
     touch_frames_i::Array{Int64,1}
     wt::Tracker
+
+    contrast_min::Int64
+    contrast_max::Int64
 
     discrete_auto_calc::Bool
     d_spacing::Int64
