@@ -797,19 +797,7 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     han, = user_data
 
     try
-        if background_mode(han.b)
-            subtract_background(han)
-        end
-        if sharpen_mode(han.b)
-            sharpen_image(han)
-        end
-        if local_contrast_mode(han.b)
-            han.current_frame = round.(UInt8,local_contrast_enhance(han.current_frame))
-        end
-        if anisotropic_mode(han.b)
-            myimg=convert(Array{Float64,2},han.current_frame)
-            han.current_frame = round.(UInt8,anisodiff(myimg,20,20.0,0.05,1))
-        end
+
         han.send_frame[:,:] = han.current_frame'
         han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
 
