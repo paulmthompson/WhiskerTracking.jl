@@ -136,24 +136,43 @@ function subtract_background(han::Tracker_Handles)
 end
 
 function sharpen_image(han::Tracker_Handles)
-
-    imgl = imfilter(han.current_frame, Kernel.Laplacian());
-    newimg= imgl .- minimum(imgl)
-    newimg = newimg ./ maximum(newimg)
-    han.current_frame = 255 .- round.(UInt8,newimg .* 255)
-
+    han.current_frame = sharpen_image(han.current_frame)
     nothing
 end
 
-function adjust_contrast(myimg,contrast_min,contrast_max)
+function sharpen_image(img::Array{UInt8,2}) where T
+    imgl = imfilter(img, Kernel.Laplacian());
+    newimg= imgl .- minimum(imgl)
+    newimg = newimg ./ maximum(newimg)
+    255 .- round.(UInt8,newimg .* 255)
+end
 
-    if VERSION > v"0.7-"
-        myimg[myimg.>contrast_max] .= 255
-        myimg[myimg.<contrast_min] .= 0
-    else
-        myimg[myimg.>contrast_max]=255
-        myimg[myimg.<contrast_min]=0
+function adjust_contrast(img::Array{T,2},min_c::Real,max_c::Real) where T
+
+    out_max = 255
+    out_min = 0
+
+    out_min_rel = min_c / out_max
+    out_max_rel = max_c / out_max
+    out_range_f = (max_c - min_c) / (out_max - out_min)
+
+    for i=1:length(img)
+
+        inten = img[i] / 255 #normalize to float of intensity
+
+        inten = inten - out_min_rel # remove bottom
+        if inten < 0.0
+            inten = 0.0
+        end
+
+        inten = inten / out_range_f
+
+        if inten > 1.0
+            inten = 1.0
+        end
+
+        img[i] = round(T,inten * out_max)
     end
 
-    myimg
+    nothing
 end

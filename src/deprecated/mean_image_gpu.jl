@@ -1,4 +1,5 @@
 
+
 function mean_std_video_gpu(han::Tracker_Handles,total_frame_num)
     mean_std_video_gpu(han.wt.vid_name,total_frame_num)
 end

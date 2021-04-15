@@ -107,7 +107,7 @@ end
 
 function draw_prediction2(han::Tracker_Handles,hg,conf)
 
-    colors=((1,0,0),(0,1,0),(0,1,1))
+    colors=((1,0,0),(0,1,0),(0,1,1),(1,0,1))
     pred = calculate_whisker_predictions(han,hg)
     for i = 1:size(pred,3)
         (x,y,loss) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
