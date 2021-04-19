@@ -97,6 +97,19 @@ function get_curvature(x::Array{T,1},y::Array{T,1},points = 2.0:2.0:(total_lengt
     curv
 end
 
+function make_whisker_segment(x::Array{T,1},y::Array{T,1},ip1::Real,ip2::Real) where T
+
+    (new_x, new_y) = WhiskerTracking.interpolate_whisker(x,y)
+
+    ip_1 = WhiskerTracking.get_ind_at_dist(new_x,new_y,ip1)
+    ip_2 = WhiskerTracking.get_ind_at_dist(new_x,new_y,ip2)
+
+    x_part = new_x[ip_1:ip_2]
+    y_part = new_y[ip_1:ip_2]
+
+    (x_part,y_part)
+end
+
 function least_squares_quad(x,y)
 
     x_mat = zeros(Float64,size(x,1),3)

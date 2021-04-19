@@ -9,7 +9,7 @@ SNR (Point P)
 
 function calc_force(x::Array{Float64,1},y::Array{Float64,1},theta_f::Float64,curv::Float64,ii::Int,i_p::Int,curv_0=0.0; I_p = 1.0, E=1.0)
     #x, y - whisker coordinates
-    #theta_f - whisker angle
+    #theta_f - whisker angle (radians)
     #curv - whisker curvature
     #ii - index of contact
     #i_p - index of high SNR point - we should use the second DLC point for this (as long as it isn't past pole)
@@ -18,8 +18,6 @@ function calc_force(x::Array{Float64,1},y::Array{Float64,1},theta_f::Float64,cur
 
     #curv_0 intrinsic curvature of the whisker
     delta_kappa = curv - curv_0 #Change in curvature
-
-    theta_f = theta_f / 180 * pi
 
     #x_f, y_f follicle x and y
     x_f = x[end]
@@ -33,46 +31,90 @@ function calc_force(x::Array{Float64,1},y::Array{Float64,1},theta_f::Float64,cur
     x_p = x[i_p]
     y_p = y[i_p]
 
-    theta_contact = contact_angle(x,y,ii)#Angle that the whisker is pointing at point of contact
+    c_i = get_contact_ind(x,y,ii,30.0,false)
+    theta_contact = contact_angle(x[ii],x[c_i],y[ii],y[c_i])
 
-    theta_0 = atan((y_c - y_f),(x_c - x_f)) #
-    r_0 = sqrt((x_c - x_f)^2 + (y_c - y_f)^2)
+    (theta_0,r_0) = calc_r_theta(x_f,x_c,y_f,y_c)
+    (theta_p,r_p) = calc_r_theta(x_p,x_c,y_p,y_c)
 
-    theta_p = atan((y_c - y_p),(x_c - x_p))
-    r_p = sqrt((x_c - x_p)^2 + (y_c - y_p)^2)
+    (F, M_0) = force_moment(delta_kappa,r_p,r_0,theta_p,theta_0,theta_contact,I_p = I_p, E = E)
 
-    #Contact force magnitude
-    F = abs(delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact)))
-
-    M_0 = r_0 * F * cos(theta_0 - theta_contact)
-
-    F_ax = F * sin(theta_f - theta_contact)
-    F_lat = F * cos(theta_f - theta_contact)
+    (F_ax, F_lat) = decompose_force(F,theta_f,theta_contact)
 
     (M_0,F_ax,F_lat,F,theta_contact)
 end
 
-function contact_angle(x::Array{Float64,1},y::Array{Float64,1},ii::Int)
-    #x whisker coordinates
-    #y whisker coordinates
-    #ii index of whisker contact
+#=
+Calculate Force and Moment
+delta_kappa - change in curvature from intrinsic
+r_p - distance from point of contact to point p (pixels)
+r_0 - distance from follicle to point of contact (pixels)
+theta_p - angle from point_p to point of contact (radians)
+theta_0 - angle from follicle to point of contact (radians)
+theta_contact - angle that whisker is pointing at point of contact (radians)
+=#
+function force_moment(delta_kappa::Real,r_p::Real,r_0::Real,theta_p::Real,
+    theta_0::Real,theta_contact::Real;I_p = 1.0, E=1.0)
 
-    theta_c = 0.0
-    s_thres = 0.1
+    F = abs(delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact)))
 
-    i = ii + 1
-    while(i < length(x)) #Creep forward to make sure that point is different location
-        if sqrt((x[ii]-x[i])^2+(y[ii]-y[i])^2)>s_thres
-            theta_c = atan((y[ii]-y[i]),(x[ii]-x[i]))
-            break
-        end
-        i = i + 1
-    end
-    theta_c
+    M_0 = r_0 * F * cos(theta_0 - theta_contact)
+
+    (F, M_0)
 end
 
-#Decompose force into x and y components
-function contact_force_x_y(f_t,t_c,px,py,wx,wy)
+#=
+F - Total Contact Force
+theta_f - whisker angle (radians)
+theta_contact - angle of contact (radians)
+=#
+function decompose_force(F::Real,theta_f::Real,theta_contact::Real)
+    F_ax = F * sin(theta_f - theta_contact)
+    F_lat = F * cos(theta_f - theta_contact)
+    (F_ax,F_lat)
+end
+
+function calc_r_theta(x1::Real,x2::Real,y1::Real,y2::Real)
+
+    theta_p = atan((y2 - y1),(x2 - x1))
+    r_p = sqrt((x2 - x1)^2 + (y2 - y1)^2)
+    (theta_p,r_p)
+end
+
+
+function contact_angle(x1::Real,x2::Real,y1::Real,y2::Real)
+    atan(y2-y1,x2-x1)
+end
+
+function get_contact_ind(x::Array{T,1},y::Array{T,1},ii,s_thres = 10.0,forward_dir=true) where T
+    s = 0.0
+
+    x_0 = x[ii]
+    y_0 = y[ii]
+
+    i = ii
+    while(s < s_thres)
+
+        s = sqrt((x[i] - x_0)^2 + (y[i] - y_0)^2)
+
+        if forward_dir
+            i = i + 1
+        else
+            i = i - 1
+        end
+    end
+    i
+end
+
+
+#=
+Decompose force into x and y components
+f_t - contact force
+t_c - angle of contact (radians)
+px, py - pole x and y coordinates
+wx, wy - x and y coordinate of closest whisker point
+=#
+function contact_force_x_y(f_t::Real,t_c::Real,px::Real,py::Real,wx::Real,wy::Real)
 
     #Force of contact is normal to the contact angle.
     t_c_x = cos(t_c - pi/2)
@@ -98,25 +140,25 @@ function get_ax_lat_angles(aa,t_n)
     n_x=cos(t_n)
     n_y=sin(t_n)
 
-    a_x=cosd(aa)
-    a_y=sind(aa)
+    a_x=cos(aa)
+    a_y=sin(aa)
 
     theta_ax=aa
 
     #I am only using force magnitudes, so find the direction where the axial force component is
     #positive.
     if dot([n_x; n_y],[a_x; a_y]) < 0
-        theta_ax = aa + 180
-        a_x = cosd(theta_ax)
-        a_y = sind(theta_ax)
+        theta_ax = aa + pi
+        a_x = cos(theta_ax)
+        a_y = sin(theta_ax)
     end
 
     #Project the force vector onto the axial component and subtract from the force vector to get the lateral component
-    n_a_x = dot([n_x; n_y],[cosd(theta_ax); sind(theta_ax)]) .* [a_x; a_y]
+    n_a_x = dot([n_x; n_y],[cos(theta_ax); sin(theta_ax)]) .* [a_x; a_y]
 
     theta_lat=atan(n_y-n_a_x[2],n_x-n_a_x[1])
 
-    (theta_lat/pi * 180, theta_ax)
+    (theta_lat, theta_ax)
 end
 
 function get_force_signs(xx,yy,tracked,p,F_t,t_c,aa,c)
@@ -125,20 +167,24 @@ function get_force_signs(xx,yy,tracked,p,F_t,t_c,aa,c)
     for i=1:length(xx)
 
         if (tracked[i])&(c[i])
-            ii=calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
+
+            (new_x, new_y) = interpolate_whisker(xx[i],yy[i])
+            ii=calc_p_dist(new_x,new_y,p[i,1],p[i,2])[2]
+
+            #Find normal angle, which determines if
 
             (F_t_x,F_t_y,theta_n) = contact_force_x_y(F_t[i],t_c[i],
-                p[i,1],p[i,2],xx[i][ii],yy[i][ii])
+                p[i,1],p[i,2],new_x[ii],new_y[ii])
 
             (t_lat,t_ax) = get_ax_lat_angles(aa[i],theta_n)
 
-            if abs(t_ax - aa[i]) < 10
+            if abs(t_ax - aa[i]) < (10 / 180 * pi)
                 F_ax_sign[i] = -1
             else
                 F_ax_sign[i] = 1
             end
 
-            if (t_lat < aa[i]) & (t_lat > aa[i]-180)
+            if (t_lat < aa[i]) & (t_lat > aa[i]-pi)
                 F_lat_sign[i] = 1
             else
                 F_lat_sign[i] = -1
@@ -163,17 +209,17 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)); i_p_lo
     for i=1:length(c)
         if ((c[i])&(length(xx[i])>1))&(tracked[i])
 
+            (new_x, new_y) = interpolate_whisker(xx[i],yy[i])
+
             #ii - index of contact
-            ii=calc_p_dist(xx[i],yy[i],p[i,1],p[i,2])[2]
+            ii=calc_p_dist(new_x,new_y,p[i,1],p[i,2])[2]
 
             #i_p - index of high SNR point
-            #We can use 50 units of length from whisker follicle
-            #This is only accurate if the fit up to 50 units is accurate
-            i_p=culm_dist(xx[i],yy[i],i_p_loc)
+            i_p=culm_dist(new_x,new_y,i_p_loc)
 
             if (i_p>ii) #Don't want our high SNR point past the point of contact
                 try
-                    (M[i],F_ax[i],F_lat[i],F_t[i],theta_c[i])=calc_force(xx[i],yy[i],aa[i],curv[i],ii,i_p,E=E_in,I_p=moment_of_inertia_p)
+                    (M[i],F_ax[i],F_lat[i],F_t[i],theta_c[i])=calc_force(new_x,new_y,aa[i],curv[i],ii,i_p,E=E_in,I_p=moment_of_inertia_p)
                     F_calc[i]=true
                 catch
                 end
@@ -181,26 +227,5 @@ function calculate_all_forces(xx,yy,p,c,aa,curv,tracked=trues(length(c)); i_p_lo
         end
     end
 
-    A_x = find(F_calc)
-    knots = (A_x,)
-
-    itp_fx = interpolate(knots, F_ax[F_calc], Gridded(Linear()))
-    itp_fy = interpolate(knots, F_lat[F_calc], Gridded(Linear()))
-    itp_m = interpolate(knots, M[F_calc], Gridded(Linear()))
-    itp_ft = interpolate(knots, F_t[F_calc], Gridded(Linear()))
-    itp_tc = interpolate(knots, theta_c[F_calc], Gridded(Linear()))
-
-    for i=1:length(c)
-
-        if ((c[i])&(!F_calc[i]))&((i>A_x[1])&(A_x[end]>i))
-            F_ax[i]=itp_fx(i)
-            F_lat[i]=itp_fy(i)
-            M[i]=itp_m(i)
-            F_t[i]=itp_ft(i)
-            theta_c[i]=itp_tc(i)
-        end
-    end
-
-
-    (F_ax,F_lat,M,F_t,theta_c)
+    (F_ax,F_lat,M,F_t,theta_c,F_calc)
 end

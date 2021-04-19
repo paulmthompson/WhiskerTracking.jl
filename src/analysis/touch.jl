@@ -3,7 +3,7 @@ Analysis methods for finding pole positions and touch locations
 =#
 #Distance to pole
 #(or other landmark)
-function calc_p_dist(wx,wy,p_x,p_y)
+function calc_p_dist(wx::Array{T,1},wy::Array{T,1},p_x::Real,p_y::Real) where T
 
     p_dist=1000.0
     p_id=1
@@ -18,6 +18,40 @@ function calc_p_dist(wx,wy,p_x,p_y)
 
     end
     (p_dist,p_id)
+end
+
+function calc_p_dist_interp(wx::Array{T,1},wy::Array{T,1},px::Real,py::Real) where T
+
+
+
+end
+
+function interpolate_whisker(x::Array{T,1},y::Array{T,1},interp_res = 1.0) where T
+
+    s_t=WhiskerTracking.total_length(x,y)
+    s_out = 1.0:interp_res:s_t
+    s_in = zeros(Float64,length(x))
+    for i=2:length(x)
+        s_in[i] = WhiskerTracking.distance_along(x,y,i) + s_in[i-1]
+    end
+
+    x_out = zeros(Float64,length(s_out))
+    y_out = zeros(Float64,length(s_out))
+
+    x_out[1] = x[1]
+    y_out[1] = y[1]
+    x_out[end] = x[end]
+    y_out[end] = y[end]
+
+    interp_x = interpolate((s_in,),x,Gridded(Linear()))
+    interp_y = interpolate((s_in,),y,Gridded(Linear()))
+
+
+    for i = 2:(length(s_out)-1)
+        x_out[i] = interp_x(s_out[i])
+        y_out[i] = interp_y(s_out[i])
+    end
+    (x_out,y_out)
 end
 
 function get_p_distances(wx,wy,p::Array{T,2}) where T

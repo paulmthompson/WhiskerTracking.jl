@@ -197,15 +197,15 @@ end
 #=
 Snapshot
 =#
-function save_single_image(han::Tracker_Handles,path=han.paths.images)
-    save_single_image(han,han.current_frame,han.displayed_frame,path)
+function save_single_image(han::Tracker_Handles,path=han.paths.images,use_contrast=false)
+    save_single_image(han,han.current_frame,han.displayed_frame,path,use_contrast)
 end
 
-function save_single_image(han::Tracker_Handles,img,num,path=han.paths.images)
+function save_single_image(han::Tracker_Handles,img::AbstractArray,num::Int,path=han.paths.images,use_contrast=false)
 
     img_name = name_img(han,"img",num)
 
-    save_img_with_dir_change(han,img_name,img,path)
+    save_img_with_dir_change(han,img_name,img,path,use_contrast)
 
     nothing
 end
@@ -227,15 +227,21 @@ function save_follicle_image(han::Tracker_Handles,path=han.paths.images)
 
     img = create_follicle_image(han)
 
-    save_img_with_dir_change(han,img_name_img,path)
+    save_img_with_dir_change(han,img_name,img,path)
 
     nothing
 end
 
-function save_img_with_dir_change(han::Tracker_Handles,img_name,img,path=han.paths.images)
+function save_img_with_dir_change(han::Tracker_Handles,img_name::String,img::AbstractArray,path=han.paths.images,use_contrast=false)
     my_wd=pwd()
     cd(path)
-    Images.save(img_name, img)
+    if use_contrast
+        img2 = deepcopy(img)
+        adjust_contrast(img2,han.contrast_min,han.contrast_max)
+        Images.save(img_name,img2)
+    else
+        Images.save(img_name, img)
+    end
     cd(my_wd)
 end
 
