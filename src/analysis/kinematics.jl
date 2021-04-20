@@ -157,3 +157,14 @@ end
 function c_diff_2(x_0::Float64,x_1::Float64,x_2::Float64)
    x_0 - 2*x_1 + x_2
 end
+
+function remove_nan_whiskers(xx::Array,yy::Array)
+
+    for i=1:length(xx)
+        nan_inds = findall(isnan.(xx[i]).|isnan.(yy[i]))
+
+        deleteat!(xx[i],nan_inds)
+        deleteat!(yy[i],nan_inds)
+    end
+    nothing
+end
