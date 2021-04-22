@@ -1,7 +1,7 @@
 
 function add_image_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
-    signal_connect(adjust_contrast_cb,b["contrast_max_slider"],"value-changed",Void,(),false,(handles,))
+    signal_connect(adjust_contrast_cb,b["contrast_min_slider"],"value-changed",Void,(),false,(handles,))
     signal_connect(adjust_contrast_cb,b["contrast_max_slider"],"value-changed",Void,(),false,(handles,))
 
     nothing

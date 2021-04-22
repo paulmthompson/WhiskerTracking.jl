@@ -135,20 +135,26 @@ function subtract_background(han::Tracker_Handles)
     nothing
 end
 
-function sharpen_image(han::Tracker_Handles)
-    han.current_frame = sharpen_image(han.current_frame)
-    nothing
-end
-
-function sharpen_image(img::Array{UInt8,2}) where T
-    imgl = imfilter(img, Kernel.Laplacian());
-    newimg= imgl .- minimum(imgl)
-    newimg = newimg ./ maximum(newimg)
-    255 .- round.(UInt8,newimg .* 255)
-end
-
-function adjust_contrast(han::Tracker_Handles,min_c,max_c)
-    adjust_contrast(han.current_frame,han.wt.contrast_min,han.wt.contrast_max)
+# https://web.stanford.edu/class/cs448f/lectures/2.1/Sharpening.pdf
+function sharpen_image(img::AbstractArray{T,2},sigma=21,rep = 5) where T
+    kern = KernelFactors.gaussian((sigma,sigma))
+    img_out = zeros(T,size(img))
+    img_temp = zeros(Float64,size(img))
+    for i=1:length(img)
+        img_temp[i] = img[i]
+    end
+    for i=1:rep
+        img_temp = 1.5 .* img_temp .- 0.5 .* imfilter(img_temp,kern)
+    end
+    adjust_contrast(img_temp,0,255)
+    if eltype(img) <: Integer
+        for i=1:length(img)
+            img_out[i] = round(T,img_temp[i])
+        end
+    else
+        img_out[:] = img_temp
+    end
+    img_out
 end
 
 function adjust_contrast(img::AbstractArray{T,2},min_c::Real,max_c::Real) where T
@@ -175,7 +181,11 @@ function adjust_contrast(img::AbstractArray{T,2},min_c::Real,max_c::Real) where 
             inten = 1.0
         end
 
-        img[i] = round(T,inten * out_max)
+        if eltype(img) <: Integer
+            img[i] = round(T,inten * out_max)
+        else
+            img[i] = inten * out_max
+        end
     end
 
     nothing
