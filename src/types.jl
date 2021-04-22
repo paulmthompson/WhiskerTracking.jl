@@ -77,6 +77,15 @@ end
 
 classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1),0.0)
 
+mutable struct image_adjustment_settings
+    contrast_min::Int64
+    contrast_max::Int64
+    sharpen_win ::Int64
+    sharpen_reps::Int64
+end
+
+image_adjustment_settings()=image_adjustment_settings(0,255,3,1)
+
 mutable struct Normalize_Parameters
     mean_img::Array{Float32,3}
     std_img::Array{Float32,3}
@@ -183,8 +192,7 @@ mutable struct Tracker_Handles
     touch_frames_i::Array{Int64,1}
     wt::Tracker
 
-    contrast_min::Int64
-    contrast_max::Int64
+    im_adj::image_adjustment_settings
 
     discrete_auto_calc::Bool
     d_spacing::Int64
