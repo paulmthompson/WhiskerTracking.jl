@@ -2,51 +2,6 @@
 function add_tracing_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(combine_cb,b["tracing_combine_button"],"clicked",Void,(),false,(handles,))
-    signal_connect(connect_cb,b["tracing_connect_button"],"clicked",Void,(),false,(handles,))
-
-    nothing
-end
-
-#=
-Adds points from current whisker of interest to
-follicle position from last frame.
-
-This is a weird special case and can probably be eliminated
-=#
-function connect_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    try
-
-        if han.tracked[han.frame-1]
-            x_1=han.woi[han.frame-1].x[end]
-            y_1=han.woi[han.frame-1].y[end]
-            thick_1=han.woi[han.frame-1].thick[end]
-            scores_1=han.woi[han.frame-1].scores[end]
-        end
-
-        dist=round(Int64,sqrt((han.wt.whiskers[han.woi_id].x[end]-x_1)^2+(han.wt.whiskers[han.woi_id].y[end]-y_1)^2))
-
-        xs=linspace(han.wt.whiskers[han.woi_id].x[end],x_1,dist)
-        ys=linspace(han.wt.whiskers[han.woi_id].y[end],y_1,dist)
-
-        for i=2:length(xs)
-            push!(han.wt.whiskers[han.woi_id].x,xs[i])
-            push!(han.wt.whiskers[han.woi_id].y,ys[i])
-            push!(han.wt.whiskers[han.woi_id].thick,thick_1)
-            push!(han.wt.whiskers[han.woi_id].scores,scores_1)
-        end
-
-        han.wt.whiskers[han.woi_id].len=length(han.wt.whiskers[han.woi_id].x)
-
-        plot_whiskers(han)
-
-        assign_woi(han)
-
-    catch
-        println("Could not connect to pad")
-    end
 
     nothing
 end
