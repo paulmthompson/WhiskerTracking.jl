@@ -6,6 +6,7 @@ function add_image_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(sharpen_cb,b["sharpen_window"],"value-changed",Void,(),false,(handles,))
     signal_connect(sharpen_cb,b["sharpen_reps"],"value-changed",Void,(),false,(handles,))
+    signal_connect(sharpen_cb,b["sharpening_filter_type"],"changed",Void,(),false,(handles,))
 
     nothing
 end
@@ -34,6 +35,7 @@ function sharpen_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     try
 
+        han.im_adj.sharpen_filter = get_gtk_property(han.b["sharpening_filter_type"],:active,Int64) + 1
         han.im_adj.sharpen_win = get_gtk_property(han.b["adj_sharpen_window"],:value,Int64)
         han.im_adj.sharpen_reps = get_gtk_property(han.b["adj_sharpen_reps"],:value,Int64)
 

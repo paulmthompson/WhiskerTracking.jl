@@ -82,9 +82,10 @@ mutable struct image_adjustment_settings
     contrast_max::Int64
     sharpen_win ::Int64
     sharpen_reps::Int64
+    sharpen_filter::Int64
 end
 
-image_adjustment_settings()=image_adjustment_settings(0,255,3,1)
+image_adjustment_settings()=image_adjustment_settings(0,255,3,1,1)
 
 mutable struct Normalize_Parameters
     mean_img::Array{Float32,3}

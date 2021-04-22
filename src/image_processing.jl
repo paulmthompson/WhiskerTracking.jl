@@ -136,17 +136,40 @@ function subtract_background(han::Tracker_Handles)
 end
 
 # https://web.stanford.edu/class/cs448f/lectures/2.1/Sharpening.pdf
-function sharpen_image(img::AbstractArray{T,2},sigma=21,rep = 5) where T
+#=
+Filter type, 1 = median, 2 = gaussian
+=#
+function sharpen_image(img::AbstractArray{T,2},sigma=21,rep = 5,filter_type=1) where T
+    if iseven(sigma)
+        sigma = sigma + 1
+    end
     kern = KernelFactors.gaussian((sigma,sigma))
     img_out = zeros(T,size(img))
     img_temp = zeros(Float64,size(img))
+    img_median = zeros(UInt8,size(img))
+    if filter_type == 1
+        for i=1:length(img)
+            img_median[i] = round(UInt8,img[i])
+        end
+    end
+
     for i=1:length(img)
         img_temp[i] = img[i]
     end
+
     for i=1:rep
-        img_temp = 1.5 .* img_temp .- 0.5 .* imfilter(img_temp,kern)
+        if filter_type == 1
+            img_temp = 1.5 .* img_temp .- 0.5 .* median_filter(img_median,(sigma,sigma))
+        else
+            img_temp = 1.5 .* img_temp .- 0.5 .* imfilter(img_temp,kern)
+        end
+        adjust_contrast(img_temp,0,255)
+        if filter_type == 1
+            for i=1:length(img)
+                img_median[i] = round(UInt8,img_temp[i])
+            end
+        end
     end
-    adjust_contrast(img_temp,0,255)
     if eltype(img) <: Integer
         for i=1:length(img)
             img_out[i] = round(T,img_temp[i])
@@ -155,6 +178,77 @@ function sharpen_image(img::AbstractArray{T,2},sigma=21,rep = 5) where T
         img_out[:] = img_temp
     end
     img_out
+end
+
+#=
+Median Filter adapted from Julia code by Tejus Gupta (c) 2018
+https://gist.github.com/tejus-gupta/2f29e101e18a58dcf2477991151b3a42
+
+Based on algorithm in 'A Fast Two-Dimensional Median Filtering Algorithm' by Huang, Yang and Tang.
+=#
+function median_filter(img::Array{UInt8, 2}, window_size::Tuple{Int64,Int64})
+
+    function update_median(median_val, n_pixels_below_median, hist, half_pixels)
+        if n_pixels_below_median <= half_pixels
+            for val in median_val:2^8
+                if n_pixels_below_median + hist[val] > half_pixels
+                    median_val = val
+                    break
+                else
+                    n_pixels_below_median += hist[val]
+                end
+            end
+        elseif n_pixels_below_median > half_pixels
+            for val in median_val-1:-1:1
+                n_pixels_below_median -= hist[val]
+                if n_pixels_below_median <= half_pixels
+                    median_val = val
+                    break
+                end
+            end
+        end
+        return median_val, n_pixels_below_median
+    end
+
+    result = copy(img)
+
+    if iseven(window_size[1]) || iseven(window_size[2])
+        error("window width and height must be odd.")
+    end
+
+    half_window_size = window_size.>>1
+    img_size = size(img)
+    half_pixels = (window_size[1]*window_size[2])>>1
+
+    for j in 1 + half_window_size[2]: img_size[2] - half_window_size[2]
+        hist = zeros(Int, 2^8)
+        for I in CartesianIndices((1:window_size[1], j-half_window_size[2]:j+half_window_size[2]))
+            hist[img[I]+1] += 1
+        end
+
+        median_val, n_pixels_below_median = update_median(1, 0, hist, half_pixels)
+        result[1+half_window_size[2], j] = UInt8(median_val-1)
+
+        for i in 2 + half_window_size[1]: img_size[1] - half_window_size[1]
+            for I in CartesianIndices((i-half_window_size[1]-1, j-half_window_size[2]:j+half_window_size[2]))
+                hist[img[I]+1] -= 1
+                if img[I] + 1 < median_val
+                    n_pixels_below_median -= 1
+                end
+            end
+
+            for I in CartesianIndices((i+half_window_size[1], j-half_window_size[2]:j+half_window_size[2]))
+                hist[img[I]+1] += 1
+                if img[I] + 1 < median_val
+                    n_pixels_below_median += 1
+                end
+            end
+
+            median_val, n_pixels_below_median = update_median(median_val, n_pixels_below_median, hist, half_pixels)
+            result[i, j] = UInt8(median_val-1)
+        end
+    end
+    result
 end
 
 function adjust_contrast(img::AbstractArray{T,2},min_c::Real,max_c::Real) where T

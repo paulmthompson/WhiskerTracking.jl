@@ -615,7 +615,7 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
     w,h = size(img)
     img2 = deepcopy(img)
     if sharpen_mode(han.b)
-        img2 = sharpen_image(img2,han.im_adj.sharpen_win,han.im_adj.sharpen_reps)
+        img2 = sharpen_image(img2,han.im_adj.sharpen_win,han.im_adj.sharpen_reps,han.im_adj.sharpen_filter)
     end
     adjust_contrast(img2,han.im_adj.contrast_min,han.im_adj.contrast_max)
 
@@ -805,7 +805,7 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         han.send_frame[:,:] = han.current_frame'
         if sharpen_mode(han.b)
-            han.send_frame = sharpen_image(han.send_frame,han.im_adj.sharpen_win,han.im_adj.sharpen_reps)
+            han.send_frame = sharpen_image(han.send_frame,han.im_adj.sharpen_win,han.im_adj.sharpen_reps,han.im_adj.sharpen_filter)
         end
         adjust_contrast(han.send_frame,han.im_adj.contrast_min,han.im_adj.contrast_max)
         han.wt.whiskers=WT_trace(han.frame,han.send_frame,han.wt.min_length,han.wt.pad_pos,han.wt.mask)
