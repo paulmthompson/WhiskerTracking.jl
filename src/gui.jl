@@ -36,7 +36,7 @@ function make_gui()
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),false,falses(1),classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
+    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -50,6 +50,7 @@ function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     signal_connect(delete_cb,b["delete_button"], "clicked",Void,(),false,(handles,))
 
     signal_connect(advance_slider_cb,b["win"],"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
+
     signal_connect(draw_cb,b["draw_button"],"clicked",Void,(),false,(handles,))
 
     signal_connect(touch_override_cb,b["contact_button"],"clicked",Void,(),false,(handles,1))
@@ -579,9 +580,15 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
     elseif event.keyval == 0xff51 #Left arrow
         setproperty!(han.b["adj_frame"],:value,han.requested_frame - 1)
         #han.displayed_frame -= 1
+    elseif event.keyval == 0xFFE9 #Left alt
+        take_snapshot(han)
     end
 
     nothing
+end
+
+function take_snapshot(han::Tracker_Handles)
+    save_label_image(han,han.save_label_path)
 end
 
 function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -837,13 +844,8 @@ function plot_whiskers(han::Tracker_Handles)
 
     if haskey(han.woi,han.displayed_frame)
         if (han.tracked[han.displayed_frame])
-            set_source_rgb(ctx,1.0,0.0,0.0)
 
-            move_to(ctx,han.woi[han.displayed_frame].x[1],han.woi[han.displayed_frame].y[1])
-            for i=2:han.woi[han.displayed_frame].len
-                line_to(ctx,han.woi[han.displayed_frame].x[i],han.woi[han.displayed_frame].y[i])
-            end
-            stroke(ctx)
+            draw_woi(han,ctx)
 
             if view_discrete(han.b)
                 draw_discrete(han)
@@ -865,6 +867,46 @@ function plot_whiskers(han::Tracker_Handles)
     end
 
     reveal(han.c)
+
+    nothing
+end
+
+function draw_woi(han::Tracker_Handles,ctx)
+
+    set_source_rgb(ctx,1.0,0.0,0.0)
+
+    move_to(ctx,han.woi[han.displayed_frame].x[1],han.woi[han.displayed_frame].y[1])
+    for i=2:han.woi[han.displayed_frame].len
+        line_to(ctx,han.woi[han.displayed_frame].x[i],han.woi[han.displayed_frame].y[i])
+    end
+    stroke(ctx)
+
+    nothing
+end
+
+function draw_woi2(han::Tracker_Handles,ctx)
+
+    img = create_label_image(han,0)
+    img = img'
+    w,h = size(img)
+
+    for i=1:length(img)
+        if (img[i]>0)
+            han.plot_frame[i] = (convert(UInt32,img[i]) << 16)
+        end
+    end
+    stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
+    @assert stride == 4*w
+    surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
+                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
+
+    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Void},
+    (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
+
+    rectangle(ctx, 0, 0, w, h)
+
+    fill(ctx)
 
     nothing
 end

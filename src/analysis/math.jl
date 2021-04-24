@@ -183,26 +183,3 @@ end
 function reset_tracked(t,interp_ids::Array{Int64,1})
    t[interp_ids] .= true
 end
-
-function interpolate_whisker(x,y)
-   s=WhiskerTracking.total_length(x,y)
-
-    s_i = zeros(Float64,length(x))
-    for i=2:length(x)
-       s_i[i]=WhiskerTracking.distance_along(x,y,i) + s_i[i-1]
-    end
-
-    itp_x = interpolate((s_i,), x, Gridded(Linear()));
-    itp_y = interpolate((s_i,), y, Gridded(Linear()));
-
-    out_s = s_i[2]:s
-
-    x_out = zeros(Float64,length(out_s))
-    y_out = zeros(Float64,length(out_s))
-
-    for i=1:length(out_s)
-       x_out[i] = itp_x(out_s[i])
-        y_out[i] = itp_y(out_s[i])
-    end
-    (x_out,y_out)
-end

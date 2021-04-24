@@ -210,11 +210,11 @@ function save_single_image(han::Tracker_Handles,img::AbstractArray,num::Int,path
     nothing
 end
 
-function save_label_image(han::Tracker_Handles,path=han.paths.images)
+function save_label_image(han::Tracker_Handles,path=han.paths.images,interp=false)
 
     img_name = name_img(han,"w",han.displayed_frame)
 
-    img = create_label_image(han)
+    img = create_label_image(han,0,interp)
 
     save_img_with_dir_change(han,img_name,img,path)
 
@@ -252,13 +252,26 @@ function name_img(han::Tracker_Handles,name_prefix,num)
     img_name = string(name_prefix,lpad(num,max_dig,"0"),".png")
 end
 
-function create_label_image(han::Tracker_Handles,rad=1)
+function create_label_image(han::Tracker_Handles,rad=0,interp=false)
 
     img = zeros(UInt8,size(han.current_frame))
 
-    for i=1:length(han.woi[han.displayed_frame].x)
-        x=floor(Int64,han.woi[han.displayed_frame].x[i])
-        y=floor(Int64,han.woi[han.displayed_frame].y[i])
+    w1=han.woi[han.displayed_frame]
+
+    #Janelia whiskers are 0 in
+    new_x = w1.x .+ 1
+    new_y = w1.y .+ 1
+
+    if interp
+        (new_x, new_y) = interpolate_whisker(new_x,new_y,0.2)
+    end
+
+    for i=1:length(new_x)
+        x=round(Int64,new_x[i])
+        y=round(Int64,new_y[i])
+
+        img[y,x] = 255 #Backbone
+
         for xx=-1*rad:rad
             for yy=-1*rad:rad
                 if !(((y+yy)<1)|(y+yy>size(img,1))|((x+xx)<1)|(x+xx>size(img,2)))

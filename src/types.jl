@@ -220,6 +220,7 @@ mutable struct Tracker_Handles
 
     show_event::Bool
     event_array::BitArray{1}
+    save_label_path::String
 
     class::classifier
     nn::NeuralNetwork
