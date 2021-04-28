@@ -110,7 +110,7 @@ function make_whisker_segment(x::Array{T,1},y::Array{T,1},ip1::Real,ip2::Real) w
     (x_part,y_part)
 end
 
-function least_squares_quad(x,y)
+function least_squares_quad(x::AbstractArray{T,1},y::AbstractArray{T,1}) where T
 
     x_mat = zeros(Float64,size(x,1),3)
     for i=1:size(x,1)
@@ -122,12 +122,13 @@ function least_squares_quad(x,y)
     coeffs[1]
 end
 
-function least_squares_quad_rot(x,y)
-   (my_in, mysign) = rotate_cov_eigen(x,y)
-    least_squares_quad(my_in[:,1],my_in[:,2])
+function least_squares_quad_rot(x::AbstractArray{T,1},y::AbstractArray{T,1}) where T
+   (my_in, rot_mat) = rotate_cov_eigen(x,y)
+   sign_out = sign(cross([rot_mat[:,1]; 0.0],[rot_mat[:,2]; 0.0])[3])
+   least_squares_quad(my_in[:,1],my_in[:,2])
 end
 
-function rotate_cov_eigen(x,y)
+function rotate_cov_eigen(x::AbstractArray{T,1},y::AbstractArray{T,1}) where T
 
     my_in = [x y]
     cov_mat = cov(my_in)
@@ -137,9 +138,7 @@ function rotate_cov_eigen(x,y)
     max_eig = findmax(eig_val)[2]
     min_eig = findmin(eig_val)[2]
 
-    sign_out = cross([rot_mat[:,max_eig]; 0.0],[rot_mat[:,min_eig]; 0.0])
-
-    (my_in * rot_mat[:,[max_eig,min_eig]], sign(sign_out[3]))
+    (my_in * rot_mat[:,[max_eig,min_eig]], rot_mat[:,[max_eig,min_eig]])
 end
 
 function c_diff(x::Array{T,1},i::Int64) where T
