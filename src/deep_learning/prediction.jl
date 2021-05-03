@@ -29,30 +29,18 @@ function _draw_predicted_whisker(x,y,c,canvas,thres)
     end
     reveal(canvas)
 end
-#=
+
 function calculate_whisker_fit(pred_1::AbstractArray{T,2},img::AbstractArray{N,2}) where {T,N}
 
-    conf_thres = 0.5
-
-    yscale = size(img,2) / size(pred_1,2)
-    xscale = size(img,1) / size(pred_1,1)
-
-    points_1 = findall(pred_1.>conf_thres)
-    x = [points_1[i][1] for i=1:length(points_1)] .* xscale
-    y = [points_1[i][2] for i=1:length(points_1)] .* yscale
-    conf = [pred_1[points_1[i][1],points_1[i][2]] for i=1:length(points_1)]
-
-    calculate_whisker_fit(x,y,conf)
+    calculate_whisker_fit(pred_1,size(img))
 end
-=#
 
-function calculate_whisker_fit(pred_1::AbstractArray{T,2},img::AbstractArray{N,2}) where {T,N}
-
-    upsampled = StackedHourglass.upsample_pyramid(pred_1,size(img))
+function calculate_whisker_fit(pred_1::AbstractArray{T,2},sz::Tuple,n_points_max=100) where T
+    upsampled = StackedHourglass.upsample_pyramid(pred_1,sz)
 
     (x,y,conf) = get_points(upsampled)
 
-    calculate_whisker_fit(x,y,conf)
+    calculate_whisker_fit(x,y,conf,n_points_max)
 end
 
 function get_points(input::AbstractArray{T,2},conf_thres=0.5) where T
@@ -64,23 +52,33 @@ function get_points(input::AbstractArray{T,2},conf_thres=0.5) where T
     (x,y,conf)
 end
 
-function calculate_whisker_fit(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::AbstractArray{N,1}) where {T,N}
+function calculate_whisker_fit(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::AbstractArray{N,1},
+    n_points_max=100) where {T,N}
     (my_in, rot_mat) = rotate_cov_eigen(x,y)
-    (new_x, new_y) = center_of_mass(my_in[:,1],my_in[:,2],conf)
+    (new_x, new_y) = center_of_mass(my_in[:,1],my_in[:,2],conf,n_points_max)
     [new_x new_y] * rot_mat'
 end
 
-function center_of_mass(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::AbstractArray{N,1}) where {T,N}
+#=
+
+=#
+function center_of_mass(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::AbstractArray{N,1},n_points_max=100) where {T,N}
     x_sort=sortperm(x)
     sorted_x=sort(x)
     sorted_y = y[x_sort]
     sorted_conf = conf[x_sort]
 
-    myedges = range(sorted_x[1],stop=sorted_x[end],length=round(Int64,sorted_x[end]-sorted_x[1]))
+    out_length = round(Int64,sorted_x[end] - sorted_x[1])
 
-    out_x = zeros(Float64,length(myedges))
-    out_y = zeros(Float64,length(myedges))
-    out_weights = zeros(Float64,length(myedges))
+    if out_length > n_points_max
+        out_length = n_points_max
+    end
+
+    myedges = range(sorted_x[1],stop=sorted_x[end],length=out_length)
+
+    out_x = zeros(Float64,length(myedges)-1)
+    out_y = zeros(Float64,length(myedges)-1)
+    out_weights = zeros(Float64,length(myedges)-1)
 
     start_ind = 1
 
@@ -97,71 +95,26 @@ function center_of_mass(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::Abstra
                 break
             end
         end
-    end
-    out_x[:] = myedges
-    (out_x, out_y ./ out_weights)
-end
-
-#=
-function calculate_whisker_fit(x::Array{T,1},y::Array{T,1},conf,suppress=true) where T
-
-    quality_flag = true
-
-    (poly,loss) = poly_and_loss(x,y,conf)
-
-    xloss = 100.0
-
-    if (loss>50.0)
-
-        #retry with stricker cutoff
-        #(poly,loss) = poly_and_loss(x[],y,conf)
-
-        for rot = [pi/2, pi/4, -pi/4]
-            (x_new,y_new) = rotate_mat(x,y,rot)
-            (xpoly,xloss) = poly_and_loss(x_new,y_new,conf)
-
-            if xloss < 50.0
-                x_order = sortperm(x_new)
-                y_out = [xpoly(i) for i in x_new[x_order]]
-                x_out = x_new[x_order]
-
-                (x_prime,y_prime) = rotate_mat(x_out,y_out,-1*rot)
-
-                return (y_prime, x_prime,xloss)
-            end
-        end
-        if !suppress
-            println("WARNING: Poor Fit")
-        end
+        out_x[i] = (a+b) / 2
     end
 
-    x_order=sortperm(x)
-    return ([poly(i) for i in x[x_order]],x[x_order],loss)
+    out_y = out_y ./ out_weights
+
+    nan_vals = isnan.(out_x) .| isnan.(out_y)
+    deleteat!(out_x,nan_vals)
+    deleteat!(out_y,nan_vals)
+
+    (out_x, out_y)
 end
-=#
+
 function calculate_whisker_predictions(han::Tracker_Handles,hg)
     pred=StackedHourglass.predict_single_frame(hg,han.current_frame./255)
-end
-
-function poly_and_loss(x,y,conf)
-
-    x_order=sortperm(x)
-    mypoly=Polynomials.fit(x[x_order],y[x_order],5,weights=conf[x_order])
-
-    loss = sum(abs.([(y[i]-mypoly(x[i]))*conf[i] for i=1:length(x)]))
-    (mypoly,loss,x[x_order],[mypoly(i) for i in x[x_order]])
 end
 
 function rotate_mat(x,y,theta)
     x_prime = x .* cos(theta) .- y .* sin(theta)
     y_prime = y .* cos(theta) .+ x .* sin(theta)
     (x_prime,y_prime)
-end
-
-function poly_loss_rotation(x,y,rot,conf)
-    (x_new,y_new) = rotate_mat(x,y,rot)
-    (poly,loss) = poly_and_loss(x_new,y_new,conf)
-    (x_new, y_new, poly,loss)
 end
 
 function draw_prediction2(han::Tracker_Handles,hg,conf)
