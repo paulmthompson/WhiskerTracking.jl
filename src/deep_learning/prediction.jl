@@ -36,11 +36,14 @@ function calculate_whisker_fit(pred_1::AbstractArray{T,2},img::AbstractArray{N,2
 end
 
 function calculate_whisker_fit(pred_1::AbstractArray{T,2},sz::Tuple,n_points_max=100) where T
+
+    (rot_angle, loss) = quick_quad(pred_1)
+
     upsampled = StackedHourglass.upsample_pyramid(pred_1,sz)
 
     (x,y,conf) = get_points(upsampled)
 
-    calculate_whisker_fit(x,y,conf,n_points_max)
+    calculate_whisker_fit(x,y,conf,n_points_max,rot_angle)
 end
 
 function get_points(input::AbstractArray{T,2},conf_thres=0.5) where T
@@ -52,11 +55,52 @@ function get_points(input::AbstractArray{T,2},conf_thres=0.5) where T
     (x,y,conf)
 end
 
+function quick_quad(pred::AbstractArray{T,2},angles=0.0:pi/12:pi) where T
+
+    inds = findall(pred .> 0.1)
+
+    x = zeros(Float64,length(inds))
+    y = zeros(Float64,length(inds))
+
+    for i=1:length(inds)
+        x[i] = inds[i][1]
+        y[i] = inds[i][2]
+    end
+
+    quick_quad(x,y,angles)
+end
+
+function quick_quad(x::AbstractArray{T,1},y::AbstractArray{T,1},angles=0.0:pi/12:pi) where T
+
+    x_prime = zeros(Float64,length(x))
+    y_prime = zeros(Float64,length(y))
+
+    quad_mat = ones(Float64,length(x),3)
+ 
+    losses = zeros(Float64,length(angles))
+
+    for i = 1:length(angles)
+
+        rotate_mat(x,y,x_prime,y_prime,angles[i])
+
+        for j=1:length(x_prime)
+            quad_mat[j,1] = x_prime[j]
+            quad_mat[j,2] = x_prime[j] * x_prime[j]
+        end
+        out = quad_mat \ y_prime
+
+        losses[i] = mean(((quad_mat * out) .- y_prime).^2)
+    end
+
+    (angles[findmin(losses)[2]],minimum(losses))
+end
+
 function calculate_whisker_fit(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::AbstractArray{N,1},
-    n_points_max=100) where {T,N}
-    (my_in, rot_mat) = rotate_cov_eigen(x,y)
-    (new_x, new_y) = center_of_mass(my_in[:,1],my_in[:,2],conf,n_points_max)
-    [new_x new_y] * rot_mat'
+    n_points_max=100,rot_angle=0.0) where {T,N}
+
+    (new_x,new_y) = rotate_mat(x,y,rot_angle)
+    (new_x, new_y) = center_of_mass(new_x,new_y,conf,n_points_max)
+    rotate_mat(new_x,new_y,-1 * rot_angle)
 end
 
 #=
@@ -89,16 +133,17 @@ function center_of_mass(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::Abstra
             this_x = sorted_x[j]
             if (a <= this_x < b)
                 out_y[i] = out_y[i] + sorted_y[j] * sorted_conf[j]
+                out_x[i] = out_x[i] + this_x * sorted_conf[j]
                 out_weights[i] = out_weights[i] + sorted_conf[j]
             elseif (this_x >= b)
                 start_ind = j
                 break
             end
         end
-        out_x[i] = (a+b) / 2
     end
 
     out_y = out_y ./ out_weights
+    out_x = out_x ./ out_weights
 
     nan_vals = isnan.(out_x) .| isnan.(out_y)
     deleteat!(out_x,nan_vals)
@@ -111,7 +156,16 @@ function calculate_whisker_predictions(han::Tracker_Handles,hg)
     pred=StackedHourglass.predict_single_frame(hg,han.current_frame./255)
 end
 
-function rotate_mat(x,y,theta)
+#=
+Rotate matrices about specified angle
+=#
+function rotate_mat(x::AbstractArray{T,1},y::AbstractArray{T,1},x_prime::AbstractArray{T,1},y_prime::AbstractArray{T,1},theta) where T
+    x_prime[:] = x .* cos(theta) .- y .* sin(theta)
+    y_prime[:] = y .* cos(theta) .+ x .* sin(theta)
+    nothing
+end
+
+function rotate_mat(x::AbstractArray{T,1},y::AbstractArray{T,1},theta::Real) where T
     x_prime = x .* cos(theta) .- y .* sin(theta)
     y_prime = y .* cos(theta) .+ x .* sin(theta)
     (x_prime,y_prime)
@@ -122,8 +176,8 @@ function draw_prediction2(han::Tracker_Handles,hg,conf)
     colors=((1,0,0),(0,1,0),(0,1,1),(1,0,1))
     pred = calculate_whisker_predictions(han,hg)
     for i = 1:size(pred,3)
-        new_xy = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
-        draw_points_2(han,new_xy[:,2],new_xy[:,1],colors[i])
+        (x,y) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
+        draw_points_2(han,y,x,colors[i])
     end
 
     reveal(han.c)
