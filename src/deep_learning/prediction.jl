@@ -51,7 +51,7 @@ function get_points(input::AbstractArray{T,2},conf_thres=0.5) where T
     points_1 = findall(input_s .> conf_thres)
     x = [points_1[i][1] for i=1:length(points_1)]
     y = [points_1[i][2] for i=1:length(points_1)]
-    conf = [input_s[points_1[i][1],points_1[i][2]] for i=1:length(points_1)]
+    conf = input_s[points_1]
     (x,y,conf)
 end
 
@@ -76,7 +76,7 @@ function quick_quad(x::AbstractArray{T,1},y::AbstractArray{T,1},angles=0.0:pi/12
     y_prime = zeros(Float64,length(y))
 
     quad_mat = ones(Float64,length(x),3)
- 
+
     losses = zeros(Float64,length(angles))
 
     for i = 1:length(angles)
@@ -98,9 +98,10 @@ end
 function calculate_whisker_fit(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::AbstractArray{N,1},
     n_points_max=100,rot_angle=0.0) where {T,N}
 
-    (new_x,new_y) = rotate_mat(x,y,rot_angle)
-    (new_x, new_y) = center_of_mass(new_x,new_y,conf,n_points_max)
-    rotate_mat(new_x,new_y,-1 * rot_angle)
+    rotate_mat!(x,y,rot_angle)
+    (new_x, new_y) = center_of_mass(x,y,conf,n_points_max)
+    rotate_mat!(new_x,new_y,-1 * rot_angle)
+    (new_x,new_y)
 end
 
 #=
@@ -171,6 +172,30 @@ function rotate_mat(x::AbstractArray{T,1},y::AbstractArray{T,1},theta::Real) whe
     (x_prime,y_prime)
 end
 
+function rotate_mat!(x::AbstractArray{T,1},y::AbstractArray{T,1},theta::Real) where T
+    for i=1:length(x)
+        x_old = x[i]
+        y_old = y[i]
+        (x[i],y[i]) = rotate_mat(x_old,y_old,theta)
+    end
+    nothing
+end
+
+function rotate_mat(points::Array{CartesianIndex{2},1},theta::Real)
+    x = zeros(Float64,length(points))
+    y = zeros(Float64,length(points))
+    for i=1:length(x)
+        (x[i],y[i])=rotate_mat(points[i][1],points[i][2],theta)
+    end
+    (x,y)
+end
+
+function rotate_mat(x::Real,y::Real,theta::Real)
+    x_out = x * cos(theta) - y * sin(theta)
+    y_out = y * cos(theta) + x * sin(theta)
+    (x_out,y_out)
+end
+
 function draw_prediction2(han::Tracker_Handles,hg,conf)
 
     colors=((1,0,0),(0,1,0),(0,1,1),(1,0,1))
@@ -193,4 +218,14 @@ function draw_points_2(han::Tracker_Handles,x::Array{T,1},y::Array{T,1},cc) wher
         arc(ctx, x[i],y[i], 1.0, 0, 2*pi);
         stroke(ctx);
     end
+end
+
+function get_whisker(upsampled::AbstractArray{T,2},rot_angle::Real,n_points=100) where T
+
+    (xx,yy,confs) = WhiskerTracking.get_points(upsampled)
+
+    xx = convert(Array{Float64,1},xx)
+    yy = convert(Array{Float64,1},yy)
+
+    (x_out,y_out) = WhiskerTracking.calculate_whisker_fit(xx,yy,confs,n_points,rot_angle)
 end
