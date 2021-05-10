@@ -5,7 +5,8 @@ module WhiskerTracking
 using Statistics,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra, Libdl, Dates
 
 #Deep Learning Libraries
-using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
+#using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
+using CUDA, Knet
 
 #Python Stuff
 using PyCall, ScikitLearn
