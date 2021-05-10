@@ -43,6 +43,9 @@ function calculate_whisker_fit(pred_1::AbstractArray{T,2},sz::Tuple,n_points_max
 
     (x,y,conf) = get_points(upsampled)
 
+    x = convert(Array{Float64,1},x)
+    y = convert(Array{Float64,1},y)
+
     calculate_whisker_fit(x,y,conf,n_points_max,rot_angle)
 end
 
