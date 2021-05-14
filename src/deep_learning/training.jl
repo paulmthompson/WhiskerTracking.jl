@@ -79,7 +79,7 @@ function run_training(hg,trn::Knet.Data,this_opt,p,epochs=100,ls=Array{Float64,1
     ls
 end
 
-function run_training_no_gui(hg,trn::Knet.Data,this_opt,epochs=100,ls=Array{Float64,1}())
+function run_training_no_gui(hg,trn::Knet.Data,this_opt,epochs=100,ls=Array{Float32,1}())
 
     total_length=length(trn) * epochs
     minimizer = Knet.minimize(hg,ncycle(trn,epochs),this_opt)
