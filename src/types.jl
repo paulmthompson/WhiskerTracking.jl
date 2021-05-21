@@ -67,6 +67,8 @@ mutable struct contact_widgets
     pred_curv::Gtk.GtkCheckButtonLeaf
 end
 
+include("contact_detection.jl")
+
 mutable struct classifier
     predictors::Array{Float64,2}
     n_estimators::Int64
