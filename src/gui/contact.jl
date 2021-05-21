@@ -241,17 +241,31 @@ function draw_touch(han::Tracker_Handles)
     nothing
 end
 
-function draw_touch_prediction(han::Tracker_Handles)
+function draw_touch_prediction(han::Tracker_Handles,x,y)
 
     if (han.show_contact)
 
         try
+
+            w_img = zeros(Float32,han.w,han.h)
+            for ii=1:length(x)
+                w_img[round(Int,x[ii]),round(Int,y[ii])] = 1.0f0
+            end
+            pred = sigm(predict_contact(han.class.tc,han.current_frame' ./ 255,w_img))
+
+            contact = true
+            if pred >= 0.5
+                contact = true
+            else
+                contact = false
+            end
+
             ctx = Gtk.getgc(han.c)
 
             w = 640
             h = 480
 
-            if han.tracked_contact[han.displayed_frame]
+            if contact
                 set_source_rgb(ctx,1,0,0)
             else
                 set_source_rgb(ctx,1,1,1)
@@ -259,7 +273,7 @@ function draw_touch_prediction(han::Tracker_Handles)
 
             rectangle(ctx, w - 40, h - 40, 20, 20)
             fill(ctx)
-            
+
             reveal(han.c)
         catch
             println("Could not draw contact prediction")
@@ -267,4 +281,20 @@ function draw_touch_prediction(han::Tracker_Handles)
     end
 
     nothing
+end
+
+function predict_contact(hg,img::AbstractArray{T,2},w_img::AbstractArray) where T
+
+    input_frame = zeros(Float32,256,256,2,1)
+
+    input_frame[:,:,1,1] = convert(Array{Float32,2},StackedHourglass.lowpass_filter_resize(img,(256,256)))
+    input_frame[:,:,2,1] = convert(Array{Float32,2},StackedHourglass.lowpass_filter_resize(w_img,(256,256)))
+
+    input_frame = convert(KnetArray,input_frame)
+
+    set_testing(hg,false) #Turn off batch normalization for prediction
+    myout=hg(input_frame)[1]
+    set_testing(hg,true) #Turn back on
+
+    myout
 end

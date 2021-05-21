@@ -70,14 +70,11 @@ end
 include("contact_detection.jl")
 
 mutable struct classifier
-    predictors::Array{Float64,2}
-    n_estimators::Int64
-    forest_depth::Int64
-    clf::PyObject
-    cv::Float64
+    tc::TouchClassifier
+    w_id::Int64
 end
 
-classifier()=classifier(zeros(Float64,1,1),100,10,PyObject(1),0.0)
+classifier()=classifier(TouchClassifier(64,2,2),1)
 
 mutable struct image_adjustment_settings
     contrast_min::Int64

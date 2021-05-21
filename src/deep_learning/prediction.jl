@@ -206,6 +206,10 @@ function draw_prediction2(han::Tracker_Handles,hg,conf)
     for i = 1:size(pred,3)
         (x,y) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
         draw_points_2(han,y,x,colors[i])
+
+        if (han.show_contact) & (i == han.class.w_id)
+            draw_touch_prediction(han,y,x)
+        end
     end
 
     reveal(han.c)

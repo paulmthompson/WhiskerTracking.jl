@@ -643,8 +643,6 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
 
     draw_touch(han) #Indicates manual contact classification
 
-    draw_touch_prediction(han)
-
     draw_event(han)
 
     #If this frame is in the frame list, draw a box around the display
