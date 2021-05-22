@@ -8,13 +8,8 @@ using Statistics,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra, L
 #using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
 using CUDA, Knet
 
-#Python Stuff
-using PyCall, ScikitLearn
-
 using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD2, Interpolations, DSP,
 FFTW, IterTools, FFMPEG, StackedHourglass, Polynomials, StatsBase
-
-@sk_import ensemble: RandomForestClassifier
 
 if VERSION > v"0.7-"
     const Void = Nothing

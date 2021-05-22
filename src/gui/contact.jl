@@ -80,7 +80,7 @@ function contact_fit_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
-    han.class.clf=RandomForestClassifier(n_estimators=han.class.n_estimators,max_depth=han.class.forest_depth,random_state=0)
+    #han.class.clf=RandomForestClassifier(n_estimators=han.class.n_estimators,max_depth=han.class.forest_depth,random_state=0)
 
     #Select which variables to use
     if getproperty(han.c_widgets.pred_pole_button,:active,Bool)
