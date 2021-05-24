@@ -74,7 +74,13 @@ mutable struct classifier
     w_id::Int64
 end
 
-classifier()=classifier(TouchClassifier(64,2,2),1)
+function classifier()
+    if CUDA.has_cuda_gpu()
+        classifier(TouchClassifier(64,2,2),1)
+    else
+        classifier(TouchClassifier(64,2,2,Array),1)
+    end
+end
 
 mutable struct image_adjustment_settings
     contrast_min::Int64
@@ -114,9 +120,15 @@ mutable struct NeuralNetwork
     predicted::Array{Float32,3}
 end
 
-NeuralNetwork() = NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), HG2(64,13,4),10,zeros(Float32,0),0.5,false,
+function NeuralNetwork()
+    if CUDA.has_cuda_gpu()
+        hg = HG2(64,13,4)
+    else
+        hg = HG2(64,13,4, Array)
+    end
+    NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), hg,10,zeros(Float32,0),0.5,false,
 true,pre_train_path,1,false,false,false,zeros(Float32,0,3,0))
-
+end
 mutable struct Save_Paths
     path::String
     temp::String

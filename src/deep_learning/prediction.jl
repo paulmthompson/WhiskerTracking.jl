@@ -156,8 +156,8 @@ function center_of_mass(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::Abstra
     (out_x, out_y)
 end
 
-function calculate_whisker_predictions(han::Tracker_Handles,hg)
-    pred=StackedHourglass.predict_single_frame(hg,han.current_frame./255)
+function calculate_whisker_predictions(han::Tracker_Handles,hg::StackedHourglass.NN,atype=KnetArray)
+    pred=StackedHourglass.predict_single_frame(hg,han.current_frame./255,atype)
 end
 
 #=
@@ -199,10 +199,16 @@ function rotate_mat(x::Real,y::Real,theta::Real)
     (x_out,y_out)
 end
 
-function draw_prediction2(han::Tracker_Handles,hg,conf)
+function draw_prediction2(han::Tracker_Handles,hg::StackedHourglass.NN,conf)
 
     colors=((1,0,0),(0,1,0),(0,1,1),(1,0,1))
-    pred = calculate_whisker_predictions(han,hg)
+    atype = []
+    if CUDA.has_cuda_gpu()
+        atype = KnetArray 
+    else
+        atype = Array
+    end
+    pred = calculate_whisker_predictions(han,hg,atype)
     for i = 1:size(pred,3)
         (x,y) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
         draw_points_2(han,y,x,colors[i])

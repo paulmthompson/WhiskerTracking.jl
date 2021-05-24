@@ -7,7 +7,7 @@ mutable struct TouchClassifier <: StackedHourglass.NN
     pool2::StackedHourglass.Pool
     r3::StackedHourglass.Residual
     pool3::StackedHourglass.Pool
-    w::Union{Param{KnetArray{Float32,2}},Param{CuArray{Float32,2}}}
+    w::Union{Param{KnetArray{Float32,2}},Param{Array{Float32,2}}}
     b::StackedHourglass.PType4
 end
 
@@ -18,11 +18,11 @@ function TouchClassifier(N,N_input,K,atype=KnetArray)
     fb.c1.bn_p = Knet.Param(convert(atype{Float32,1},Knet.bnparams(N_input)))
     fb.c1.ms = Knet.bnmoments()
 
-    r1 = StackedHourglass.Residual(N,N)
+    r1 = StackedHourglass.Residual(N,N,atype)
     p1 = StackedHourglass.Pool()
-    r2 = StackedHourglass.Residual(N,N) # 32 x 32 x 64
+    r2 = StackedHourglass.Residual(N,N,atype) # 32 x 32 x 64
     p2 = StackedHourglass.Pool()
-    r3 = StackedHourglass.Residual(N,N) # 16 x 16 x 64
+    r3 = StackedHourglass.Residual(N,N,atype) # 16 x 16 x 64
     p3 = StackedHourglass.Pool() # 8 x 8 x 64
     fc_w = Knet.Param(convert(atype,Knet.xavier_normal(Float32,1,4096)))
     fc_b = Knet.Param(convert(atype,Knet.xavier_normal(Float32,1,1,1,1)))
