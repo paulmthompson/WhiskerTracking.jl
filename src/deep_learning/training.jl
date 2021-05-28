@@ -8,7 +8,7 @@ function set_up_training(han::Tracker_Handles,get_mean=true)
     set_up_training(han.nn,han.wt.vid_name,han.end_frame,woi,han.wt.pad_pos,han.frame_list,get_mean)
 end
 
-function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=true)
+function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=false)
 
     (w,h,fps)=get_vid_dims(vid_name)
 

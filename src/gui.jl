@@ -420,6 +420,17 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
+function add_image_nums_to_gui(han::WhiskerTracking.Tracker_Handles,img_nums)
+    for i in img_nums
+       han.woi[i] = WhiskerTracking.Whisker1()
+        han.tracked[i] = false
+        han.pole_present[i] = false
+        han.pole_loc[i] = zeros(Float32,2)
+    end
+    han.frame_list=sort(collect(keys(han.woi)))
+    set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.woi))
+end
+
 function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
