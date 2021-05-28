@@ -36,7 +36,7 @@ function make_gui()
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),these_paths,zeros(UInt8,w,h))
+    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),Dict{Int,Int}(),these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -101,6 +101,9 @@ function add_additional_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     #Contact
     make_menu_callbacks(b["classifier_"],handles.contact_widgets.win)
     add_contact_callbacks(handles.contact_widgets,handles)
+
+    make_menu_callbacks(b["contact_mark_"],b["contact_win"])
+    add_contact_mark_callbacks(b,handles)
 
     #Deep learning
     make_menu_callbacks(b["dl_menu_"],b["deep_learning_win"])

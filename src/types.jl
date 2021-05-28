@@ -235,6 +235,7 @@ mutable struct Tracker_Handles
 
     class::classifier
     nn::NeuralNetwork
+    contact_type::Dict{Int,Int}
 
     paths::Save_Paths
     temp_frame::Array{UInt8,2}
