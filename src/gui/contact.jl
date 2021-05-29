@@ -76,22 +76,6 @@ function add_contact_callbacks(w,handles)
     nothing
 end
 
-function add_contact_mark_callbacks(b,handles)
-
-    signal_connect(pro_re_cb,b["protraction_button"],"clicked",Void,(),false,(handles,1))
-    signal_connect(pro_re_cb,b["retraction_button"],"clicked",Void,(),false,(handles,2))
-
-    nothing
-end
-
-function pro_re_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int})
-    han, con_type = user_data
-
-    han.contact_type[han.displayed_frame]=con_type
-
-    nothing
-end
-
 function contact_fit_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data

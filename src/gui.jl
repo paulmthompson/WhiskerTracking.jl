@@ -36,7 +36,7 @@ function make_gui()
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),Dict{Int,Int}(),these_paths,zeros(UInt8,w,h))
+    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),Manual_Class(),these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -219,6 +219,8 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     end
 
     handles.max_frames = get_max_frames(vid_name)
+
+    handles.man=Manual_Class(handles.max_frames)
 
     handles.start_frame = 1
     handles.end_frame = handles.max_frames

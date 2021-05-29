@@ -102,6 +102,26 @@ end
 
 Normalize_Parameters() = Normalize_Parameters(zeros(Float32,0,0,0),zeros(Float32,0,0,0),0,0,10000)
 
+mutable struct Manual_Class
+    max_frames::Int64
+
+    partial_contact::Int64
+    contact_block::Array{Tuple,1} #Contact on and off tuples
+    no_contact_block::Array{Tuple,1} #No Contact on and off
+    contact::Array{Int64,1} #Manually classified contact frames; 0 is not manual; 1 = no contact; 2 = contact
+
+    pro_re::Dict{Int,Int}
+    pro_re_block::Array{Int64,1}
+
+    exclude::Array{Tuple,1}
+    exclude_block::BitArray{1}
+end
+
+Manual_Class() = Manual_Class(0,1,Array{Tuple,1}(),Array{Tuple,1}(),Array{Int64,1}(),Dict{Int,Int}(),Array{Int64,1}(),Array{Tuple,1}(),falses(1))
+
+Manual_Class(frame_num::Int) = Manual_Class(frame_num,1,Array{Tuple,1}(),Array{Tuple,1}(),
+zeros(Int64,frame_num),Dict{Int,Int}(),zeros(Int64,frame_num),Array{Tuple,1}(),falses(frame_num))
+
 mutable struct NeuralNetwork
     labels::Array{Float32,4} #Labels for training
     imgs::Array{Float32,4} #Images for training
@@ -235,7 +255,7 @@ mutable struct Tracker_Handles
 
     class::classifier
     nn::NeuralNetwork
-    contact_type::Dict{Int,Int}
+    man::Manual_Class
 
     paths::Save_Paths
     temp_frame::Array{UInt8,2}

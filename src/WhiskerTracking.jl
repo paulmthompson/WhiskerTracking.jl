@@ -44,6 +44,7 @@ include("analysis.jl")
 include("save_load.jl")
 include("discrete.jl")
 
+include("gui/manual.jl")
 include("gui/whisker_pad.jl")
 include("gui/discrete.jl")
 include("gui/mask.jl")
