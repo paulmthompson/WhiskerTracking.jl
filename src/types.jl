@@ -196,6 +196,7 @@ mutable struct Tracker_Handles
     end_frame::Int64 #last frame for analysis (like taking average)
 
     c::Gtk.GtkCanvasLeaf
+    c2::Gtk.GtkCanvasLeaf
 
     plot_frame::Array{UInt32,2}
 

@@ -18,6 +18,9 @@ function make_gui()
     c_box = b["canvas_box"]
     push!(c_box,c)
 
+    c2=Canvas(w,10)
+    push!(b["manual_box"],c2)
+
     #contact options
     c_widgets = _make_contact_gui()
 
@@ -30,7 +33,7 @@ function make_gui()
 
     these_paths = Save_Paths("",false)
 
-    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,1,1,c,zeros(UInt32,w,h),
+    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,1,1,c,c2,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
@@ -299,8 +302,9 @@ function update_new_frame(han)
             han.current_frame2=deepcopy(han.current_frame)
             redraw_all(han)
 
-            set_gtk_property!(han.b["frame_id_label"],:label,string(han.displayed_frame))
-            set_gtk_property!(han.b["time_label"],:label,string(round(frame_time,digits=2), " s"))
+            update_times(han,1000)
+            #set_gtk_property!(han.b["frame_id_label"],:label,string(han.displayed_frame))
+            #set_gtk_property!(han.b["time_label"],:label,string(round(frame_time,digits=2), " s"))
         catch
         end
         han.frame_loaded = true
@@ -312,6 +316,32 @@ function update_new_frame(han)
 
     end
 
+end
+
+function update_times(han::Tracker_Handles,frame_range)
+    update_times(han.b,han.displayed_frame,han.fps,han.max_frames,frame_range)
+end
+
+function update_times(b,frame_id,fps,max_frames,frame_range)
+
+    set_gtk_property!(b["frame_id_label"],:label,string(frame_id))
+    set_gtk_property!(b["time_label"],:label,string(round(frame_id / fps,digits=2), " s"))
+
+    lower_id = frame_id - frame_range
+    if lower_id < 0
+        lower_id = 0
+    end
+
+    set_gtk_property!(b["negative_frame_label"],:label,string(lower_id))
+    set_gtk_property!(b["negative_time_label"],:label,string(round(lower_id / fps,digits=2), " s"))
+
+    upper_id = frame_id + frame_range
+    if upper_id > max_frames
+        upper_id = max_frames
+    end
+
+    set_gtk_property!(b["positive_frame_label"],:label,string(upper_id))
+    set_gtk_property!(b["positive_time_label"],:label,string(round(upper_id / fps,digits=2), " s"))
 end
 
 function load_single_frame(x::Float64,tt::AbstractArray{UInt8,2},vn::String)
