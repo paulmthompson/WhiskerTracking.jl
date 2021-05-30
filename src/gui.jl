@@ -361,6 +361,13 @@ function draw_manual(han::Tracker_Handles)
     set_source_rgb(ctx,1,1,1)
     paint(ctx)
 
+    #center line
+    set_source_rgb(ctx,0,0,0)
+    cent = (upper_id - han.displayed_frame) / (upper_id - lower_id)
+    move_to(ctx,cent * w,0)
+    line_to(ctx,cent * w,20)
+    stroke(ctx)
+
     #exclude
     e_line = make_line(han.man.exclude_block,lower_id,upper_id,w)
     set_source_rgb(ctx,0,0,0)
@@ -380,6 +387,10 @@ function draw_manual(han::Tracker_Handles)
     con_line = make_line(han.man.contact .== 2,lower_id,upper_id,w)
     set_source_rgb(ctx,0,1,0)
     draw_manual_line(han.c2,con_line,14)
+
+    con_t_line = make_line(han.tracked_contact .== 1, lower_id, upper_id,w)
+    set_source_rgba(ctx,0,1,0,0.5)
+    draw_manual_line(han.c2,con_t_line,18)
 
     reveal(han.c2)
 end
