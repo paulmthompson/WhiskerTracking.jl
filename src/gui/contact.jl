@@ -210,6 +210,7 @@ function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
     end
 
     han.man.contact[han.displayed_frame] = contact + 1
+    calc_contact_block(han)
 
 
     draw_touch(han)

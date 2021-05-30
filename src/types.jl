@@ -110,6 +110,8 @@ mutable struct Manual_Class
     no_contact_block::Array{Tuple,1} #No Contact on and off
     contact::Array{Int64,1} #Manually classified contact frames; 0 is not manual; 1 = no contact; 2 = contact
 
+    calc_contact_block::Array{Tuple,1}
+
     pro_re::Dict{Int,Int}
     pro_re_block::Array{Int64,1}
 
@@ -117,10 +119,10 @@ mutable struct Manual_Class
     exclude_block::BitArray{1}
 end
 
-Manual_Class() = Manual_Class(0,1,Array{Tuple,1}(),Array{Tuple,1}(),Array{Int64,1}(),Dict{Int,Int}(),Array{Int64,1}(),Array{Tuple,1}(),falses(1))
+Manual_Class() = Manual_Class(0,1,Array{Tuple,1}(),Array{Tuple,1}(),Array{Int64,1}(),Array{Tuple,1}(),Dict{Int,Int}(),Array{Int64,1}(),Array{Tuple,1}(),falses(1))
 
 Manual_Class(frame_num::Int) = Manual_Class(frame_num,1,Array{Tuple,1}(),Array{Tuple,1}(),
-zeros(Int64,frame_num),Dict{Int,Int}(),zeros(Int64,frame_num),Array{Tuple,1}(),falses(frame_num))
+zeros(Int64,frame_num),Array{Tuple,1}(),Dict{Int,Int}(),zeros(Int64,frame_num),Array{Tuple,1}(),falses(frame_num))
 
 mutable struct NeuralNetwork
     labels::Array{Float32,4} #Labels for training
