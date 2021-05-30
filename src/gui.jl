@@ -309,6 +309,8 @@ function update_new_frame(han)
         end
         han.frame_loaded = true
 
+        draw_manual(han)
+
         if han.requested_frame != han.displayed_frame
             update_new_frame(han)
         end
@@ -327,21 +329,81 @@ function update_times(b,frame_id,fps,max_frames,frame_range)
     set_gtk_property!(b["frame_id_label"],:label,string(frame_id))
     set_gtk_property!(b["time_label"],:label,string(round(frame_id / fps,digits=2), " s"))
 
-    lower_id = frame_id - frame_range
-    if lower_id < 0
-        lower_id = 0
-    end
+    (lower_id, upper_id) = get_lower_upper_frame(frame_id,frame_range,max_frames)
 
     set_gtk_property!(b["negative_frame_label"],:label,string(lower_id))
     set_gtk_property!(b["negative_time_label"],:label,string(round(lower_id / fps,digits=2), " s"))
+
+    set_gtk_property!(b["positive_frame_label"],:label,string(upper_id))
+    set_gtk_property!(b["positive_time_label"],:label,string(round(upper_id / fps,digits=2), " s"))
+end
+
+function get_lower_upper_frame(frame_id,frame_range,max_frames)
+    lower_id = frame_id - frame_range
+    if lower_id < 1
+        lower_id = 1
+    end
 
     upper_id = frame_id + frame_range
     if upper_id > max_frames
         upper_id = max_frames
     end
 
-    set_gtk_property!(b["positive_frame_label"],:label,string(upper_id))
-    set_gtk_property!(b["positive_time_label"],:label,string(round(upper_id / fps,digits=2), " s"))
+    (lower_id, upper_id)
+end
+
+function draw_manual(han::Tracker_Handles)
+    frame_range = 1000
+    (lower_id, upper_id) = get_lower_upper_frame(han.displayed_frame,frame_range,han.max_frames)
+
+    ctx=Gtk.getgc(han.c2)
+    w = width(ctx)
+    set_source_rgb(ctx,1,1,1)
+    paint(ctx)
+
+    #exclude
+    e_line = make_line(han.man.exclude_block,lower_id,upper_id,w)
+
+    draw_manual_line(han.c2,e_line,2)
+
+    reveal(han.c2)
+end
+
+function draw_manual_line(c,a,j)
+    ctx=Gtk.getgc(c)
+    w=width(ctx)
+
+    set_source_rgb(ctx,0,0,0)
+    i=1
+    while (i<w)
+        if a[i]
+            move_to(ctx,i,j)
+            i = findnext(.!a,i)
+            if (i != 0)&(i != nothing)
+                line_to(ctx,i,j)
+            else
+                i = round(Int,w)
+                line_to(ctx,i,j)
+            end
+        end
+        i += 1
+    end
+    stroke(ctx)
+
+end
+
+function make_line(a,l_id,u_id,w)
+    iter = range(l_id,u_id,length=round(Int,w))
+
+    out = falses(round(Int,w))
+
+    for i=2:length(iter)
+        ind1 = round(Int,iter[i-1])
+        ind2 = round(Int,iter[i])
+        out[i]=maximum(a[ind1:ind2])
+    end
+
+    out
 end
 
 function load_single_frame(x::Float64,tt::AbstractArray{UInt8,2},vn::String)
