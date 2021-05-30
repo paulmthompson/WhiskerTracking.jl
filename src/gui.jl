@@ -18,7 +18,7 @@ function make_gui()
     c_box = b["canvas_box"]
     push!(c_box,c)
 
-    c2=Canvas(w,10)
+    c2=Canvas(w,20)
     push!(b["manual_box"],c2)
 
     #contact options
@@ -363,8 +363,23 @@ function draw_manual(han::Tracker_Handles)
 
     #exclude
     e_line = make_line(han.man.exclude_block,lower_id,upper_id,w)
-
+    set_source_rgb(ctx,0,0,0)
     draw_manual_line(han.c2,e_line,2)
+
+    #Protraction
+    pro_line = make_line(han.man.pro_re_block .== 1,lower_id,upper_id,w)
+    set_source_rgb(ctx,1,0,0)
+    draw_manual_line(han.c2,pro_line,8)
+
+    #Retraction
+    re_line = make_line(han.man.pro_re_block .== 2,lower_id,upper_id,w)
+    set_source_rgb(ctx,0,0,1)
+    draw_manual_line(han.c2,re_line,8)
+
+    #Contact
+    con_line = make_line(han.man.contact .== 2,lower_id,upper_id,w)
+    set_source_rgb(ctx,0,1,0)
+    draw_manual_line(han.c2,con_line,14)
 
     reveal(han.c2)
 end
@@ -373,7 +388,6 @@ function draw_manual_line(c,a,j)
     ctx=Gtk.getgc(c)
     w=width(ctx)
 
-    set_source_rgb(ctx,0,0,0)
     i=1
     while (i<w)
         if a[i]
