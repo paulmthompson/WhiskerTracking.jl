@@ -39,7 +39,7 @@ function make_gui()
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),Manual_Class(),these_paths,zeros(UInt8,w,h))
+    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -708,10 +708,10 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
     event = unsafe_load(param_tuple)
 
     if event.keyval == 0xff53 #Right arrow
-        setproperty!(han.b["adj_frame"],:value,han.requested_frame + 1) #This will call the slider callback
+        setproperty!(han.b["adj_frame"],:value,han.requested_frame + han.speed) #This will call the slider callback
         #han.displayed_frame += 1
     elseif event.keyval == 0xff51 #Left arrow
-        setproperty!(han.b["adj_frame"],:value,han.requested_frame - 1)
+        setproperty!(han.b["adj_frame"],:value,han.requested_frame - han.speed)
         #han.displayed_frame -= 1
     elseif event.keyval == 0xFFE9 #Left alt
         take_snapshot(han)

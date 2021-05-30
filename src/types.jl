@@ -259,6 +259,7 @@ mutable struct Tracker_Handles
     class::classifier
     nn::NeuralNetwork
     man::Manual_Class
+    speed::Int64
 
     paths::Save_Paths
     temp_frame::Array{UInt8,2}
