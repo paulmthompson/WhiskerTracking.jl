@@ -210,6 +210,14 @@ function draw_touch2(han::Tracker_Handles)
         rectangle(ctx,620,0,20,20)
         fill(ctx)
 
+        for i=1:length(han.man.calc_contact_block)
+            if (han.displayed_frame >= han.man.calc_contact_block[i][1]) & (han.displayed_frame <= han.man.calc_contact_block[i][2])
+                set_source_rgb(ctx,0,0,0)
+                move_to(ctx,620,15)
+                show_text(ctx,string(i))
+            end
+        end
+
         reveal(han.c)
     end
 
@@ -231,8 +239,8 @@ end
 
 function calc_contact_block(han::Tracker_Handles)
 
-    if length(han.tracked_contact) = han.max_frames
-        contact = falses(max_frames)
+    if length(han.tracked_contact) == han.max_frames
+        contact = falses(han.max_frames)
         for i=1:length(han.tracked_contact)
             if han.man.contact[i] == 2
                 contact[i] = true
@@ -243,9 +251,11 @@ function calc_contact_block(han::Tracker_Handles)
             end
         end
 
-        (c_on,c_off) = get_contact_indexes(contact,han.man.exclude)
+        (c_on,c_off) = get_contact_indexes(contact,han.man.exclude_block)
+        han.man.calc_contact_block = [(c_on[i],c_off[i]) for i=1:length(c_on)]
 
         set_gtk_property!(han.b["contact_number_label"],:label,string(length(c_on)))
+        set_gtk_property!(han.b["contact_spin_adj"],:upper,length(c_on))
     end
 end
 
