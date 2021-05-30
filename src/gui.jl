@@ -775,6 +775,7 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
     fill(ctx)
 
     draw_touch(han) #Indicates manual contact classification
+    draw_touch2(han)
 
     draw_event(han)
 

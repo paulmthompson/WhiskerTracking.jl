@@ -182,3 +182,32 @@ end
 function make_range(x::Tuple)
     x[1]:x[2]
 end
+
+function draw_touch2(han::Tracker_Handles)
+
+    if length(han.tracked_contact) == han.max_frames
+
+        ctx=Gtk.getgc(han.c)
+
+        if han.man.contact[han.displayed_frame] != 0 #prefer manual
+            if han.man.contact[han.displayed_frame] == 2
+                set_source_rgb(ctx,1,0,0)
+            else
+                set_source_rgb(ctx,1,1,1)
+            end
+        else
+            if han.tracked_contact[han.displayed_frame]
+                set_source_rgb(ctx,1,0,0)
+            else
+                set_source_rgb(ctx,1,1,1)
+            end
+        end
+
+        rectangle(ctx,620,0,20,20)
+        fill(ctx)
+
+        reveal(han.c)
+    end
+
+    nothing
+end
