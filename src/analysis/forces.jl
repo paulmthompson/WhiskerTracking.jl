@@ -136,8 +136,12 @@ function get_theta_n(c,v::Array{Float64,1},f_t::Array{Float64,1},t_c::Array{Floa
         if c[i]
             j = findnext(.!c,i)
 
+            if j == nothing
+                j = length(c_sign)
+            end
+
             rr = i:(j-1) #These are the indexes corresponding to this contact epoch
-            rr = rr[t[i:(j-1)]] #we remove any frames that are not tracked 
+            rr = rr[t[i:(j-1)]] #we remove any frames that are not tracked
 
             c_sign[rr] .= sign(mean(v[rr]))
 
