@@ -11,6 +11,8 @@ function add_contact_mark_callbacks(b,handles)
 
     signal_connect(exclude_cb,b["exclude_button"],"toggled",Void,(),false,(handles,))
 
+    signal_connect(advance_slider_cb,b["contact_win"],"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
+
     nothing
 end
 
