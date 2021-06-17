@@ -244,13 +244,14 @@ mutable struct Tracker_Handles
 
     selection_mode::Int64 #What the mouse will do when you click
 
-    tracked_whiskers_x::Array{Float64,2}
-    tracked_whiskers_y::Array{Float64,2}
-    tracked_whiskers_l::BitArray{2}
+    tracked_whiskers_x::Vector{Vector{Float64}}
+    tracked_whiskers_y::Vector{Vector{Float64}}
+    tracked_whiskers_l::Vector{Float64}
 
     show_contact::Bool
     tracked_contact::BitArray{1}
     tracked_pole::Array{Float64,2}
+    show_tracked_whisker::Bool
 
     show_event::Bool
     event_array::BitArray{1}

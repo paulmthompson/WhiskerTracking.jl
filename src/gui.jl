@@ -38,8 +38,8 @@ function make_gui()
     false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
-    zeros(Float64,1,1),zeros(Float64,1,1),falses(1,1),false,falses(1),
-    zeros(Float64,1,1),false,falses(1),".",classifier(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
+    zeros(Float64,0),zeros(Float64,0),zeros(Float64,0),false,falses(1),
+    zeros(Float64,1,1),false,false,falses(1),".",classifier(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -232,6 +232,9 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     set_gtk_property!(handles.b["adj_frame"],:upper,handles.max_frames)
 
     all_whiskers=[Array{Whisker1,1}() for i=1:1]
+    handles.tracked_whiskers_x = [zeros(Float64,0) for i=1:handles.max_frames]
+    handles.tracked_whiskers_y = [zeros(Float64,0) for i=1:handles.max_frames]
+    handles.tracked_whiskers_l = 1000.0 .* ones(Float64,handles.max_frames)
 
     tracker_name = (vid_name)[1:(end-4)]
 
@@ -985,8 +988,8 @@ function plot_whiskers(han::Tracker_Handles)
         end
     end
 
-    if show_tracked(han.b)
-        #draw_tracked_whisker(han)
+    if han.show_tracked_whisker
+        draw_tracked_whisker(han)
     end
 
     if (han.nn.draw_preds)|(get_draw_predictions(han.b))
@@ -1001,6 +1004,40 @@ function plot_whiskers(han::Tracker_Handles)
     reveal(han.c)
 
     nothing
+end
+
+function draw_tracked_whisker(han::Tracker_Handles)
+
+    ctx=Gtk.getgc(han.c)
+
+    set_source_rgb(ctx,0.0,1.0,0.0)
+
+    w_x = han.tracked_whiskers_x[han.displayed_frame]
+    w_y = han.tracked_whiskers_y[han.displayed_frame]
+
+    w_f = (350.0,25.0)
+    correct_follicle(w_x,w_y,w_f[1],w_f[2])
+
+    if length(w_x) > 0
+
+        move_to(ctx,w_x[1],w_y[1])
+        for i=2:length(w_x)
+            line_to(ctx,w_x[i],w_y[i])
+        end
+        stroke(ctx)
+
+        high_snr_p1=50.0 #proximal edge of high SNR region
+        high_snr_p2=200.0 #distal edge of high SNR region
+        (x_i,y_i) = make_whisker_segment(w_x,w_y,high_snr_p1,high_snr_p2)
+
+        set_source_rgb(ctx,1.0,0.5,0.0)
+        move_to(ctx,x_i[1],y_i[1])
+        for i=2:length(x_i)
+            line_to(ctx,x_i[i],y_i[i])
+        end
+        stroke(ctx)
+    end
+
 end
 
 function draw_woi(han::Tracker_Handles,ctx)

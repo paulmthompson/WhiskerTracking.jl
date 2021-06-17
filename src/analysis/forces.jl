@@ -56,6 +56,19 @@ function calc_force(x::Array{Float64,1},y::Array{Float64,1},theta_f::Float64,cur
 end
 
 #=
+For taped beam (cone)
+From https://journals.physiology.org/doi/full/10.1152/jn.00707.2006
+x - point to calculate moment of interia
+r_base - radius of whisker at base. In paper x/L = 232/2 um / 66.2 mm = 0.0017
+L - length of whisker (66 mm)
+=#
+function moment_of_inertia(x, L=66.2000, r_base=.116)
+    #alpha = pi/4 * (r_base / L)^4
+    alpha = pi/4 * (.116 / 66.20) ^ 4
+    I = alpha * (L - x) ^ 4 # mm^4
+end
+
+#=
 Calculate Force and Moment
 delta_kappa - change in curvature from intrinsic
 r_p - distance from point of contact to point p (pixels)
@@ -63,10 +76,21 @@ r_0 - distance from follicle to point of contact (pixels)
 theta_p - angle from point_p to point of contact (radians)
 theta_0 - angle from follicle to point of contact (radians)
 theta_contact - angle that whisker is pointing at point of contact (radians)
+
+E = 2.6 GPa From https://journals.physiology.org/doi/full/10.1152/jn.00707.2006 (2600 N/mm^2)
+
+I_p varies with distance along the whisker for measurement point
+if I_p is 1/4 of the way up the whisker, I_p = 4.5e-5
 =#
 function force_moment(delta_kappa::Real,r_p::Real,r_0::Real,theta_p::Real,
-    theta_0::Real,theta_contact::Real;I_p = 1.0, E=1.0)
+    theta_0::Real,theta_contact::Real; I_p = 4.5e-5, E = 2600.0)
 
+    #=
+    Note that F approaches infinity if 1) theta_p and theta_contact are orthogonal (very unusual)
+    or 2) if r_p decreases to zero. This is possible if your high SNR point is right at the point of
+    contact. Ideally, we should not be using different point Ps through because the moment of inertia and
+    modulus are position dependent.
+    =#
     F = abs(delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact)))
 
     M_0 = r_0 * F * cos(theta_0 - theta_contact)
@@ -166,7 +190,7 @@ end
 
 =#
 function calculate_all_forces(xx,yy,p,c,aa::Array{Float64,1},
-    curv::Array{Float64,1},tracked=trues(length(c)); i_p_loc=50.0,E_in=1.0,moment_of_inertia_p=1.0)
+    curv::Array{Float64,1},tracked=trues(length(c)); i_p_loc=50.0,moment_of_inertia_p=1.0, whisker_length=350.0)
 
     F_ax=zeros(Float64,length(c))
     F_lat=zeros(Float64,length(c))
@@ -187,7 +211,7 @@ function calculate_all_forces(xx,yy,p,c,aa::Array{Float64,1},
             i_p=culm_dist(new_x,new_y,i_p_loc)
 
             try
-                (M[i],F_ax[i],F_lat[i],F_t[i],theta_c[i])=calc_force(new_x,new_y,aa[i],curv[i],ii,i_p,E=E_in,I_p=moment_of_inertia_p)
+                (M[i],F_ax[i],F_lat[i],F_t[i],theta_c[i])=calc_force(new_x,new_y,aa[i],curv[i],ii,i_p,I_p=moment_of_inertia_p)
                 F_calc[i] = true
                 !isfinite(F_t[i]) && (F_t[i] = 0.0; F_calc[i] = false)
                 !isfinite(F_lat[i]) && (F_lat[i] = 0.0; F_calc[i] = false)

@@ -295,9 +295,22 @@ function create_follicle_image(han::Tracker_Handles,rad=5)
 end
 =#
 
-function load_whisker_into_gui(han,whiskers::Array{Float64,2})
+function load_whisker_into_gui(han,path)
 
-    han.tracked_whiskers = whiskers
+    file=jldopen(path)
+    w_x=read(file,"w_x")
+    w_y=read(file,"w_y")
+    frame_list = read(file,"frame_list")
+    w_loss = read(file, "loss")
+    close(file)
+
+    for i=1:length(w_x)
+        if frame_list[i] != 0
+            han.tracked_whiskers_x[frame_list[i]] = w_x[i]
+            han.tracked_whiskers_y[frame_list[i]] = w_y[i]
+            han.tracked_whiskers_l[frame_list[i]] = w_loss[i]
+        end
+    end
 
     nothing
 end
