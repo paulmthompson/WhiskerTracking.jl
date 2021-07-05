@@ -59,6 +59,7 @@ include("gui/deeplearning.jl")
 
 include("drawing_tools/draw.jl")
 include("drawing_tools/erase.jl")
+include("drawing_tools/shapes.jl")
 
 include("analysis/follicle.jl")
 include("analysis/kinematics.jl")

@@ -1016,6 +1016,7 @@ function draw_tracked_whisker(han::Tracker_Handles)
     w_y = han.tracked_whiskers_y[han.displayed_frame]
 
     w_f = (350.0,25.0)
+
     correct_follicle(w_x,w_y,w_f[1],w_f[2])
 
     if length(w_x) > 0
@@ -1037,7 +1038,6 @@ function draw_tracked_whisker(han::Tracker_Handles)
         end
         stroke(ctx)
     end
-
 end
 
 function draw_woi(han::Tracker_Handles,ctx)

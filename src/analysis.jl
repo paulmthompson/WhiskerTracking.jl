@@ -52,10 +52,21 @@ function get_curv_and_angle(woi,tracked=trues(length(woi)),follicle=(400.0f0,50.
     (curv,aa)
 end
 
-function culm_dist(x,y,thres)
+#=
+count along whisker to end
+=#
+
+function culm_dist(x::Array{T,1},y::Array{T,1},thres::Real,follicle_end=true) where T
     tot=0.0
     outind=1
-    for i=(length(x)-1):-1:1
+
+    if follicle_end
+        inds = (length(x)-1):-1:1
+    else
+        inds = 1:(length(x)-1)
+    end
+    
+    for i in inds
 
         tot += sqrt((x[i]-x[i+1])^2+(y[i]-y[i+1])^2)
 
