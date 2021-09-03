@@ -1,10 +1,16 @@
 # WhiskerTracking.jl
 
-This is a collection of methods for whisker tracking and whisker kinetic/kinematic analysis. Right now, this is probably not very usable outside of my hands as a package, but hopefullly will become more refined. Briefly, the tracking methods include:
+This is a collection of methods for whisker tracking and whisker kinetic/kinematic analysis. Right now, this is probably not very usable outside of my hands as a package, but hopefullly will become more refined. Briefly, it includes the following capabilities:
 
-1) A wrapper for the Janelia Whisker Tracker https://github.com/nclack/whisk. Basically, this package provides wrappers for automatic tracking and manual tracking, uses a Julia-based GUI, and adds some features like image processing, face masking etc. The heavy lifting is done by Janelia.
+### Manual video curation, whisker identification, and selection.
 
-2) A wrapper for DeeplabCut https://github.com/AlexEMG/DeepLabCut. Here you can transform a collection of fully tracked whiskers into a discrete set of equally spaced points, reformat these into the format that deeplabcut expects, use deeplabcut to process your videos, then perform polynomial fits on the discrete points to get whisker traces.  I also use DLC for stimuli tracking (e.g. the pole).
+A GUI can be used to scroll through large whisker tracking videos. A wrapper is provided for the Janelia Whisker Tracker https://github.com/nclack/whisk to manually identify whiskers on a single frame. Some image processing algorithms are provided such as sharpening filters or contrast adjustment.
+
+### Whisker and pole prediction using deep learning
+
+A stacked hourglass network (https://github.com/paulmthompson/StackedHourglass.jl) to predict individual pixels that correspond to unique whiskers. Default weights from a large training dataset are provided that should automatically work on fairly clean whisker videos, but the user has the ability to add more training frames to the dataset.
+
+### Analysis of whisker kinematics and kinetics
 
 There is also a collection of analysis methods for whiskers. These include
 
@@ -12,16 +18,7 @@ There is also a collection of analysis methods for whiskers. These include
 
 2) Calculation of forces/moments at the whisker follicle from http://www.jneurosci.org/content/33/16/6726. 
 
-## Installation
-
-I have used this on both Windows and Linux. In both cases, you will need to install 1) the Janelia Whisker Tracker, 2) FFMPEG (https://ffmpeg.org/) to decode videos, and 3) Deeplabcut. These filepaths are hardcoded in the src/config.jl file and should be changed to the locations of the files on your computer.
-
 ## Documentation
 
 https://whiskertrackingjl.readthedocs.io/en/latest/
 
-## Future Directions
-
-I would love for the Janelia methods to be in pure Julia to no longer rely on their library. My impression is that it should run just as fast in pure julia, and would not be too tedious of a code migration. 
-
-I have found a lot of success in using janelia to "pre-train" a deeplabcut neural network by automatically tracing data, changing it into a format deeplabcut can use, and then letting deeplabcut doing all of the tracking and linking. Right now this process is pretty clunky, and I basically have to switch back and forth between DLC notebooks and Julia notebooks. All of this should be integrated better.
