@@ -26,7 +26,7 @@ Calculation
 
 .. math::
 
-   \theta = \arctan{ \frac{ y_2 - y_f }{ x_2 - x_f } }
+   \\theta = \\arctan{ \\frac{ y_2 - y_f }{ x_2 - x_f } }
 
 Potential Pitfalls and Alternative Approaches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
