@@ -1,6 +1,7 @@
 
 
-# Kinematic and Mechanical Quantification
+Kinematic and Mechanical Quantification
+#########################################
 
 
 Here we outline the different behavioral features of whisking that can be calculated from
@@ -9,7 +10,8 @@ package. Many of these features do not have consensus of how they should be calc
 literature, and we will try our best to highlight potential advantages and pitfalls to the
 approaches that we have selected here.
 
-## Whisker Angle
+Whisker Angle
+--------------
 
 .. image:: media/mouse_angle.png
 
@@ -19,9 +21,12 @@ while more retracted (toward the tail) are negative. The angle is calculated in 
 coordinate system as the angle between a vector extending from the whisker follicle (x_f,y_f) to a
 point along the whisker shaft (x_2,y_2), and the axis indicating 0 (dashed line).
 
-### Pitfalls 
+Pitfalls
+~~~~~~~~~
 
-## Whisker Curvature
+Whisker Curvature
+------------------
 
 
-## Whisker Phase
+Whisker Phase
+--------------
