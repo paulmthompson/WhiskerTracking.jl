@@ -16,15 +16,34 @@ Whisker Angle
 .. image:: media/mouse_angle.png
 
 The whisker angle is in a coordinate system where the axis perpendicular to the axis
-of the head is equal to 0. More protracted (toward the nose) positions are positive,
+of the head is equal to zero. More protracted (toward the nose) positions are positive,
 while more retracted (toward the tail) are negative. The angle is calculated in this
 coordinate system as the angle between a vector extending from the whisker follicle (|x_f| , |y_f|) to a
 point along the whisker shaft (|x_2| , |y_2|), and the axis indicating 0 (dashed line).
 
-Pitfalls
-~~~~~~~~~
+Calculation
+~~~~~~~~~~~~
 
+.. math::
 
+   \theta = \arctan{ \frac{ y_2 - y_f }{ x_2 - x_f } }
+
+Potential Pitfalls and Alternative Approaches
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The coordinate system is defined as being perpendicular to the head, but the
+head may not align to the x or y axis of the video.
+
+The vector for the whisker segment is only defined by two points: at the follicle,
+and some arbitrary distance from the follicle.  Errors in angular calculations
+can result from errors in the positions of the follicle or the arbitrary point
+(|x_2| , |y_2|).
+
+The optimal distance from the follicle along the whisker, which ends at point
+(|x_2| , |y_2|) is unknown. Because the whisker has some intrinsic curvature,
+this will result in some error. Additionally, changes in curvature from
+movement or active touch may result in changes in the angle, particularly if
+the point is chosen a far distance from the whisker follicle.
 
 Whisker Curvature
 ------------------
