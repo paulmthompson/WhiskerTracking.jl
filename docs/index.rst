@@ -6,13 +6,18 @@
 Welcome to WhiskerTracking.jl's documentation!
 ==============================================
 
+WhiskerTracking.jl is a Julia package designed to analyze high speed videos of whisking behavior in rodents,
+including quantifying the mechanical aspects of active touch.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    Whisker_Tracking.rst
+   Kinematics_Mechanics.rst
    Contact_Detection.rst
-   
+
+
 
 
 
