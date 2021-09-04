@@ -18,8 +18,8 @@ Whisker Angle
 The whisker angle is in a coordinate system where the axis perpendicular to the axis
 of the head is equal to 0. More protracted (toward the nose) positions are positive,
 while more retracted (toward the tail) are negative. The angle is calculated in this
-coordinate system as the angle between a vector extending from the whisker follicle (x_f,y_f) to a
-point along the whisker shaft (x_2,y_2), and the axis indicating 0 (dashed line).
+coordinate system as the angle between a vector extending from the whisker follicle (|x_f|,|y_f|) to a
+point along the whisker shaft (|x_2|,|y_2|), and the axis indicating 0 (dashed line).
 
 Pitfalls
 ~~~~~~~~~
@@ -30,3 +30,8 @@ Whisker Curvature
 
 Whisker Phase
 --------------
+
+.. |x_f| replace:: x\ :sub:`f`\
+.. |y_f| replace:: y\ :sub:`f`\
+.. |x_2| replace:: x\ :sub:`2`\
+.. |y_2| replace:: y\ :sub:`2`\
