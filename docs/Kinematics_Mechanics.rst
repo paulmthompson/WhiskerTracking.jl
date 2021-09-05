@@ -1,9 +1,9 @@
-.. role:: underline
-    :class: underline
 
 Kinematic and Mechanical Quantification
 #########################################
 
+.. role:: underline
+    :class: underline
 
 Here we outline the different behavioral features of whisking that can be calculated from
 whisker videos. We also provide background on how these are calculated in the WhiskerTracking.jl
