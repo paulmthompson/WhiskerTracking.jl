@@ -1,6 +1,13 @@
 
-<style>
 .underline {
   text-decoration: underline;
 }
-</style>
+
+body {
+  font-family: "Verdana", Geneva, sans-serif;
+  text-align: justify;
+  text-justify: auto;
+  margin: 0 auto;
+  width: 600 px;
+  padding: 0 20px 20px 20px;
+}
