@@ -48,6 +48,16 @@ the point is chosen a far distance from the whisker follicle.
 Whisker Curvature
 ------------------
 
+.. image:: media/mouse_curvature.png
+
+<u>Estimation of curvature for a rodent whisker is nontrival.</u>  The quantity of
+curvature is most accurately estimated by an osculating circle. Indeed, some
+groups have calculated curvature by finding the best fit circle, and then
+using the inverse of the radius to calculate curvature [CITE]. However, this
+approach is complicated by the fact that a whisker as a whole does not form the
+shape of a circle, and that whiskers tend to not have significant amounts of bending
+(particularly whisker segments), so that the whisker itself will represent only
+a very small part of a very large fitted circle, leading to poor fits.
 
 Whisker Phase
 --------------
