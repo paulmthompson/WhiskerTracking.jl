@@ -50,7 +50,7 @@ Whisker Curvature
 
 .. image:: media/mouse_curvature.png
 
-:underline:`Estimation of curvature for a rodent whisker is nontrival.`  The quantity of
+ :underline:`Estimation of curvature for a rodent whisker is nontrival`.  The quantity of
 curvature is most accurately estimated by an osculating circle. Indeed, some
 groups have calculated curvature by finding the best fit circle, and then
 using the inverse of the radius to calculate curvature [CITE]. However, this
@@ -66,3 +66,6 @@ Whisker Phase
 .. |y_f| replace:: y\ :sub:`f`\
 .. |x_2| replace:: x\ :sub:`2`\
 .. |y_2| replace:: y\ :sub:`2`\
+
+.. role:: underline
+    :class: underline
