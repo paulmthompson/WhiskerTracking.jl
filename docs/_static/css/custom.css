@@ -13,3 +13,8 @@ body {
 .sphinxsidebar a {
   font-size: 15px;
 }
+
+.sphinxsidebar ul {
+  list-style-position: inside;
+  list-style-type: circle;
+}
