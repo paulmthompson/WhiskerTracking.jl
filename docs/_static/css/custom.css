@@ -18,3 +18,7 @@ body {
   list-style-position: inside;
   list-style-type: circle;
 }
+
+.sphinxsidebar li {
+  display: block;
+}
