@@ -60,9 +60,6 @@ master_doc = 'index'
 import sphinx_rtd_theme
 html_theme = 'alabaster'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-html_theme_options = {
-    'sidebarwidth' : 300
-}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

@@ -9,3 +9,7 @@ body {
   text-justify: inter-word;
   margin: 0 auto;
 }
+
+.sphinxsidebar a {
+  font-size: 15px;
+}
