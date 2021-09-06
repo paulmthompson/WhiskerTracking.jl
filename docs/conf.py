@@ -61,7 +61,7 @@ import sphinx_rtd_theme
 html_theme = 'alabaster'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_theme_options = {
-    'sidebar_width' : 200
+    'sidebarwidth' : 230
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
