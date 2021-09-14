@@ -51,7 +51,7 @@ function update_analog_canvas(han::Tracker_Handles)
     set_source_rgb(ctx,1,0,0)
     cent = (upper_id - han.displayed_frame) / (upper_id - lower_id)
     move_to(ctx,cent * w,0)
-    line_to(ctx,cent * w,20)
+    line_to(ctx,cent * w,h)
     stroke(ctx)
 
     #exclude
@@ -77,7 +77,7 @@ function update_analog_canvas(han::Tracker_Handles)
     off = h/2
 
     an_range = range(a_min,a_max,length=round(Int64,w))
-    move_to(ctx,0,off+han.analog.var[1][a_min])
+    move_to(ctx,0,off+han.analog.var[1][a_min] * han.analog.gains[1])
     aa = a_min + 1
     a_val = 0
     ww = 1
@@ -88,7 +88,7 @@ function update_analog_canvas(han::Tracker_Handles)
         end
 
         if aa > an_range[ww]
-            line_to(ctx,ww,a_val + off)
+            line_to(ctx,ww,a_val * han.analog.gains[1] + off)
             a_val = 0
             ww += 1
         end
