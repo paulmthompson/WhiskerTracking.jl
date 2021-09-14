@@ -39,7 +39,8 @@ function make_gui()
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     zeros(Float64,0),zeros(Float64,0),zeros(Float64,0),false,falses(1),
-    zeros(Float64,1,1),false,false,falses(1),".",classifier(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
+    zeros(Float64,1,1),false,false,falses(1),".",classifier(),Analog_Class(),
+    NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -88,6 +89,11 @@ function add_additional_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     #View Callbacks
     make_menu_callbacks(b["view_menu_"],b["view_win"])
     add_view_callbacks(b,handles)
+
+    #analog
+    make_analog_gui(b,handles)
+    make_menu_callbacks(b["analog_menu_"],b["analog_win"])
+    add_analog_callbacks(b,handles)
 
     #Tracing Callbacks
     make_menu_callbacks(b["manual_menu_"],b["tracing_win"])
@@ -228,6 +234,8 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     handles.start_frame = 1
     handles.end_frame = handles.max_frames
 
+    handles.tracked_contact = falses(handles.max_frames)
+
     #Adjust Frame Slider Scale
     set_gtk_property!(handles.b["adj_frame"],:upper,handles.max_frames)
 
@@ -312,7 +320,14 @@ function update_new_frame(han)
         end
         han.frame_loaded = true
 
-        draw_manual(han)
+        try
+            draw_manual(han)
+        catch
+        end
+
+        if han.analog.show
+            update_analog_canvas(han)
+        end
 
         if han.requested_frame != han.displayed_frame
             update_new_frame(han)
@@ -356,6 +371,7 @@ function get_lower_upper_frame(frame_id,frame_range,max_frames)
 end
 
 function draw_manual(han::Tracker_Handles)
+
     frame_range = 1000
     (lower_id, upper_id) = get_lower_upper_frame(han.displayed_frame,frame_range,han.max_frames)
 
@@ -372,28 +388,44 @@ function draw_manual(han::Tracker_Handles)
     stroke(ctx)
 
     #exclude
-    e_line = make_line(han.man.exclude_block,lower_id,upper_id,w)
-    set_source_rgb(ctx,0,0,0)
-    draw_manual_line(han.c2,e_line,2)
+    try
+        e_line = make_line(han.man.exclude_block,lower_id,upper_id,w)
+        set_source_rgb(ctx,0,0,0)
+        draw_manual_line(han.c2,e_line,2)
+    catch
+        println("Could not draw exclude block")
+    end
 
     #Protraction
-    pro_line = make_line(han.man.pro_re_block .== 1,lower_id,upper_id,w)
-    set_source_rgb(ctx,1,0,0)
-    draw_manual_line(han.c2,pro_line,8)
+    try
+        pro_line = make_line(han.man.pro_re_block .== 1,lower_id,upper_id,w)
+        set_source_rgb(ctx,1,0,0)
+        draw_manual_line(han.c2,pro_line,8)
+    catch
+        println("Error drawing protraction")
+    end
 
     #Retraction
-    re_line = make_line(han.man.pro_re_block .== 2,lower_id,upper_id,w)
-    set_source_rgb(ctx,0,0,1)
-    draw_manual_line(han.c2,re_line,8)
+    try
+        re_line = make_line(han.man.pro_re_block .== 2,lower_id,upper_id,w)
+        set_source_rgb(ctx,0,0,1)
+        draw_manual_line(han.c2,re_line,8)
+    catch
+        println("Error drawing retraction")
+    end
 
     #Contact
-    con_line = make_line(han.man.contact .== 2,lower_id,upper_id,w)
-    set_source_rgb(ctx,0,1,0)
-    draw_manual_line(han.c2,con_line,14)
+    try
+        con_line = make_line(han.man.contact .== 2,lower_id,upper_id,w)
+        set_source_rgb(ctx,0,1,0)
+        draw_manual_line(han.c2,con_line,14)
 
-    con_t_line = make_line(han.tracked_contact .== 1, lower_id, upper_id,w)
-    set_source_rgba(ctx,0,1,0,0.5)
-    draw_manual_line(han.c2,con_t_line,18)
+        con_t_line = make_line(han.tracked_contact, lower_id, upper_id,w)
+        set_source_rgba(ctx,0,1,0,0.5)
+        draw_manual_line(han.c2,con_t_line,18)
+    catch
+        println("Error drawing contact")
+    end
 
     reveal(han.c2)
 end

@@ -124,6 +124,16 @@ Manual_Class() = Manual_Class(0,1,Array{Tuple,1}(),Array{Tuple,1}(),Array{Int64,
 Manual_Class(frame_num::Int) = Manual_Class(frame_num,1,Array{Tuple,1}(),Array{Tuple,1}(),
 zeros(Int64,frame_num),Array{Tuple,1}(),Dict{Int,Int}(),zeros(Int64,frame_num),Array{Tuple,1}(),falses(frame_num))
 
+mutable struct Analog_Class
+    c::Gtk.GtkCanvasLeaf
+    t_zoom::Int64
+    show::Bool
+    var::Dict{Int64,Array{Real,1}}
+    ts::Dict{Int64,Array{Float64,1}}
+end
+
+Analog_Class() = Analog_Class(Canvas(100,100),100,false,Dict{Int64,Array{Real,1}}(),Dict{Int64,Array{Float64,1}}())
+
 mutable struct NeuralNetwork
     labels::Array{Float32,4} #Labels for training
     imgs::Array{Float32,4} #Images for training
@@ -258,6 +268,7 @@ mutable struct Tracker_Handles
     save_label_path::String
 
     class::classifier
+    analog::Analog_Class
     nn::NeuralNetwork
     man::Manual_Class
     speed::Int64
