@@ -83,6 +83,7 @@ function update_analog_canvas(han::Tracker_Handles)
     ww = 1
     while aa < a_max
 
+        #=
         if abs(han.analog.var[1][aa]) > a_val
             a_val = han.analog.var[1][aa]
         end
@@ -90,6 +91,12 @@ function update_analog_canvas(han::Tracker_Handles)
         if aa > an_range[ww]
             line_to(ctx,ww,a_val * han.analog.gains[1] + off)
             a_val = 0
+            ww += 1
+        end
+        =#
+        line_to(ctx,ww + aa / an_range[ww],han.analog.var[1][aa] * han.analog.gains[1] + off)
+
+        if aa > an_range[ww]
             ww += 1
         end
         aa += 1
