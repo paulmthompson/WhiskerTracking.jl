@@ -34,7 +34,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 julia = "1.6"
 Cairo = "0.6, 0.7, 0.8, 1.0"
-CUDA = 3.0
+CUDA = "3.0"
 DSP = "0.6"
 FFMPEG = "0.2, 0.3, 0.4"
 FFTW = "1.1 - 1.2"
