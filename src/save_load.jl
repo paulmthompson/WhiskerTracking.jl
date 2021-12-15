@@ -252,11 +252,27 @@ function name_img(han::Tracker_Handles,name_prefix,num)
     img_name = string(name_prefix,lpad(num,max_dig,"0"),".png")
 end
 
-function create_label_image(han::Tracker_Handles,rad=0,interp=false)
+function create_label_images(han::Tracker_Handles,rad=0,interp=false)
+    imgs=zeros(Float32,64,64,1,length(han.woi))
 
+    i=1
+    for woi in han.woi
+        img = zeros(UInt8,size(han.current_frame))
+        imgs[:,:,1,i] = StackedHourglass.low_pass_pyramid(create_label_image(img,woi[2],rad,interp),(64,64))
+        i+=1
+    end
+    imgs
+end
+
+function create_label_image(han::Tracker_Handles,rad=0,interp=false)
     img = zeros(UInt8,size(han.current_frame))
 
     w1=han.woi[han.displayed_frame]
+
+    create_label_image(img,w1,rad,interp)
+end
+
+function create_label_image(img::Array,w1,rad=0,interp=false)
 
     #Janelia whiskers are 0 in
     new_x = w1.x .+ 1

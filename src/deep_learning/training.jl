@@ -5,13 +5,14 @@ Create training file
 
 function set_up_training(han::Tracker_Handles,get_mean=true)
     woi=get_woi_array(han)
-    set_up_training(han.nn,han.wt.vid_name,han.end_frame,woi,han.wt.pad_pos,han.frame_list,get_mean)
+    set_up_training(han,han.nn,han.wt.vid_name,han.end_frame,woi,han.wt.pad_pos,han.frame_list,get_mean)
 end
 
-function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=false)
+function set_up_training(han,nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=false)
 
     (w,h,fps)=get_vid_dims(vid_name)
 
+    #=
     if get_mean
         (mean_img,std_img)=mean_std_video_gpu(vid_name,max_frames)
         nn.norm.min_ref = 0
@@ -22,17 +23,20 @@ function set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=
         #Rotate and Reshape to 256 256
         nn.norm.mean_img = reshape(imresize(nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
     end
+    =#
 
     (new_woi, new_frame_list) = check_whiskers(woi,frame_list,max_frames)
 
     WT_reorder_whisker(new_woi,pad_pos)
 
-    nn.labels = make_heatmap_labels(new_woi,pad_pos)
+    #nn.labels = make_heatmap_labels(new_woi,pad_pos)
+    nn.labels = create_label_images(han)
     nn.imgs = get_labeled_frames(vid_name,new_frame_list);
 
     #Normalize
+    #=
     nn.imgs = StackedHourglass.normalize_new_images(nn.imgs,nn.norm.mean_img);
-
+    =#
     (nn.imgs,nn.labels)=augment_images(nn.imgs,nn.labels);
 end
 
