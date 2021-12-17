@@ -157,7 +157,25 @@ function center_of_mass(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::Abstra
 end
 
 function calculate_whisker_predictions(han::Tracker_Handles,hg::StackedHourglass.NN,atype=KnetArray)
-    pred=StackedHourglass.predict_single_frame(hg,han.current_frame./255,atype)
+
+    output = han.current_frame ./ 255
+
+    if han.nn.flip_x
+        reverse!(output,dims=1)
+    end
+    if han.nn.flip_y
+        reverse!(output,dims=2)
+    end
+
+    pred=StackedHourglass.predict_single_frame(hg,output,atype)
+
+    if han.nn.flip_x
+        reverse!(pred,dims=1)
+    end
+    if han.nn.flip_y
+        reverse!(pred,dims=2)
+    end
+    pred
 end
 
 #=
@@ -204,7 +222,7 @@ function draw_prediction2(han::Tracker_Handles,hg::StackedHourglass.NN,conf)
     colors=((1,0,0),(0,1,0),(0,1,1),(1,0,1))
     atype = []
     if CUDA.has_cuda_gpu()
-        atype = KnetArray 
+        atype = KnetArray
     else
         atype = Array
     end

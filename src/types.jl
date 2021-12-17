@@ -152,6 +152,8 @@ mutable struct NeuralNetwork
     use_existing_weights::Bool
     use_existing_labels::Bool
     predicted::Array{Float32,3}
+    flip_x::Bool
+    flip_y::Bool
 end
 
 function NeuralNetwork()
@@ -161,7 +163,7 @@ function NeuralNetwork()
         hg = HG2(64,13,4, Array)
     end
     NeuralNetwork(zeros(Float32,0,0,0,0),zeros(Float32,0,0,0,0),Normalize_Parameters(), hg,10,zeros(Float32,0),0.5,false,
-true,pre_train_path,1,false,false,false,zeros(Float32,0,3,0))
+true,pre_train_path,1,false,false,false,zeros(Float32,0,3,0),false,false)
 end
 mutable struct Save_Paths
     path::String
