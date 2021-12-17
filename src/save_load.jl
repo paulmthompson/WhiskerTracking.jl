@@ -197,26 +197,26 @@ end
 #=
 Snapshot
 =#
-function save_single_image(han::Tracker_Handles,path=han.paths.images,use_contrast=false)
-    save_single_image(han,han.current_frame,han.displayed_frame,path,use_contrast)
+function save_single_image(han::Tracker_Handles,path=han.paths.images,use_contrast=false; flip_x=false,flip_y=false)
+    save_single_image(han,han.current_frame,han.displayed_frame,path,use_contrast,flip_x=flip_x,flip_y=flip_y)
 end
 
-function save_single_image(han::Tracker_Handles,img::AbstractArray,num::Int,path=han.paths.images,use_contrast=false)
+function save_single_image(han::Tracker_Handles,img::AbstractArray,num::Int,path=han.paths.images,use_contrast=false; flip_x=false,flip_y=false)
 
     img_name = name_img(han,"img",num)
 
-    save_img_with_dir_change(han,img_name,img,path,use_contrast)
+    save_img_with_dir_change(han,img_name,img,path,use_contrast,flip_x,flip_y)
 
     nothing
 end
 
-function save_label_image(han::Tracker_Handles,path=han.paths.images,interp=false)
+function save_label_image(han::Tracker_Handles,path=han.paths.images,interp=false; flip_x=false, flip_y=false)
 
     img_name = name_img(han,"w",han.displayed_frame)
 
     img = create_label_image(han,0,interp)
 
-    save_img_with_dir_change(han,img_name,img,path)
+    save_img_with_dir_change(han,img_name,img,path,false,flip_x,flip_y)
 
     nothing
 end
@@ -232,16 +232,24 @@ function save_follicle_image(han::Tracker_Handles,path=han.paths.images)
     nothing
 end
 
-function save_img_with_dir_change(han::Tracker_Handles,img_name::String,img::AbstractArray,path=han.paths.images,use_contrast=false)
+function save_img_with_dir_change(han::Tracker_Handles,img_name::String,img::AbstractArray,path=han.paths.images,use_contrast=false,flip_x=false,flip_y=false)
     my_wd=pwd()
     cd(path)
     if use_contrast
         img2 = deepcopy(img)
         adjust_contrast(img2,han.contrast_min,han.contrast_max)
-        Images.save(img_name,img2)
-    else
-        Images.save(img_name, img)
+        img = img2
     end
+
+    if flip_x
+        reverse!(img,dims=1)
+    end
+    if flip_y
+        reverse!(img, dims=2)
+    end
+
+    Images.save(img_name, img)
+
     cd(my_wd)
 end
 
