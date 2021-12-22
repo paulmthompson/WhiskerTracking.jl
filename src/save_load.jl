@@ -235,20 +235,21 @@ end
 function save_img_with_dir_change(han::Tracker_Handles,img_name::String,img::AbstractArray,path=han.paths.images,use_contrast=false,flip_x=false,flip_y=false)
     my_wd=pwd()
     cd(path)
+    out_img = deepcopy(img)
     if use_contrast
-        img2 = deepcopy(img)
+        img2 = deepcopy(out_img)
         adjust_contrast(img2,han.contrast_min,han.contrast_max)
-        img = img2
+        out_img = img2
     end
 
     if flip_x
-        reverse!(img,dims=1)
+        reverse!(out_img,dims=1)
     end
     if flip_y
-        reverse!(img, dims=2)
+        reverse!(out_img, dims=2)
     end
 
-    Images.save(img_name, img)
+    Images.save(img_name, out_img)
 
     cd(my_wd)
 end
