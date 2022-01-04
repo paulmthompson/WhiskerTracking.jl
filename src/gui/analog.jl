@@ -103,6 +103,10 @@ function update_analog_canvas(han::Tracker_Handles)
     end
     stroke(ctx)
 
+    set_source_rgb(ctx,0,0,0)
+    move_to(ctx,w/2-10,h-10.0)
+    show_text(ctx,string(round((a_min + a_max) / 2 / 30000.0,digits=2)))
+
     reveal(han.analog.c)
 
     nothing
