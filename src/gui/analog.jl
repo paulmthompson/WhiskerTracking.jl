@@ -103,9 +103,31 @@ function update_analog_canvas(han::Tracker_Handles)
     end
     stroke(ctx)
 
+    #draw time
     set_source_rgb(ctx,0,0,0)
     move_to(ctx,w/2-10,h-10.0)
     show_text(ctx,string(round((a_min + a_max) / 2 / 30000.0,digits=2)))
+
+    #draw exclude block
+    e_line = make_line(han.man.exclude_block,lower_id,upper_id,w)
+    draw_manual_line(han.analog.c,e_line,10)
+    stroke(ctx)
+
+    #draw contact Block
+    try
+        con_line = make_line(han.man.contact .== 2,lower_id,upper_id,w)
+        set_source_rgb(ctx,0,1,0)
+        draw_manual_line(han.analog.c,con_line,14)
+
+        con_t_line = make_line(han.tracked_contact, lower_id, upper_id,w)
+        set_source_rgba(ctx,0,1,0,0.5)
+        draw_manual_line(han.analog.c,con_t_line,18)
+    catch
+        println("Error drawing contact")
+    end
+
+    #Draw Events
+
 
     reveal(han.analog.c)
 

@@ -320,17 +320,18 @@ function update_new_frame(han)
         end
         han.frame_loaded = true
 
-        try
-            draw_manual(han)
-        catch
-        end
-
-        if han.analog.show
-            update_analog_canvas(han)
-        end
-
         if han.requested_frame != han.displayed_frame
             update_new_frame(han)
+        else
+
+            try
+                draw_manual(han)
+            catch
+            end
+
+            if han.analog.show
+                update_analog_canvas(han)
+            end
         end
     else
 
