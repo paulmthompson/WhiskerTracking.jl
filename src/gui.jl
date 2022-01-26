@@ -54,6 +54,7 @@ function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     signal_connect(delete_cb,b["delete_button"], "clicked",Void,(),false,(handles,))
 
     signal_connect(advance_slider_cb,b["win"],"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
+    signal_connect(advance_slider_cb_mouse,b["win"],"scroll-event",Void,(Ptr{Gtk.GdkEventScroll},),false,(handles,))
 
     signal_connect(draw_cb,b["draw_button"],"clicked",Void,(),false,(handles,))
 
@@ -751,6 +752,21 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
         #han.displayed_frame -= 1
     elseif event.keyval == 0xFFE9 #Left alt
         take_snapshot(han)
+    end
+
+    nothing
+end
+
+function advance_slider_cb_mouse(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    event = unsafe_load(param_tuple)
+
+    if event.direction == Gtk.GdkScrollDirection.UP
+        setproperty!(han.b["adj_frame"],:value,han.requested_frame + han.speed)
+    elseif event.direction == Gtk.GdkScrollDirection.DOWN
+        setproperty!(han.b["adj_frame"],:value,han.requested_frame - han.speed)
     end
 
     nothing
