@@ -130,11 +130,12 @@ mutable struct Analog_Class
     show::Bool
     var::Dict{Int64,Array{Float64,1}}
     ts::Dict{Int64,Array{Float64,1}}
+    ts_d::Dict{Int64,Array{Float64,1}}
     gains::Dict{Int64,Float64}
 end
 
 Analog_Class() = Analog_Class(Canvas(100,100),100,false,Dict{Int64,Array{Float64,1}}(),Dict{Int64,Array{Float64,1}}(),
-Dict{Int64,Float64}())
+Dict{Int64,Array{Float64,1}}(),Dict{Int64,Float64}())
 
 mutable struct NeuralNetwork
     labels::Array{Float32,4} #Labels for training

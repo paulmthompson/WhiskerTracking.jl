@@ -127,7 +127,21 @@ function update_analog_canvas(han::Tracker_Handles)
     end
 
     #Draw Events
+    t1 = a_min / 30000
+    t2 = a_max / 30000
 
+    for i=1:length(han.analog.ts_d[1])
+
+        if (han.analog.ts_d[1][i] > t1) & (han.analog.ts_d[1][i] < t2)
+            pos = (han.analog.ts_d[1][i] - t1) / (t2 - t1) * w
+
+            set_source_rgb(ctx,0,0,0)
+            move_to(ctx,pos,20)
+            line_to(ctx,pos,25)
+            stroke(ctx)
+        end
+
+    end
 
     reveal(han.analog.c)
 
