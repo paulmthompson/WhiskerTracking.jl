@@ -128,13 +128,14 @@ mutable struct Analog_Class
     c::Gtk.GtkCanvasLeaf
     t_zoom::Int64
     show::Bool
+    cam::Array{Float64,1}
     var::Dict{Int64,Array{Float64,1}}
     ts::Dict{Int64,Array{Float64,1}}
     ts_d::Dict{Int64,Array{Float64,1}}
     gains::Dict{Int64,Float64}
 end
 
-Analog_Class() = Analog_Class(Canvas(100,100),100,false,Dict{Int64,Array{Float64,1}}(),Dict{Int64,Array{Float64,1}}(),
+Analog_Class() = Analog_Class(Canvas(100,100),100,false,zeros(Float64,0),Dict{Int64,Array{Float64,1}}(),Dict{Int64,Array{Float64,1}}(),
 Dict{Int64,Array{Float64,1}}(),Dict{Int64,Float64}())
 
 mutable struct NeuralNetwork
