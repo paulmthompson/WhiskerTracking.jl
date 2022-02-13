@@ -64,41 +64,20 @@ function update_analog_canvas(han::Tracker_Handles)
 
     #Find points from along signal that are within the frame
 
-    #Get min ind
-    a_min=get_min_analog(han,lower_id,1)
+    #Get min ind of analog
+    a_min=get_min_analog(han,han.analog.cam[lower_id],1)
 
-    #Get center ind
-    get_min_analog(han,han.displayed_frame,1)
+    #Get max ind of analog
+    a_max=get_max_analog(han,han.analog.cam[upper_id],1)
 
-    #Get max ind
-    a_max=get_max_analog(han,upper_id,1)
-
-    #myline = rand(-100:100,round(Int,w))
     off = h/2
-
-    an_range = range(a_min,a_max,length=round(Int64,w))
     move_to(ctx,0,off+han.analog.var[1][a_min] * han.analog.gains[1])
     aa = a_min + 1
-    a_val = 0
-    ww = 1
+
     while aa < a_max
-
-        #=
-        if abs(han.analog.var[1][aa]) > a_val
-            a_val = han.analog.var[1][aa]
-        end
-
-        if aa > an_range[ww]
-            line_to(ctx,ww,a_val * han.analog.gains[1] + off)
-            a_val = 0
-            ww += 1
-        end
-        =#
-        line_to(ctx,ww + aa / an_range[ww],han.analog.var[1][aa] * han.analog.gains[1] + off)
-
-        if aa > an_range[ww]
-            ww += 1
-        end
+        x = (aa - a_min) / (a_max - a_min) * w
+        y = han.analog.var[1][aa] * han.analog.gains[1] + off
+        line_to(ctx,x,y)
         aa += 1
     end
     stroke(ctx)
@@ -127,12 +106,12 @@ function update_analog_canvas(han::Tracker_Handles)
     end
 
     #Draw Events
-    t1 = a_min / 30000
-    t2 = a_max / 30000
+    t1 = han.analog.cam[lower_id]
+    t2 = han.analog.cam[upper_id]
 
     for i=1:length(han.analog.ts_d[1])
 
-        if (han.analog.ts_d[1][i] > t1) & (han.analog.ts_d[1][i] < t2)
+        if (han.analog.ts_d[1][i] >= t1) & (han.analog.ts_d[1][i] <= t2)
             pos = (han.analog.ts_d[1][i] - t1) / (t2 - t1) * w
 
             set_source_rgb(ctx,0,0,0)
@@ -148,12 +127,12 @@ function update_analog_canvas(han::Tracker_Handles)
     nothing
 end
 
-function get_min_analog(han,b1::Int,an::Int)
+function get_min_analog(han,b1::Real,an::Int)
 
-    findfirst(han.analog.ts[an].>b1)[1]
+    findfirst(han.analog.ts[an] .>= b1)[1]
 end
 
-function get_max_analog(han,b1::Int,an::Int)
+function get_max_analog(han,b1::Real,an::Int)
 
-    findfirst(han.analog.ts[an].>b1)[1]-1
+    findfirst(han.analog.ts[an] .>= b1)[1]-1
 end
