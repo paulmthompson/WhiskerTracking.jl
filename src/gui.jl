@@ -38,9 +38,8 @@ function make_gui()
     false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
-    zeros(Float64,0),zeros(Float64,0),zeros(Float64,0),false,falses(1),
-    zeros(Float64,1,1),false,false,falses(1),".",classifier(),Analog_Class(),
-    NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
+    Tracked_Whisker(0),false,false,falses(1),zeros(Float64,1,1),false,false,falses(1),".",
+    classifier(),Analog_Class(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -241,9 +240,7 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     set_gtk_property!(handles.b["adj_frame"],:upper,handles.max_frames)
 
     all_whiskers=[Array{Whisker1,1}() for i=1:1]
-    handles.tracked_whiskers_x = [zeros(Float64,0) for i=1:handles.max_frames]
-    handles.tracked_whiskers_y = [zeros(Float64,0) for i=1:handles.max_frames]
-    handles.tracked_whiskers_l = 1000.0 .* ones(Float64,handles.max_frames)
+    handles.tracked_w = Tracked_Whisker(handles.max_frames)
 
     tracker_name = (vid_name)[1:(end-4)]
 
@@ -1062,10 +1059,11 @@ function draw_tracked_whisker(han::Tracker_Handles)
 
     ctx=Gtk.getgc(han.c)
 
-    set_source_rgb(ctx,0.0,1.0,0.0)
+    set_source_rgba(ctx,235/255,52/255,192/255,0.9)
+    set_line_width(ctx,0.5)
 
-    w_x = han.tracked_whiskers_x[han.displayed_frame]
-    w_y = han.tracked_whiskers_y[han.displayed_frame]
+    w_x = han.tracked_w.whiskers_x[han.displayed_frame]
+    w_y = han.tracked_w.whiskers_y[han.displayed_frame]
 
     w_f = (350.0,25.0)
 
@@ -1083,12 +1081,17 @@ function draw_tracked_whisker(han::Tracker_Handles)
         high_snr_p2=200.0 #distal edge of high SNR region
         (x_i,y_i) = make_whisker_segment(w_x,w_y,high_snr_p1,high_snr_p2)
 
-        set_source_rgb(ctx,1.0,0.5,0.0)
+        set_source_rgba(ctx,58/255,235/255,52/255,0.9)
+        set_line_width(ctx,0.5)
         move_to(ctx,x_i[1],y_i[1])
         for i=2:length(x_i)
             line_to(ctx,x_i[i],y_i[i])
         end
         stroke(ctx)
+
+        if han.draw_mechanics
+
+        end
     end
 end
 

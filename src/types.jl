@@ -199,6 +199,23 @@ function Save_Paths(mypath,make_dirs=true)
     out
 end
 
+mutable struct Tracked_Whisker
+    whiskers_x::Vector{Vector{Float64}}
+    whiskers_y::Vector{Vector{Float64}}
+    whiskers_l::Vector{Float64}
+    pole_x::Array{Float64,1}
+    pole_y::Array{Float64,1}
+    follicle_x::Array{Float64,1}
+    follicle_y::Array{Float64,1}
+    follicle_angle::Array{Float64,1}
+    contact_angle::Array{Float64,1}
+end
+
+function Tracked_Whisker(n)
+    Tracked_Whisker([zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],1000.0 .* ones(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
+    zeros(Float64,n),zeros(Float64,n),zeros(Float64,n))
+end
+
 mutable struct Tracker_Handles
     frame::Int64 #currently active frame number
 
@@ -259,9 +276,8 @@ mutable struct Tracker_Handles
 
     selection_mode::Int64 #What the mouse will do when you click
 
-    tracked_whiskers_x::Vector{Vector{Float64}}
-    tracked_whiskers_y::Vector{Vector{Float64}}
-    tracked_whiskers_l::Vector{Float64}
+    tracked_w::Tracked_Whisker
+    draw_mechanics::Bool
 
     show_contact::Bool
     tracked_contact::BitArray{1}

@@ -331,9 +331,9 @@ function load_whisker_into_gui(han,path)
 
     for i=1:length(w_x)
         if frame_list[i] != 0
-            han.tracked_whiskers_x[frame_list[i]] = w_x[i]
-            han.tracked_whiskers_y[frame_list[i]] = w_y[i]
-            han.tracked_whiskers_l[frame_list[i]] = w_loss[i]
+            han.tracked_w.whiskers_x[frame_list[i]] = w_x[i]
+            han.tracked_w.whiskers_y[frame_list[i]] = w_y[i]
+            han.tracked_w.whiskers_l[frame_list[i]] = w_loss[i]
         end
     end
 
