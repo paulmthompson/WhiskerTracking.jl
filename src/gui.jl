@@ -38,7 +38,7 @@ function make_gui()
     false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
-    Tracked_Whisker(0),false,false,falses(1),zeros(Float64,1,1),false,false,falses(1),".",
+    Tracked_Whisker(0),false,false,falses(1),false,false,falses(1),".",
     classifier(),Analog_Class(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
 end
 
@@ -1090,7 +1090,11 @@ function draw_tracked_whisker(han::Tracker_Handles)
         stroke(ctx)
 
         if han.draw_mechanics
-
+            set_source_rgb(ctx,0,0,1)
+            x = han.tracked_w.pole_x[han.displayed_frame]
+            y = han.tracked_w.pole_y[han.displayed_frame]
+            arc(ctx, x,y, 5, 0, 2*pi);
+            stroke(ctx)
         end
     end
 end

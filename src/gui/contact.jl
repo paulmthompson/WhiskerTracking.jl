@@ -177,13 +177,13 @@ function contact_load_predicted_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         end
     end
 
-    filepath = open_dialog("Load Tracked Pole",han.b["win"])
+    #filepath = open_dialog("Load Tracked Pole",han.b["win"])
 
-    if filepath != ""
+    #if filepath != ""
 
-        p=read_pole_hdf5(filepath)
-        han.tracked_pole = p
-    end
+        #p=read_pole_hdf5(filepath)
+        #han.tracked_pole = p
+    #end
 
     nothing
 end

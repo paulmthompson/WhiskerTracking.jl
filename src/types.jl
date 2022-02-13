@@ -282,7 +282,6 @@ mutable struct Tracker_Handles
 
     show_contact::Bool
     tracked_contact::BitArray{1}
-    tracked_pole::Array{Float64,2}
     show_tracked_whisker::Bool
 
     show_event::Bool
