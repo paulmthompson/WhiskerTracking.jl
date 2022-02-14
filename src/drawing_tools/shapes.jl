@@ -9,8 +9,8 @@ function draw_arrow(ctx,x_b,y_b,m,a,mycolor=(1,1,1))
 
     move_to(ctx,x_b,y_b)
 
-    x_f = m * cos(a)
-    y_f = m * sin(a)
+    x_f = m * cos(a) + x_b
+    y_f = m * sin(a) + y_b
     line_to(ctx,x_f,y_f)
 
     stroke(ctx)
