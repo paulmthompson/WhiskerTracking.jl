@@ -8,7 +8,7 @@ function make_zoom_gui(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
 end
 
-function add_analog_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
+function add_zoom_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(zoom_select_cb,b["select_zoom_button"],"toggled",Void,(),false,(handles,))
 
@@ -50,25 +50,32 @@ function draw_zoom(han::Tracker_Handles)
 
     ctx=Gtk.getgc(han.zoom.c)
 
-     w = han.zoom.w2 - han.zoom.w1
-     h = han.zoom.h2 - han.zoom.h1
+    w_c = width(ctx)
+    h_c = height(ctx)
 
-     img2 = han.current_frame[w1:w2,h1:h2]
+     w = han.zoom.w2 - han.zoom.w1 + 1
+     h = han.zoom.h2 - han.zoom.h1 + 1
+
+     img2 = han.current_frame[han.zoom.h1:han.zoom.h2,han.zoom.w1:han.zoom.w2]'
+     img3 = zeros(UInt32,h,w)
 
      for i=1:length(img2)
-        han.plot_frame[i] = (convert(UInt32,img2[i]) << 16) | (convert(UInt32,img2[i]) << 8) | img2[i]
+        img3[i] = (convert(UInt32,img2[i]) << 16) | (convert(UInt32,img2[i]) << 8) | img2[i]
      end
+
+    Cairo.scale(ctx,w_c/w,h_c/h)
+
      stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
      surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
-                 Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
-                 han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
+                 Ptr{Nothing}, (Ptr{Nothing},Int32,Int32,Int32,Int32),
+                 img3, Cairo.FORMAT_RGB24, w, h, stride)
 
-     ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Void},
-     (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
+     ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Nothing},
+     (Ptr{Nothing},Ptr{Nothing},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
 
-     rectangle(ctx, 0, 0, w, h)
+    rectangle(ctx, 0, 0, w, h_c)
+    fill(ctx)
+    ccall((:cairo_identity_matrix,Cairo._jl_libcairo),Nothing, (Ptr{Nothing},), ctx.ptr)
 
-     fill(ctx)
-
-     reveal(han.zoom.c)
+    reveal(han.zoom.c)
 end

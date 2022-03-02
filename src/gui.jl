@@ -857,6 +857,12 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
         end
     end
 
+    if get_gtk_property(han.b["zoom_win"],:visible,Bool)
+        if han.selection_mode != 14
+            draw_zoom(han)
+        end
+    end
+
     reveal(han.c)
 end
 
