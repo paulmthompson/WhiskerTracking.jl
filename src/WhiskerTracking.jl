@@ -57,6 +57,7 @@ include("gui/janelia.jl")
 include("gui/export.jl")
 include("gui/contact.jl")
 include("gui/deeplearning.jl")
+include("gui/zoom.jl")
 
 include("drawing_tools/draw.jl")
 include("drawing_tools/erase.jl")

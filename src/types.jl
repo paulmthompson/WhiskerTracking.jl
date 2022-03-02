@@ -138,6 +138,16 @@ end
 Analog_Class() = Analog_Class(Canvas(100,100),100,false,zeros(Float64,0),Dict{Int64,Array{Float64,1}}(),Dict{Int64,Array{Float64,1}}(),
 Dict{Int64,Array{Float64,1}}(),Dict{Int64,Float64}())
 
+mutable struct Zoom_Class
+    c::Gtk.GtkCanvasLeaf
+    w1::Int64
+    w2::Int64
+    h1::Int64
+    h2::Int64
+end
+
+Zoom_Class() = Zoom_Class(Canvas(100,100),1,100,1,100)
+
 mutable struct NeuralNetwork
     labels::Array{Float32,4} #Labels for training
     imgs::Array{Float32,4} #Images for training
@@ -290,6 +300,7 @@ mutable struct Tracker_Handles
 
     class::classifier
     analog::Analog_Class
+    zoom::Zoom_Class
     nn::NeuralNetwork
     man::Manual_Class
     speed::Int64

@@ -39,7 +39,7 @@ function make_gui()
     falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     Tracked_Whisker(0),false,false,falses(1),false,false,falses(1),".",
-    classifier(),Analog_Class(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
+    classifier(),Analog_Class(),Zoom_Class(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -94,6 +94,11 @@ function add_additional_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     make_analog_gui(b,handles)
     make_menu_callbacks(b["analog_menu_"],b["analog_win"])
     add_analog_callbacks(b,handles)
+
+    #Zoom
+    make_zoom_gui(b,handles)
+    make_menu_callbacks(b["zoom_menu_"],b["zoom_win"])
+    add_zoom_callbacks(b,handles)
 
     #Tracing Callbacks
     make_menu_callbacks(b["manual_menu_"],b["tracing_win"])
@@ -944,6 +949,12 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
             println("Could not add point")
         end
 
+    elseif han.selection_mode == 14
+        try
+            select_zoom_location(han,m_x,m_y)
+        catch
+            println("Selecting Box failed")
+        end
     end
 
     if han.erase_mode
