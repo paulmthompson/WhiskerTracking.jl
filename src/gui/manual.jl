@@ -134,6 +134,7 @@ function exclude_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         if han.displayed_frame > han.man.partial_contact
             push!(han.man.exclude,(han.man.partial_contact,han.displayed_frame))
             update_exclude(han.man)
+            calc_contact_block(han)
         else
             println("error: start with beginning of contact block")
         end

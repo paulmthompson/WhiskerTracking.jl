@@ -754,9 +754,17 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
         #han.displayed_frame -= 1
     elseif event.keyval == 0xFFE9 #Left alt
         take_snapshot(han)
-    elseif event.keyval == 0x063
+    elseif event.keyval == 0x063 #c
         contact = get_gtk_property(han.b["contact_block_button"],:active,Bool)
         set_gtk_property!(han.b["contact_block_button"],:active,!contact)
+    elseif event.keyval == 0x02c # ,
+        c_i = get_gtk_property(han.b["contact_spin"],:value,Int64)
+        if c_i > 1
+            set_gtk_property!(han.b["contact_spin_adj"],:value,c_i - 1)
+        end
+    elseif event.keyval == 0x02e # .
+        c_i = get_gtk_property(han.b["contact_spin"],:value,Int64)
+        set_gtk_property!(han.b["contact_spin_adj"],:value,c_i + 1)
     end
 
     nothing
