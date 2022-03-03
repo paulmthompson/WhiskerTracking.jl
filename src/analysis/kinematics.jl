@@ -34,7 +34,7 @@ function get_ind_at_dist(x,y,thres)
     ind = length(x)
     s=0.0
     for i=2:length(x)
-        s=WhiskerTracking.distance_along(x,y,i) + s
+        s = WhiskerTracking.distance_along(x,y,i) + s
         if s > thres
             ind = i
             break
@@ -166,4 +166,36 @@ function remove_nan_whiskers(xx::Array,yy::Array)
         deleteat!(yy[i],nan_inds)
     end
     nothing
+end
+
+function bootstrap_ip_curv(w_x,w_y,ip_min,ip_max,min_length,n)
+
+    aa = WhiskerTracking.get_angle(w_x,w_y,30.0)
+
+    if ip_max > WhiskerTracking.total_length(w_x,w_y)
+        ip_max = WhiskerTracking.total_length(w_x,w_y)
+    end
+
+    w_x_p = (w_x .- w_x[1]) .* cos(aa) .+ (w_y .- w_y[1]) .* sin(aa) .+ w_x[1]
+    w_y_p = (w_x .- w_x[1]) .* -1 .* sin(aa) .+ (w_y .- w_y[1]) .* cos(aa) .+ w_y[1]
+
+    out=zeros(Float64,n)
+
+    for i=1:n
+
+        ip_1 = rand(ip_min:(ip_max-min_length))
+        ip_2 = rand((ip_1+min_length):ip_max)
+
+        (x_1,y_1) = WhiskerTracking.make_whisker_segment(w_x_p,w_y_p,ip_1,ip_2)
+
+        out[i]=WhiskerTracking.least_squares_quad(x_1,y_1)
+    end
+    out
+end
+
+function curvature_with_angle(w_x,w_y,aa)
+    w_x_p = (w_x .- w_x[1]) .* cos(aa) .+ (w_y .- w_y[1]) .* sin(aa) .+ w_x[1]
+    w_y_p = (w_x .- w_x[1]) .* -1 .* sin(aa) .+ (w_y .- w_y[1]) .* cos(aa) .+ w_y[1]
+
+    WhiskerTracking.least_squares_quad(w_x_p,w_y_p)
 end
