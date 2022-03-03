@@ -220,11 +220,12 @@ mutable struct Tracked_Whisker
     follicle_y::Array{Float64,1}
     follicle_angle::Array{Float64,1}
     contact_angle::Array{Float64,1}
+    normal_angle::Array{Float64,1}
 end
 
 function Tracked_Whisker(n)
     Tracked_Whisker([zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],1000.0 .* ones(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
-    zeros(Float64,n),zeros(Float64,n),zeros(Float64,n))
+    zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n))
 end
 
 mutable struct Tracker_Handles

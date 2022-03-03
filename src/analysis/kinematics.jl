@@ -170,10 +170,10 @@ end
 
 function bootstrap_ip_curv(w_x,w_y,ip_min,ip_max,min_length,n)
 
-    aa = WhiskerTracking.get_angle(w_x,w_y,30.0)
+    aa = get_angle(w_x,w_y,30.0)
 
-    if ip_max > WhiskerTracking.total_length(w_x,w_y)
-        ip_max = WhiskerTracking.total_length(w_x,w_y)
+    if ip_max > total_length(w_x,w_y)
+        ip_max = total_length(w_x,w_y)
     end
 
     w_x_p = (w_x .- w_x[1]) .* cos(aa) .+ (w_y .- w_y[1]) .* sin(aa) .+ w_x[1]
@@ -186,9 +186,9 @@ function bootstrap_ip_curv(w_x,w_y,ip_min,ip_max,min_length,n)
         ip_1 = rand(ip_min:(ip_max-min_length))
         ip_2 = rand((ip_1+min_length):ip_max)
 
-        (x_1,y_1) = WhiskerTracking.make_whisker_segment(w_x_p,w_y_p,ip_1,ip_2)
+        (x_1,y_1) = make_whisker_segment(w_x_p,w_y_p,ip_1,ip_2)
 
-        out[i]=WhiskerTracking.least_squares_quad(x_1,y_1)
+        out[i] = least_squares_quad(x_1,y_1)
     end
     out
 end
@@ -197,5 +197,5 @@ function curvature_with_angle(w_x,w_y,aa)
     w_x_p = (w_x .- w_x[1]) .* cos(aa) .+ (w_y .- w_y[1]) .* sin(aa) .+ w_x[1]
     w_y_p = (w_x .- w_x[1]) .* -1 .* sin(aa) .+ (w_y .- w_y[1]) .* cos(aa) .+ w_y[1]
 
-    WhiskerTracking.least_squares_quad(w_x_p,w_y_p)
+    least_squares_quad(w_x_p,w_y_p)
 end

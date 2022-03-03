@@ -1113,7 +1113,10 @@ function draw_tracked_whisker(han::Tracker_Handles)
             arc(ctx, x,y, 5, 0, 2*pi);
             stroke(ctx)
 
+            #a
             draw_arrow(ctx,x,y,30.0,han.tracked_w.contact_angle[han.displayed_frame],(1,1,1))
+
+            draw_arrow(ctx,x,y,30.0,han.tracked_w.normal_angle[han.displayed_frame],(1,1,1))
         end
     end
 end
