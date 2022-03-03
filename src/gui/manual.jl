@@ -13,6 +13,12 @@ function add_contact_mark_callbacks(b,handles)
 
     signal_connect(advance_slider_cb,b["contact_win"],"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
 
+    signal_connect(contact_angle_cb,b["contact_angle_toggle"],"toggled",Void,(),false,(handles,))
+    signal_connect(contact_location_cb,b["contact_location_toggle"],"toggled",Void,(),false,(handles,))
+    signal_connect(tracked_whisker_cb,b["tracked_whisker_toggle"],"toggled",Void,(),false,(handles,))
+    signal_connect(follicle_location_cb,b["follicle_location_toggle"],"toggled",Void,(),false,(handles,))
+    signal_connect(follicle_angle_cb,b["follicle_angle_button"],"toggled",Void,(),false,(handles,))
+
     nothing
 end
 
@@ -296,6 +302,70 @@ function get_contact_indexes(c,exclude,c_dur_min = 4)
     end
 
     (c_ind[keep], c_off[keep])
+end
+
+function contact_angle_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    if get_gtk_property(han.b["contact_angle_toggle"],:active,Bool)
+        han.selection_mode = 15
+    else
+        han.selection_mode = 1
+    end
+
+    nothing
+end
+
+function select_contact_angle(han::Tracker_Handles,m_x,m_y)
+
+    push!((han.c.mouse, :button1release), (c, event) -> contact_angle_stop(han, event.x, event.y,m_x,m_y))
+end
+
+function contact_angle_stop(han::Tracker_Handles,m_x2,m_y2,m_x,m_y)
+
+    han.tracked_w.contact_angle[han.displayed_frame] = atan(m_y2 - m_y, m_x2 - m_x)
+    update_normal_angle(han,han.displayed_frame)
+
+    pop!((han.c.mouse, :button1release))
+
+    redraw_all(han)
+end
+
+function update_normal_angle(han,i)
+    if han.man.pro_re_block[i] == 1 # Protraction
+        han.tracked_w.normal_angle[i] = han.tracked_w.contact_angle[i] - pi/2
+    else
+        han.tracked_w.normal_angle[i] = han.tracked_w.contact_angle[i] + pi/2
+    end
+end
+
+function contact_location_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    nothing
+end
+
+function tracked_whisker_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    nothing
+end
+
+function follicle_location_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    nothing
+end
+
+function follicle_angle_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
+
+    han, = user_data
+
+    nothing
 end
 
 function save_tracked_whisker(han::Tracker_Handles,file_path)

@@ -961,6 +961,12 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
         catch
             println("Selecting Box failed")
         end
+    elseif han.selection_mode == 15
+        try
+            select_contact_angle(han,m_x,m_y)
+        catch
+            println("Selecting contact angle failed")
+        end
     end
 
     if han.erase_mode
