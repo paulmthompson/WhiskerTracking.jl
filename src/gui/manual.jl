@@ -312,6 +312,8 @@ function save_tracked_whisker(han::Tracker_Handles,file_path)
         write(file,"ip_1",han.tracked_w.ip_1)
         write(file,"ip_2",han.tracked_w.ip_2)
         write(file,"whisker_pad",han.tracked_w.whisker_pad)
+        write(file,"intrinsic_x",han.tracked_w.intrinsic_x)
+        write(file,"intrinsic_y",han.tracked_w.intrinsic_y)
     close(file)
 end
 
@@ -329,5 +331,7 @@ function load_tracked_whisker(han::Tracker_Handles,file_path)
     han.tracked_w.ip_1 = read(file,"ip_1")
     han.tracked_w.ip_2 = read(file,"ip_2")
     han.tracked_w.whisker_pad = read(file,"whisker_pad")
+    han.tracked_w.intrinsic_x = read(file,"intrinsic_x")
+    han.tracked_w.intrinsic_y = read(file,"intrinsic_y")
     close(file)
 end

@@ -223,11 +223,13 @@ mutable struct Tracked_Whisker
     ip_1::Float64
     ip_2::Float64
     whisker_pad::Tuple{Float32,Float32}
+    intrinsic_x::Array{Float64,1}
+    intrinsic_y::Array{Float64,1}
 end
 
 function Tracked_Whisker(n)
     Tracked_Whisker([zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
-    zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),50.0,100.0,(0.0f0,0.0f0))
+    zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),50.0,100.0,(0.0f0,0.0f0),zeros(Float64,1),zeros(Float64,1))
 end
 
 mutable struct Tracker_Handles
