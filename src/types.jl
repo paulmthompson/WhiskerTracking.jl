@@ -213,7 +213,6 @@ end
 mutable struct Tracked_Whisker
     whiskers_x::Vector{Vector{Float64}}
     whiskers_y::Vector{Vector{Float64}}
-    whiskers_l::Vector{Float64}
     pole_x::Array{Float64,1}
     pole_y::Array{Float64,1}
     follicle_x::Array{Float64,1}
@@ -221,11 +220,14 @@ mutable struct Tracked_Whisker
     follicle_angle::Array{Float64,1}
     contact_angle::Array{Float64,1}
     normal_angle::Array{Float64,1}
+    ip_1::Float64
+    ip_2::Float64
+    whisker_pad::Tuple{Float32,Float32}
 end
 
 function Tracked_Whisker(n)
-    Tracked_Whisker([zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],1000.0 .* ones(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
-    zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n))
+    Tracked_Whisker([zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
+    zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),50.0,100.0,(0.0f0,0.0f0))
 end
 
 mutable struct Tracker_Handles

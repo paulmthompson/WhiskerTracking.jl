@@ -46,15 +46,26 @@ end
 #=
 Angle Calculation
 =#
-function get_angle(x::Array{T,1},y::Array{T,1},angle_dist=30.0) where T
+function get_angle(x::Array{T,1},y::Array{T,1},start_dist=0.0,angle_dist=30.0) where T
 
     s=0.0
     myangle = 0.0
+    j = 1
+    for i=2:length(x)
+        s = distance_along(x,y,i) + s
+
+        if s > start_dist
+            j = i - 1
+            break
+        end
+    end
+
+    s = 0.0
     for i=2:length(x)
         s = distance_along(x,y,i) + s
 
         if s>angle_dist
-            myangle = atan(y[i]-y[1],x[i]-x[1])
+            myangle = atan(y[i]-y[j],x[i]-x[j])
             break
         end
     end

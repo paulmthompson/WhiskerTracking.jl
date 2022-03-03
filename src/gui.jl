@@ -1082,10 +1082,6 @@ function draw_tracked_whisker(han::Tracker_Handles)
     w_x = han.tracked_w.whiskers_x[han.displayed_frame]
     w_y = han.tracked_w.whiskers_y[han.displayed_frame]
 
-    w_f = (350.0,25.0)
-
-    correct_follicle(w_x,w_y,w_f[1],w_f[2])
-
     if length(w_x) > 0
 
         move_to(ctx,w_x[1],w_y[1])
@@ -1094,9 +1090,7 @@ function draw_tracked_whisker(han::Tracker_Handles)
         end
         stroke(ctx)
 
-        high_snr_p1=50.0 #proximal edge of high SNR region
-        high_snr_p2=200.0 #distal edge of high SNR region
-        (x_i,y_i) = make_whisker_segment(w_x,w_y,high_snr_p1,high_snr_p2)
+        (x_i,y_i) = make_whisker_segment(w_x,w_y,han.tracked_w.ip_1,han.tracked_w.ip_2)
 
         set_source_rgba(ctx,58/255,235/255,52/255,0.9)
         set_line_width(ctx,0.5)
@@ -1117,6 +1111,14 @@ function draw_tracked_whisker(han::Tracker_Handles)
             draw_arrow(ctx,x,y,30.0,han.tracked_w.contact_angle[han.displayed_frame],(1,1,1))
 
             draw_arrow(ctx,x,y,30.0,han.tracked_w.normal_angle[han.displayed_frame],(1,1,1))
+
+            set_source_rgb(ctx,0,0,1)
+            x = han.tracked_w.follicle_x[han.displayed_frame]
+            y = han.tracked_w.follicle_y[han.displayed_frame]
+            arc(ctx, x,y, 5, 0, 2*pi);
+            stroke(ctx)
+
+            draw_arrow(ctx,x,y,30.0,han.tracked_w.follicle_angle[han.displayed_frame],(1,1,1))
         end
     end
 end
