@@ -1,5 +1,5 @@
 
-export savitsky_golay, central_difference
+export savitsky_golay, central_difference, mean_nan
 
 #Polynomial smoothing with the Savitsky Golay filters
 #
@@ -183,3 +183,10 @@ end
 function reset_tracked(t,interp_ids::Array{Int64,1})
    t[interp_ids] .= true
 end
+
+# https://discourse.julialang.org/t/nanmean-options/4994/9 by bjarthur
+_nanfunc(f, A, ::Colon) = f(filter(!isnan, A))
+_nanfunc(f, A, dims) = mapslices(a->_nanfunc(f,a,:), A, dims=dims)
+nanfunc(f, A; dims=:) = _nanfunc(f, A, dims)
+
+mean_nan(A) = dropdims(nanfunc(mean,A,dims=2),dims=2)

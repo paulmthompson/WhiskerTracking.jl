@@ -194,8 +194,7 @@ function bootstrap_ip_curv(w_x,w_y,ip_min,ip_max,min_length,n)
 
     for i=1:n
 
-        ip_1 = rand(ip_min:(ip_max-min_length))
-        ip_2 = rand((ip_1+min_length):ip_max)
+        (ip1,ip2) = generate_ip(ip_min,ip_max,min_length)
 
         (x_1,y_1) = make_whisker_segment(w_x_p,w_y_p,ip_1,ip_2)
 
@@ -204,9 +203,20 @@ function bootstrap_ip_curv(w_x,w_y,ip_min,ip_max,min_length,n)
     out
 end
 
-function curvature_with_angle(w_x,w_y,aa)
+function segment_curvature_with_angle(w_x::Array{T,1},w_y::Array{T,1},ip1::Real,ip2::Real,aa=get_angle(w_x,w_y)) where T
+    (ix_p,iy_p) = make_whisker_segment(w_x,w_y,ip1,ip2)
+    curvature_with_angle(ix_p,iy_p,aa)
+end
+
+function curvature_with_angle(w_x::Array{T,1},w_y::Array{T,1},aa::Real) where T
     w_x_p = (w_x .- w_x[1]) .* cos(aa) .+ (w_y .- w_y[1]) .* sin(aa) .+ w_x[1]
     w_y_p = (w_x .- w_x[1]) .* -1 .* sin(aa) .+ (w_y .- w_y[1]) .* cos(aa) .+ w_y[1]
 
     least_squares_quad(w_x_p,w_y_p)
+end
+
+function generate_ip(ip_min,ip_max,min_length)
+    ip1 = rand(ip_min:(ip_max-min_length))
+    ip2 = rand((ip1+min_length):ip_max)
+    (ip1,ip2)
 end
