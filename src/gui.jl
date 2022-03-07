@@ -765,6 +765,8 @@ function advance_slider_cb(w::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
     elseif event.keyval == 0x02e # .
         c_i = get_gtk_property(han.b["contact_spin"],:value,Int64)
         set_gtk_property!(han.b["contact_spin_adj"],:value,c_i + 1)
+    elseif event.keyval == 0x074 #t
+        trace_cb(han)
     end
 
     nothing
@@ -1029,6 +1031,10 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    trace_cb(han)
+end
+
+function trace_cb(han::Tracker_Handles)
     try
 
         han.send_frame[:,:] = han.current_frame'
@@ -1043,7 +1049,6 @@ function trace_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     catch
         println("Could not perform tracing")
     end
-
     nothing
 end
 
