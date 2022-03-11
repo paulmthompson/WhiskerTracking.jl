@@ -378,6 +378,25 @@ function follicle_location_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
 
+    if get_gtk_property(han.b["follicle_location_toggle"],:active,Bool)
+        han.selection_mode = 17
+    else
+        han.selection_mode = 1
+    end
+
+    nothing
+end
+
+function select_follicle_location(han::Tracker_Handles,m_x,m_y)
+
+    i = han.displayed_frame
+    while (han.man.contact[i] == 2)
+        han.tracked_w.follicle_x[i] = m_x
+        han.tracked_w.follicle_y[i] = m_y
+        i += 1
+    end
+
+    redraw_all(han)
     nothing
 end
 

@@ -983,6 +983,12 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
         catch
             println("Selecting contact location failed")
         end
+    elseif han.selection_mode == 17
+        try
+            select_follicle_location(han,m_x,m_y)
+        catch
+            println("Selecting follicle location failed")
+        end
     end
 
     if han.erase_mode
