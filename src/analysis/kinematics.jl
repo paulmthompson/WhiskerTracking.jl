@@ -220,3 +220,56 @@ function generate_ip(ip_min,ip_max,min_length)
     ip2 = rand((ip1+min_length):ip_max)
     (ip1,ip2)
 end
+
+#=
+New curvature 3/12/2022
+=#
+
+function rotate_by_angle(w_x,w_y,aa,wx0=w_x[1],wy0=w_y[1])
+    w_x_p = (w_x .- wx0) .* cos(aa) .+ (w_y .- wy0) .* sin(aa) .+ wx0
+    w_y_p = (w_x .- wx0) .* -1 .* sin(aa) .+ (w_y .- wy0) .* cos(aa) .+ wy0
+
+    (w_x_p,w_y_p)
+end
+
+function parabola_fit(x::AbstractArray{T,1},y::AbstractArray{T,1}) where T
+
+    x_mat = zeros(Float64,size(x,1),3)
+    for i=1:size(x,1)
+        x_mat[i,1] = x[i] * x[i]
+        x_mat[i,2] = x[i]
+        x_mat[i,3] = 1.0
+    end
+    coeffs = x_mat \ y
+
+    error = sum((coeffs[1] .* x.^2 .+ coeffs[2] .* x .+ coeffs[3] .- y).^2) ./ length(x)
+
+    (coeffs, error)
+end
+
+function curvature(x,a,b)
+   kappa = 2 * a / (1 + (2*a*x + b)^2)^(3/2)
+end
+
+function best_fit_parabola(x::AbstractArray{T,1},y::AbstractArray{T,1},ind1,ind2) where T
+
+    (mycoeffs,myerror) = parabola_fit(x[ind1:ind2],y[ind1:ind2])
+
+    min_error = myerror
+    min_coeffs = deepcopy(mycoeffs)
+    out_angle = 0.0
+
+    for i=0.0:pi/24:pi
+
+        (x1,y1) = rotate_by_angle(x,y,i)
+
+        (mycoeffs,myerror) = parabola_fit(x1[ind1:ind2],y1[ind1:ind2])
+
+        if myerror < min_error
+            min_error = myerror
+            out_angle = i
+            min_coeffs = deepcopy(mycoeffs)
+        end
+    end
+    (min_coeffs,out_angle)
+end
