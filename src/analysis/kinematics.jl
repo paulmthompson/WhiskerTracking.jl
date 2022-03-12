@@ -273,3 +273,10 @@ function best_fit_parabola(x::AbstractArray{T,1},y::AbstractArray{T,1},ind1,ind2
     end
     (min_coeffs,out_angle)
 end
+
+#Gives parabolic fit in original coordinate system using parabola fit from coordinate system rotated at arbitrary angle rot_angle
+function get_parabola_fit(x::AbstractArray{T,1},y::AbstractArray{T,1},coeffs,rot_angle) where T
+    (x1,y1) = rotate_by_angle(x,y,rot_angle)
+    y2 = coeffs[1].* x1.^2 .+ coeffs[2] .* x1 .+ coeffs[3]
+    (x2,y2) = rotate_by_angle(x1,y2,-rot_angle,x[1],y[1])
+end

@@ -1115,21 +1115,33 @@ function draw_tracked_whisker(han::Tracker_Handles)
 
     if length(w_x) > 0
 
+        #Draw Whisker
         move_to(ctx,w_x[1],w_y[1])
         for i=2:length(w_x)
             line_to(ctx,w_x[i],w_y[i])
         end
         stroke(ctx)
 
-        (x_i,y_i) = make_whisker_segment(w_x,w_y,han.tracked_w.ip_1,han.tracked_w.ip_2)
+        ip1 = han.tracked_w.ip_1[han.displayed_frame]
+        ip2 = han.tracked_w.ip_2[han.displayed_frame]
+
+        ip_1=get_ind_at_dist(w_x,w_y,ip1)
+        ip_2=get_ind_at_dist(w_x,w_y,ip2)
+
+        (x2,y2) = get_parabola_fit(w_x,w_y,han.tracked_w.parabola_coeffs[han.displayed_frame],han.tracked_w.parabola_angle[han.displayed_frame])
 
         set_source_rgba(ctx,58/255,235/255,52/255,0.9)
         set_line_width(ctx,0.5)
-        move_to(ctx,x_i[1],y_i[1])
-        for i=2:length(x_i)
-            line_to(ctx,x_i[i],y_i[i])
+        move_to(ctx,x2[ip_1],y2[ip_1])
+        for i=(ip_1+1):ip_2
+            line_to(ctx,x2[i],y2[i])
         end
         stroke(ctx)
+
+        myerror = sum((y2[ip_1:ip_2] .- w_y[ip_1:ip_2]).^2) / (ip_2 - ip_1)
+        #curvs = [curvature(x2[i],han.tracked_w.parabola_coeffs[han.displayed_frame][1:2]...) for i=ip_1:ip_2]
+
+        set_gtk_property!(han.b["parabola_error_label"],:label,string(round(myerror,digits=3)))
 
         if han.draw_mechanics
             set_source_rgb(ctx,0,0,1)
