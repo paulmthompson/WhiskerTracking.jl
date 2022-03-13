@@ -222,7 +222,7 @@ mutable struct Tracked_Whisker
     normal_angle::Array{Float64,1}
     ip_1::Array{Float64,1}
     ip_2::Array{Float64,1}
-    parabola_coeffs::Array{Array{Float64,1},1}
+    parabola_coeffs::Array{Float64,2}
     parabola_angle::Array{Float64,1}
     whisker_pad::Tuple{Float32,Float32}
     intrinsic_x::Array{Float64,1}
@@ -232,7 +232,7 @@ end
 function Tracked_Whisker(n)
     Tracked_Whisker([zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
     zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
-    50.0.*ones(Float64,n),400.0.*ones(Float64,n),[zeros(Float64,3) for i=1:n],zeros(Float64,n),(0.0f0,0.0f0),zeros(Float64,1),zeros(Float64,1))
+    50.0.*ones(Float64,n),400.0.*ones(Float64,n),zeros(Float64,3,n),zeros(Float64,n),(0.0f0,0.0f0),zeros(Float64,1),zeros(Float64,1))
 end
 
 mutable struct Tracker_Handles
