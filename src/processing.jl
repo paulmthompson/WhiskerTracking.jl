@@ -123,6 +123,8 @@ function assign_woi(han::Tracker_Handles)
         end
     end
 
+    update_table(han)
+
     nothing
 end
 

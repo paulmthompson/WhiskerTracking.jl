@@ -2,11 +2,11 @@
 
 function update_table(han::Tracker_Handles)
 
-    table_list=ListStore(Int32,Bool)
+    empty!(han.b["whisker_list_store"])
 
-    for i=1:length(han.frame_list)
-        push!(table_list,(han.frame_list[i],true))
+    frame_list = sort(collect(keys(han.woi)))
+    for i=1:length(frame_list)
+        push!(han.b["whisker_list_store"],(frame_list[i],true))
     end
 
-    han.b["whisker_list_store"] = table_list
 end
