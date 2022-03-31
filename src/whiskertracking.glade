@@ -2498,7 +2498,6 @@ is nearest to the pad location.</property>
                   <object class="GtkTreeView" id="frame_tree_view">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="margin_bottom">87</property>
                     <property name="model">whisker_list_store</property>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
@@ -2507,9 +2506,9 @@ is nearest to the pad location.</property>
                       <object class="GtkTreeViewColumn">
                         <property name="title" translatable="yes">Frame</property>
                         <child>
-                          <object class="GtkCellRendererPixbuf"/>
+                          <object class="GtkCellRendererText"/>
                           <attributes>
-                            <attribute name="stock-size">0</attribute>
+                            <attribute name="text">0</attribute>
                           </attributes>
                         </child>
                       </object>
