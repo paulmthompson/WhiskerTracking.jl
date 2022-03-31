@@ -574,6 +574,8 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         redraw_all(han)
         save_backup(han)
 
+        update_table(han)
+
     catch
         println("Could not add frame")
     end
