@@ -33,7 +33,7 @@ function make_gui()
 
     these_paths = Save_Paths("",false)
 
-    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,1,1,c,c2,zeros(UInt32,w,h),
+    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,c2,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,Dict{Int64,Bool}(),0,Whisker1(),false,
     wt,image_adjustment_settings(),zeros(Int64,0),1,
@@ -233,9 +233,6 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
     handles.max_frames = get_max_frames(vid_name)
 
     handles.man=Manual_Class(handles.max_frames)
-
-    handles.start_frame = 1
-    handles.end_frame = handles.max_frames
 
     handles.tracked_contact = falses(handles.max_frames)
 
@@ -661,9 +658,6 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
         write(file,"Whiskers",mywhiskers)
         write(file,"Frames_Tracked",han.tracked)
-        write(file,"Start_Frame", han.start_frame)
-        write(file,"Touch",han.touch_frames)
-        write(file,"Touch_Inds",han.touch_frames_i)
         #write(file,"all_whiskers",han.wt.all_whiskers)
 
         close(file)
@@ -687,21 +681,6 @@ function load_whisker_data(han,filepath)
                 han.woi[mywhiskers[i].time] = deepcopy(mywhiskers[i])
             end
             han.tracked = mytracked
-        end
-        if JLD.exists(file,"Start_Frame")
-            start_frame = read(file,"Start_Frame")
-            if han.start_frame != start_frame
-                println("Error: This data was not tracked starting at the same point in the video")
-            end
-        end
-        if JLD.exists(file,"Touch")
-            han.touch_frames=read(file,"Touch")
-        end
-        if JLD.exists(file,"Touch_Inds")
-            han.touch_frames_i=read(file,"Touch_Inds")
-        end
-        if JLD.exists(file,"all_whiskers")
-            #han.wt.all_whiskers=read(file,"all_whiskers")
         end
         close(file)
 
