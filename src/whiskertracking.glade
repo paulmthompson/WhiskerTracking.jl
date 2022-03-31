@@ -2423,18 +2423,6 @@ is nearest to the pad location.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="delete_button">
-                <property name="label" translatable="yes">Delete Whisker</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkButton" id="add_frame_button">
                 <property name="label" translatable="yes">Add Frame to Tracking</property>
                 <property name="visible">True</property>
@@ -2492,6 +2480,7 @@ is nearest to the pad location.</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="model">whisker_list_store</property>
+                    <property name="activate_on_single_click">True</property>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
                     </child>
@@ -2540,26 +2529,13 @@ is nearest to the pad location.</property>
             <child>
               <placeholder/>
             </child>
+            <child>
+              <placeholder/>
+            </child>
           </object>
           <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkGrid">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-          </object>
-          <packing>
-            <property name="left_attach">1</property>
-            <property name="top_attach">2</property>
           </packing>
         </child>
         <child>
@@ -2799,6 +2775,9 @@ is nearest to the pad location.</property>
             <property name="left_attach">0</property>
             <property name="top_attach">3</property>
           </packing>
+        </child>
+        <child>
+          <placeholder/>
         </child>
         <child>
           <placeholder/>
