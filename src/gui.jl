@@ -123,6 +123,8 @@ function add_additional_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
     make_menu_callbacks(b["dl_menu_"],b["deep_learning_win"])
     add_deeplearning_callbacks(b,handles)
 
+    add_table_callbacks(b,handles)
+
     Gtk.showall(handles.b["win"])
 
     nothing
