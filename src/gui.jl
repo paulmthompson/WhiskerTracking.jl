@@ -49,7 +49,6 @@ function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(erase_cb,b["erase_button"], "clicked",Void,(),false,(handles,))
     signal_connect(whisker_select_cb,handles.c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
-    signal_connect(delete_cb,b["delete_button"], "clicked",Void,(),false,(handles,))
 
     signal_connect(advance_slider_cb,b["win"],"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
     signal_connect(advance_slider_cb_mouse,b["win"],"scroll-event",Void,(Ptr{Gtk.GdkEventScroll},),false,(handles,))
@@ -597,6 +596,8 @@ function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         redraw_all(han)
         save_backup(han)
 
+        update_table(han)
+
     catch
         println("Could not delete frame")
     end
@@ -773,16 +774,6 @@ end
 
 function take_snapshot(han::Tracker_Handles)
     save_label_image(han,han.save_label_path)
-end
-
-function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.tracked[han.displayed_frame]=false
-    update_new_frame(han)
-
-    nothing
 end
 
 function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
