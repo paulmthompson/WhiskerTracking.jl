@@ -45,7 +45,6 @@ end
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     signal_connect(frame_slider_cb, b["frame_slider"], "value-changed", Void, (), false, (handles,))
-    signal_connect(frame_select, b["frame_advance_sb"], "value-changed", Void, (), false, (handles,))
     signal_connect(trace_cb,b["trace_button"], "clicked", Void, (), false, (handles,))
 
     signal_connect(erase_cb,b["erase_button"], "clicked",Void,(),false,(handles,))
@@ -569,10 +568,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         #pole loc
         han.pole_loc[new_frame]=zeros(Float32,2)
 
-        #Change frame list spin button maximum number and current index
-        set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.woi))
-        set_gtk_property!(han.b["labeled_frame_adj"],:value,get_frame_index(han.woi,new_frame))
-
         redraw_all(han)
         save_backup(han)
 
@@ -583,17 +578,6 @@ function add_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     end
 
     nothing
-end
-
-function add_image_nums_to_gui(han::WhiskerTracking.Tracker_Handles,img_nums)
-    for i in img_nums
-       han.woi[i] = WhiskerTracking.Whisker1()
-        han.tracked[i] = false
-        han.pole_present[i] = false
-        han.pole_loc[i] = zeros(Float32,2)
-    end
-    han.frame_list=sort(collect(keys(han.woi)))
-    set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.woi))
 end
 
 function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
@@ -609,10 +593,6 @@ function delete_frame_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
         delete!(han.tracked,new_frame)
         delete!(han.pole_present,new_frame)
         delete!(han.pole_loc,new_frame)
-
-        #Change frame list spin button maximum number and current index
-        set_gtk_property!(han.b["labeled_frame_adj"],:value,1)
-        set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.woi))
 
         redraw_all(han)
         save_backup(han)
@@ -793,20 +773,6 @@ end
 
 function take_snapshot(han::Tracker_Handles)
     save_label_image(han,han.save_label_path)
-end
-
-function frame_select(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    han.frame = getproperty(han.b["labeled_frame_adj"],:value,Int64)
-    set_gtk_property!(han.b["adj_frame"],:value,han.frame_list[han.frame])
-
-    #update_new_frame(han)
-
-    #adjust_contrast_gui(han)
-
-    nothing
 end
 
 function delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
