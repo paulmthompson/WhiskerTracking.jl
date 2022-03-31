@@ -261,7 +261,6 @@ mutable struct Tracker_Handles
     num_whiskers::Int64
     sw::Int64 #Selected Whisker
 
-    auto_mode::Bool
     erase_mode::Bool
 
     tracked::Dict{Int64,Bool} #Array of true/false to specify if corresponding frame has been tracked
@@ -271,17 +270,9 @@ mutable struct Tracker_Handles
 
     draw_mode::Bool
 
-    touch_mode::Bool
-
-    touch_override_mode::Bool
-    touch_frames::BitArray{1}
-    touch_frames_i::Array{Int64,1}
     wt::Tracker
 
     im_adj::image_adjustment_settings
-
-    discrete_auto_calc::Bool
-    d_spacing::Int64
 
     frame_list::Array{Int64,1}
 

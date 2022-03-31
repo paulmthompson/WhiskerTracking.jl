@@ -35,8 +35,8 @@ function make_gui()
 
     handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,1,1,c,c2,zeros(UInt32,w,h),
     zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
-    false,false,Dict{Int64,Bool}(),0,Whisker1(),false,false,false,
-    falses(0),Array{Int64,1}(),wt,image_adjustment_settings(),true,2,zeros(Int64,0),1,
+    false,Dict{Int64,Bool}(),0,Whisker1(),false,
+    wt,image_adjustment_settings(),zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     Tracked_Whisker(0),false,false,falses(1),false,false,falses(1),".",
     classifier(),Analog_Class(),Zoom_Class(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
@@ -65,8 +65,6 @@ function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
     #File Callbacks
     signal_connect(load_video_cb, b["load_video_"], "activate",Void,(),false,(handles,))
-    signal_connect(save_contact_cb,b["save_contact_"],"activate",Void,(),false,(handles,))
-    signal_connect(load_contact_cb,b["load_contact_"],"activate",Void,(),false,(handles,))
 
     add_additional_callbacks(b,handles)
 end
@@ -802,7 +800,6 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
 
     fill(ctx)
 
-    draw_touch(han) #Indicates manual contact classification
     draw_touch2(han)
 
     draw_event(han)

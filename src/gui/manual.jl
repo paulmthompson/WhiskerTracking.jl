@@ -192,6 +192,24 @@ function load_manual_class(man::Manual_Class,path)
     nothing
 end
 
+
+# Mark Contact Training Frame or not training frame
+function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
+
+    han, contact = user_data
+
+    han.man.contact[han.displayed_frame] = contact + 1
+    calc_contact_block(han)
+
+    draw_touch2(han)
+
+    nothing
+end
+
+#=
+Draw marker to indicate that touch has occured
+=#
+
 function make_range(x::Tuple)
     x[1]:x[2]
 end

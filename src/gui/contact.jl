@@ -116,51 +116,6 @@ end
 contact_estimators(han)=getproperty(han.c_widgets.n_estimators_button,:value,Int64)
 contact_depth(han)=getproperty(han.c_widgets.forest_depth_button,:value,Int64)
 
-#Load labels
-function load_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    filepath = open_dialog("Load Contact Data",han.b["win"])
-
-    if filepath != ""
-        file = matopen(filepath,"r")
-        if MAT.exists(file,"Touch_Inds")
-            touch_inds = read(file,"Touch_Inds")
-            han.touch_frames_i = touch_inds
-            setproperty!(han.contact_widgets.training_num_label,:label,string(length(han.touch_frames_i)))
-        end
-        if MAT.exists(file,"Touch")
-            touch = read(file,"Touch")
-            han.touch_frames = convert(BitArray{1},touch)
-        end
-        close(file)
-    end
-
-    nothing
-end
-
-function save_contact_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
-
-    han, = user_data
-
-    filepath = save_dialog("Save Contact Data",han.b["win"])
-
-    if filepath != ""
-        if filepath[end-3:end]==".mat"
-        else
-            filepath=string(filepath,".mat")
-        end
-
-        file=matopen(filepath,"w")
-        write(file,"Touch_Inds",han.touch_frames_i)
-        write(file,"Touch",convert(Array{Int64,1},han.touch_frames))
-        close(file)
-    end
-
-    nothing
-end
-
 function contact_load_predicted_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     han, = user_data
@@ -188,62 +143,6 @@ function contact_load_predicted_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
     nothing
 end
 
-# Mark Contact Training Frame or not training frame
-function touch_override_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Int64})
-
-    han, contact = user_data
-
-    #Check if this frame is already in the contact list
-    if isempty(find(han.touch_frames_i.==han.displayed_frame))
-
-        push!(han.touch_frames_i,han.displayed_frame)
-        push!(han.touch_frames,contact)
-
-        setproperty!(han.contact_widgets.training_num_label,:label,string(length(han.touch_frames_i)))
-
-        #Do we need to sort these here?
-
-    else #Change existing entry
-
-        ind=find(han.touch_frames_i.==han.displayed_frame)[1]
-        han.touch_frames[ind] = contact
-    end
-
-    han.man.contact[han.displayed_frame] = contact + 1
-    calc_contact_block(han)
-
-
-    draw_touch(han)
-
-    nothing
-end
-
-#=
-Draw marker to indicate that touch has occured
-=#
-
-function draw_touch(han::Tracker_Handles)
-
-    if !isempty(find(han.touch_frames_i.==han.displayed_frame))
-
-        ctx=Gtk.getgc(han.c)
-
-        ind=find(han.touch_frames_i.==han.displayed_frame)[1]
-
-        if han.touch_frames[ind]
-            set_source_rgb(ctx,1,0,0)
-        else
-            set_source_rgb(ctx,1,1,1)
-        end
-
-        rectangle(ctx,600,0,20,20)
-        fill(ctx)
-
-        reveal(han.c)
-    end
-
-    nothing
-end
 
 function draw_touch_prediction(han::Tracker_Handles,x,y)
 
