@@ -322,12 +322,7 @@ end
 
 function load_whisker_into_gui(han,path)
 
-    file=jldopen(path)
-    w_x=read(file,"w_x")
-    w_y=read(file,"w_y")
-    frame_list = read(file,"frame_list")
-    w_loss = read(file, "loss")
-    close(file)
+    (w_x,w_y,frame_list,w_loss) = load_whisker(path)
 
     for i=1:length(w_x)
         if frame_list[i] != 0
@@ -338,4 +333,16 @@ function load_whisker_into_gui(han,path)
     end
 
     nothing
+end
+
+function load_whisker(path)
+
+    file=jldopen(path)
+    w_x=read(file,"w_x")
+    w_y=read(file,"w_y")
+    frame_list = read(file,"frame_list")
+    w_loss = read(file, "loss")
+    close(file)
+
+    (w_x,w_y,frame_list,w_loss)
 end
