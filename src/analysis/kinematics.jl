@@ -326,5 +326,5 @@ function convert_to_angular_coordinates(x,y,d_vec_abs)
         x_p1 = x_p2; y_p1 = y_p2;
         w_dx1 = w_dx2; w_dy1 = w_dy2;
     end
-    w_theta
+    (w_theta,last_ind)
 end
