@@ -280,3 +280,43 @@ function get_parabola_fit(x::AbstractArray{T,1},y::AbstractArray{T,1},coeffs,rot
     y2 = coeffs[1].* x1.^2 .+ coeffs[2] .* x1 .+ coeffs[3]
     (x2,y2) = rotate_by_angle(x1,y2,-rot_angle,x[1],y[1])
 end
+
+# This will convert a whisker from being described with x,y positions to be described by the angles between head to tail segments of the whisker
+#spaced apart by magnitudes given in d_vec_abs
+function convert_to_angular_coordinates(x,y,d_vec_abs)
+
+    x_p2 = 0.0
+    y_p2 = 0.0
+    x_p1 = 0.0
+    y_p1 = 0.0
+    
+    w_dx2 = 0.0
+    w_dx1 = 0.0
+    w_dy2 = 0.0
+    w_dy1 = 0.0
+
+    w_theta = zeros(Float64,length(d_vec_abs))
+    
+    for j=1:length(d_vec_abs)
+    
+        ind = WhiskerTracking.get_ind_at_dist(x,y,d_vec_abs[j])
+        x_p2 = x[ind]
+        y_p2 = y[ind]
+        
+        if j==1
+            w_dx2 = x_p2 - x[1]
+            w_dy2 = y_p2 - y[1]
+            w_theta[j] = atan(w_dy2,w_dx2)
+        else
+            w_dx2 = x_p2 - x_p1
+            w_dy2 = y_p2 - y_p1
+            
+            a_mag = sqrt(w_dx2^2 + w_dy2^2)
+            b_mag = sqrt(w_dx1^2 + w_dy1^2)
+            w_theta[j] = acos(dot([w_dx2;w_dy2],[w_dx1;w_dy1]) / (a_mag * b_mag))
+        end
+        x_p1 = x_p2; y_p1 = y_p2;
+        w_dx1 = w_dx2; w_dy1 = w_dy2;
+    end
+    w_theta
+end
