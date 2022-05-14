@@ -322,7 +322,7 @@ end
 
 function load_whisker_into_gui(han,path)
 
-    (w_x,w_y,frame_list,w_loss) = load_whisker(path)
+    (w_x,w_y,w_loss,frame_list) = load_whisker(path)
 
     for i=1:length(w_x)
         if frame_list[i] != 0
@@ -344,5 +344,5 @@ function load_whisker(path)
     w_loss = read(file, "loss")
     close(file)
 
-    (w_x,w_y,frame_list,w_loss)
+    (w_x,w_y,w_loss,frame_list)
 end
