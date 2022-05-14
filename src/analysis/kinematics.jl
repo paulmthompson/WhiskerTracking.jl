@@ -296,10 +296,18 @@ function convert_to_angular_coordinates(x,y,d_vec_abs)
     w_dy1 = 0.0
 
     w_theta = zeros(Float64,length(d_vec_abs))
+
+    w_t = total_length(x,y)
+
+    last_ind = length(d_vec_abs)
+    if w_t < d_vec_abs[last_ind]
+        last_ind = findlast(d_vec_abs.<w_t)
+    end
     
-    for j=1:length(d_vec_abs)
+    for j=1:last_ind
     
         ind = WhiskerTracking.get_ind_at_dist(x,y,d_vec_abs[j])
+
         x_p2 = x[ind]
         y_p2 = y[ind]
         
