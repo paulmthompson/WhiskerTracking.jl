@@ -43,6 +43,24 @@ function get_ind_at_dist(x,y,thres)
     ind
 end
 
+function get_ind_at_dist_exact(x,y,thres)
+    ind = length(x)
+    s1=0.0
+    s0=0.0
+    x_out = x[end]
+    y_out = y[end]
+    for i=2:length(x)
+        s1 = WhiskerTracking.distance_along(x,y,i) + s0
+        if s1 > thres
+            x_out = x[i-1] + (thres - s0) * (x[i] - x[i-1]) / (s1 - s0)
+            y_out = y[i-1] + (thres - s0) * (y[i] - y[i-1]) / (s1 - s0)
+            break
+        end
+        s0 = s1
+    end
+    (x_out,y_out)
+end
+
 #=
 Angle Calculation
 =#
@@ -295,7 +313,8 @@ function convert_to_angular_coordinates(x,y,d_vec_abs)
     w_dy2 = 0.0
     w_dy1 = 0.0
 
-    w_theta = zeros(Float64,length(d_vec_abs))
+    w_theta = zeros(Float64,length(d_vec_abs)) #angle between
+    w_theta_absolute = zeros(Float64,length(d_vec_abs))
 
     w_t = total_length(x,y)
 
@@ -306,25 +325,23 @@ function convert_to_angular_coordinates(x,y,d_vec_abs)
     
     for j=1:last_ind
     
-        ind = WhiskerTracking.get_ind_at_dist(x,y,d_vec_abs[j])
+        (x_p2,y_p2) = get_ind_at_dist_exact(x,y,d_vec_abs[j])
 
-        x_p2 = x[ind]
-        y_p2 = y[ind]
-        
         if j==1
             w_dx2 = x_p2 - x[1]
             w_dy2 = y_p2 - y[1]
-            w_theta[j] = atan(w_dy2,w_dx2)
+            w_theta[j] = 0.0
         else
             w_dx2 = x_p2 - x_p1
             w_dy2 = y_p2 - y_p1
-            
+
             a_mag = sqrt(w_dx2^2 + w_dy2^2)
             b_mag = sqrt(w_dx1^2 + w_dy1^2)
             w_theta[j] = acos(dot([w_dx2;w_dy2],[w_dx1;w_dy1]) / (a_mag * b_mag))
         end
+        w_theta_absolute[j] = atan(w_dy2,w_dx2)
         x_p1 = x_p2; y_p1 = y_p2;
         w_dx1 = w_dx2; w_dy1 = w_dy2;
     end
-    (w_theta,last_ind)
+    (w_theta,w_theta_absolute,last_ind)
 end
