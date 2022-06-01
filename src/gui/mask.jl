@@ -175,7 +175,6 @@ function plot_mask(han::Tracker_Handles)
     reveal(han.c)
 end
 
-
 function draw_mask(han::Tracker_Handles)
 
     ctx=Gtk.getgc(han.c)
@@ -189,4 +188,34 @@ function draw_mask(han::Tracker_Handles)
     stroke(ctx)
 
     reveal(han.c)
+end
+
+function find_mask_intersection(mask,x::Array{T,1},y::Array{T,1}) where T
+
+    found = false
+    ind = 0
+
+    for i=2:length(x)
+        wx2 = x[i]
+        wx1 = x[i-1]
+        wy2 = y[i]
+        wy1 = y[i-1]
+        for j=2:length(mask)
+            if WhiskerTracking.intersect(mask[j-1][1],mask[j][1], wx1,wx2,
+                mask[j-1][2],mask[j][2],wy1,wy2)
+                ind = i
+                found = true 
+                break
+            end
+        end
+        if found
+            break 
+        end
+    end
+    return ind
+end
+
+function find_mask_intersection(mask,w::Whisker1)
+
+    find_mask_intersection(mask,w.x,w.y)
 end
