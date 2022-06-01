@@ -174,3 +174,19 @@ function plot_mask(han::Tracker_Handles)
 
     reveal(han.c)
 end
+
+
+function draw_mask(han::Tracker_Handles)
+
+    ctx=Gtk.getgc(han.c)
+
+    set_source_rgb(ctx,1.0,0.0,0.0)
+
+    move_to(ctx,han.mask[1][1],han.mask[1][2])
+    for i=2:length(han.mask)
+        line_to(ctx,han.mask[i][1],han.mask[i][2])
+    end
+    stroke(ctx)
+
+    reveal(han.c)
+end

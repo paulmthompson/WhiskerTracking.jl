@@ -302,6 +302,8 @@ mutable struct Tracker_Handles
     man::Manual_Class
     speed::Int64
 
+    mask::Array{Tuple{Float64,Float64},1} #This is a line that goes around the face that will clip the whiskers
+
     paths::Save_Paths
     temp_frame::Array{UInt8,2}
 end

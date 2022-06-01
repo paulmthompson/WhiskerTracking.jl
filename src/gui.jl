@@ -39,7 +39,7 @@ function make_gui()
     wt,image_adjustment_settings(),zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     Tracked_Whisker(0),false,false,falses(1),false,false,falses(1),".",
-    classifier(),Analog_Class(),Zoom_Class(),NeuralNetwork(),Manual_Class(),1,these_paths,zeros(UInt8,w,h))
+    classifier(),Analog_Class(),Zoom_Class(),NeuralNetwork(),Manual_Class(),1,Array{Tuple{Float64,Float64},1}(),these_paths,zeros(UInt8,w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -850,7 +850,7 @@ Mode 5 =
 Mode 10 = Select Whisker Pad
 Mode 11 = Select ROI
 Mode 12 = Select Pole
-Mode 13 = Discrete Select
+Mode 13 = Draw Mask around face
 =#
 
 function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Handles})
@@ -896,7 +896,7 @@ function whisker_select_cb(widget::Ptr,param_tuple,user_data::Tuple{Tracker_Hand
         end
     elseif han.selection_mode == 13
         try
-            #add_discrete_point(han,m_x,m_y)
+            draw_start(han,m_x,m_y,2)
             redraw_all(han)
         catch
             println("Could not add point")
