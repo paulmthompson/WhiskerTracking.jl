@@ -346,3 +346,16 @@ function load_whisker(path)
 
     (w_x,w_y,w_loss,frame_list)
 end
+
+function write_mask(han,filepath)
+    jldopen(filepath, "w") do file
+        file["mask"] = han.mask
+    end
+end
+
+function load_mask(filepath)
+    file = jldopen(filepath)
+    mask = read(file,"mask")
+    close(file)
+    mask
+end
