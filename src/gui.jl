@@ -303,7 +303,7 @@ function update_new_frame(han)
         han.displayed_frame = round(Int,get_gtk_property(han.b["adj_frame"],:value,Int))
 
         #Reset array of displayed whiskers
-        han.wt.whiskers[:]=Array{Whisker1,1}()
+        han.wt.whiskers=Array{Whisker1,1}()
 
         frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
         try

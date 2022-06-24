@@ -101,6 +101,8 @@ function assign_woi(han::Tracker_Handles)
         han.tracked_w.whiskers_x[han.displayed_frame] = deepcopy(han.woi[han.displayed_frame].x)
         han.tracked_w.whiskers_y[han.displayed_frame] = deepcopy(han.woi[han.displayed_frame].y)
 
+        han.tracked_w.whiskers_l[han.displayed_frame] = 1.0 # Manual assignment is a loss of zero
+
         correct_follicle(han.tracked_w.whiskers_x[han.displayed_frame],han.tracked_w.whiskers_y[han.displayed_frame],han.tracked_w.whisker_pad...)
 
         x = han.tracked_w.whiskers_x[han.displayed_frame]

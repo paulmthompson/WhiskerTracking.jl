@@ -368,12 +368,32 @@ function load_whisker_arrays(file)
     (w_x,w_y,w_loss,frame_list)
 end
 
-function save_tracked_whisker(path,tracked)
+function load_whisker_dict(file)
+
+    tracked = file["tracked"]
+end
+
+function save_tracked_whisker(path,tracked_w::Tracked_Whisker)
+
+    tracked=Dict{Int,Tuple{Array{Float64,1},Array{Float64,1},Float64}}()
+
+    for i=1:length(tracked_w.whiskers_x)
+
+        if length(tracked_w.whiskers_x[i]) > 0
+            tracked[i] = (tracked_w.whiskers_x[i],tracked_w.whiskers_y[i],tracked_w.whiskers_l[i])
+        end
+    end
+
+    save_tracked_whisker(path,tracked)
+end
+
+function save_tracked_whisker(path,tracked::Dict{Int,Tuple{Array{Float64,1},Array{Float64,1},Float64}})
 
     jldopen(path, "w") do file
         file["tracked"] = tracked
     end
 
+    nothing
 end
 
 function write_mask(han,filepath)
