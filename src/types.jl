@@ -210,6 +210,17 @@ function Save_Paths(mypath,make_dirs=true)
     out
 end
 
+mutable struct Draw_Area
+    surface::Cairo.CairoSurfaceImage{UInt32}
+    plot_frame::Array{UInt32,2}
+    img2::Array{UInt8,2} #This is the image modified in draw image task
+end
+
+function Draw_Area(w,h) 
+    surface = CairoImageSurface(zeros(UInt32,h,w), Cairo.FORMAT_RGB24)
+    Draw_Area(surface,zeros(UInt32,w,h),zeros(UInt8,w,h))
+end
+
 mutable struct Tracked_Whisker
     path::String
     whiskers_x::Vector{Vector{Float64}}
@@ -251,11 +262,9 @@ mutable struct Tracker_Handles
     c::Gtk.GtkCanvasLeaf
     c2::Gtk.GtkCanvasLeaf
 
-    plot_frame::Array{UInt32,2}
-
     current_frame::Array{UInt8,2}
     current_frame2::Array{UInt8,2}
-    img2::Array{UInt8,2} #This is the image modified in draw image task
+    
 
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
     woi::Dict{Int64,WhiskerTracking.Whisker1} #Dictionary of properties for whisker of interest for every frame
@@ -309,4 +318,6 @@ mutable struct Tracker_Handles
 
     paths::Save_Paths
     temp_frame::Array{UInt8,2}
+
+    draw_area::Draw_Area
 end

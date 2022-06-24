@@ -33,13 +33,13 @@ function make_gui()
 
     these_paths = Save_Paths("",false)
 
-    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,c2,zeros(UInt32,w,h),
-    zeros(UInt8,h,w),zeros(UInt8,w,h),zeros(UInt8,w,h),0,woi_array,1,1,
+    handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,c2,
+    zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
     false,Dict{Int64,Bool}(),0,Whisker1(),false,
     wt,image_adjustment_settings(),zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
     Tracked_Whisker(0),false,false,falses(1),false,false,falses(1),".",
-    classifier(),Analog_Class(),Zoom_Class(),NeuralNetwork(),Manual_Class(),1,Array{Tuple{Float64,Float64},1}(),these_paths,zeros(UInt8,w,h))
+    classifier(),Analog_Class(),Zoom_Class(),NeuralNetwork(),Manual_Class(),1,Array{Tuple{Float64,Float64},1}(),these_paths,zeros(UInt8,w,h),Draw_Area(w,h))
 end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
@@ -205,10 +205,10 @@ function resize_for_video(han::Tracker_Handles,w,h,fps)
     han.w = w
     han.fps = fps
 
-    han.plot_frame = zeros(UInt32,w,h)
+    han.draw_area = Draw_Area(w,h)
+
     han.current_frame = zeros(UInt8,h,w)
     han.current_frame2 = zeros(UInt8,w,h)
-    han.img2 = zeros(UInt8,w,h)
 
     han.send_frame = zeros(UInt8,w,h)
     han.temp_frame = zeros(UInt8,w,h)
@@ -758,22 +758,18 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
    ctx=Gtk.getgc(han.c)
 
     w,h = size(img)
-    han.img2[:] = img
+    han.draw_area.img2[:] = img
     if sharpen_mode(han.b)
-        han.img2 = sharpen_image(han.img2,han.im_adj.sharpen_win,han.im_adj.sharpen_reps,han.im_adj.sharpen_filter)
+        han.draw_area.img2 = sharpen_image(han.draw_area.img2,han.im_adj.sharpen_win,han.im_adj.sharpen_reps,han.im_adj.sharpen_filter)
     end
-    adjust_contrast(han.img2,han.im_adj.contrast_min,han.im_adj.contrast_max)
+    adjust_contrast(han.draw_area.img2,han.im_adj.contrast_min,han.im_adj.contrast_max)
 
-    for i=1:length(han.img2)
-       han.plot_frame[i] = (convert(UInt32,han.img2[i]) << 16) | (convert(UInt32,han.img2[i]) << 8) | han.img2[i]
+    for i=1:length(han.draw_area.img2)
+        han.draw_area.surface.data[i] = (convert(UInt32,han.draw_area.img2[i]) << 16) | (convert(UInt32,han.draw_area.img2[i]) << 8) | han.draw_area.img2[i]
     end
-    stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
-    surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
-                Ptr{Nothing}, (Ptr{Nothing},Int32,Int32,Int32,Int32),
-                han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
 
     ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Nothing},
-    (Ptr{Nothing},Ptr{Nothing},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
+    (Ptr{Nothing},Ptr{Nothing},Float64,Float64), ctx.ptr, han.draw_area.surface.ptr, 0, 0)
 
     rectangle(ctx, 0, 0, w, h)
 
