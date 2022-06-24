@@ -211,8 +211,10 @@ function Save_Paths(mypath,make_dirs=true)
 end
 
 mutable struct Tracked_Whisker
+    path::String
     whiskers_x::Vector{Vector{Float64}}
     whiskers_y::Vector{Vector{Float64}}
+    whiskers_l::Vector{Float64}
     pole_x::Array{Float64,1}
     pole_y::Array{Float64,1}
     follicle_x::Array{Float64,1}
@@ -230,7 +232,7 @@ mutable struct Tracked_Whisker
 end
 
 function Tracked_Whisker(n)
-    Tracked_Whisker([zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
+    Tracked_Whisker("",[zeros(Float64,0) for i=1:n],[zeros(Float64,0) for i=1:n],zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
     zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),zeros(Float64,n),
     50.0.*ones(Float64,n),400.0.*ones(Float64,n),zeros(Float64,3,n),zeros(Float64,n),(0.0f0,0.0f0),zeros(Float64,1),zeros(Float64,1))
 end

@@ -310,41 +310,67 @@ function create_label_image(img::Array,w1,rad=0,interp=false)
 end
 
 #=
-function create_follicle_image(han::Tracker_Handles,rad=5)
+Tracked whiskers
 
-    img = zeros(UInt8,size(han.current_frame))
-
-    x0 = han.woi[han.displayed_frame].x[1]]
-    y0 = han.woi[han.displayed_frame].y[1]]
-
-end
 =#
-
 function load_whisker_into_gui(han,path)
 
-    (w_x,w_y,w_loss,frame_list) = load_whisker(path)
+    tracked = load_whisker(path)
 
-    for i=1:length(w_x)
-        if frame_list[i] != 0
-            han.tracked_w.whiskers_x[frame_list[i]] = w_x[i]
-            han.tracked_w.whiskers_y[frame_list[i]] = w_y[i]
-            han.tracked_w.whiskers_l[frame_list[i]] = w_loss[i]
+    han.tracked_w=Tracked_Whisker(han.max_frames)
+
+    for key in keys(tracked)
+        if key != 0
+            han.tracked_w.whiskers_x[key] = tracked[key][1]
+            han.tracked_w.whiskers_y[key] = tracked[key][2]
+            han.tracked_w.whiskers_l[key] = tracked[key][3]
         end
     end
 
+    han.tracked_w.path = path
+
     nothing
+end
+
+function create_tracked_dictionary(w_x,w_y,w_loss,frame_list)
+
+    tracked=Dict{Int,Tuple{Array{Float64,1},Array{Float64,1},Float64}}()
+
+    for i=1:length(w_x)
+        tracked[frame_list[i]] = (w_x[i],w_y[i],w_loss[i])
+    end
+    tracked
 end
 
 function load_whisker(path)
 
     file=jldopen(path)
+
+    if haskey(file,"w_x")
+        (w_x,w_y,w_loss,frame_list) = load_whisker_arrays(file)
+        tracked = create_tracked_dictionary(w_x,w_y,w_loss,frame_list)
+    elseif haskey(file,"tracked")
+        tracked = load_whisker_dict(file)
+    end
+
+    close(file)
+
+    tracked
+end
+
+function load_whisker_arrays(file)
+
     w_x=read(file,"w_x")
     w_y=read(file,"w_y")
     frame_list = read(file,"frame_list")
     w_loss = read(file, "loss")
-    close(file)
 
     (w_x,w_y,w_loss,frame_list)
+end
+
+function save_tracked_whisker(han,path)
+
+
 end
 
 function write_mask(han,filepath)
