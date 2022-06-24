@@ -368,8 +368,11 @@ function load_whisker_arrays(file)
     (w_x,w_y,w_loss,frame_list)
 end
 
-function save_tracked_whisker(han,path)
+function save_tracked_whisker(path,tracked)
 
+    jldopen(path, "w") do file
+        file["tracked"] = tracked
+    end
 
 end
 

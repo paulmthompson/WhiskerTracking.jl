@@ -255,6 +255,7 @@ mutable struct Tracker_Handles
 
     current_frame::Array{UInt8,2}
     current_frame2::Array{UInt8,2}
+    img2::Array{UInt8,2} #This is the image modified in draw image task
 
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
     woi::Dict{Int64,WhiskerTracking.Whisker1} #Dictionary of properties for whisker of interest for every frame

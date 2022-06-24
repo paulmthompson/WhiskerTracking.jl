@@ -34,7 +34,7 @@ function make_gui()
     these_paths = Save_Paths("",false)
 
     handles = Tracker_Handles(1,b,2,h,w,25.0,true,0,c,c2,zeros(UInt32,w,h),
-    zeros(UInt8,h,w),zeros(UInt8,w,h),0,woi_array,1,1,
+    zeros(UInt8,h,w),zeros(UInt8,w,h),zeros(UInt8,w,h),0,woi_array,1,1,
     false,Dict{Int64,Bool}(),0,Whisker1(),false,
     wt,image_adjustment_settings(),zeros(Int64,0),1,
     c_widgets,Dict{Int64,Bool}(),Dict{Int64,Array{Float32,1}}(),zeros(UInt8,w,h),1,
@@ -208,6 +208,7 @@ function resize_for_video(han::Tracker_Handles,w,h,fps)
     han.plot_frame = zeros(UInt32,w,h)
     han.current_frame = zeros(UInt8,h,w)
     han.current_frame2 = zeros(UInt8,w,h)
+    han.img2 = zeros(UInt8,w,h)
 
     han.send_frame = zeros(UInt8,w,h)
     han.temp_frame = zeros(UInt8,w,h)
@@ -257,8 +258,8 @@ function load_video_to_gui(path::String,vid_title::String,handles::Tracker_Handl
 
     #save_single_image(handles,temp',1)
 
-    handles.current_frame=temp'
-    handles.current_frame2=deepcopy(handles.current_frame)
+    handles.current_frame[:]=temp'
+    handles.current_frame2[:]=handles.current_frame
     redraw_all(handles)
 
     nothing
@@ -302,13 +303,13 @@ function update_new_frame(han)
         han.displayed_frame = round(Int,get_gtk_property(han.b["adj_frame"],:value,Int))
 
         #Reset array of displayed whiskers
-        han.wt.whiskers=Array{Whisker1,1}()
+        han.wt.whiskers[:]=Array{Whisker1,1}()
 
         frame_time = han.displayed_frame  /  han.fps #Number of frames in a second of video
         try
             load_single_frame(frame_time,han.temp_frame,han.wt.vid_name)
-            han.current_frame=han.temp_frame'
-            han.current_frame2=deepcopy(han.current_frame)
+            han.current_frame[:]=han.temp_frame'
+            han.current_frame2[:]=han.current_frame
             redraw_all(han)
 
             update_times(han,1000)
@@ -468,11 +469,10 @@ end
 function load_single_frame(x::Float64,tt::AbstractArray{UInt8,2},vn::String)
 
     xx=@ffmpeg_env open(`$(FFMPEG.ffmpeg) -loglevel panic -ss $(x) -i $(vn) -f image2pipe -vcodec rawvideo -pix_fmt gray -`);
-    if VERSION > v"0.7-"
-        read!(xx,tt)
-    else
-        read!(xx[1],tt)
-    end
+    
+    read!(xx,tt)
+
+    close(xx)
 
     nothing
 end
@@ -758,22 +758,22 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
    ctx=Gtk.getgc(han.c)
 
     w,h = size(img)
-    img2 = deepcopy(img)
+    han.img2[:] = img
     if sharpen_mode(han.b)
-        img2 = sharpen_image(img2,han.im_adj.sharpen_win,han.im_adj.sharpen_reps,han.im_adj.sharpen_filter)
+        han.img2 = sharpen_image(han.img2,han.im_adj.sharpen_win,han.im_adj.sharpen_reps,han.im_adj.sharpen_filter)
     end
-    adjust_contrast(img2,han.im_adj.contrast_min,han.im_adj.contrast_max)
+    adjust_contrast(han.img2,han.im_adj.contrast_min,han.im_adj.contrast_max)
 
-    for i=1:length(img2)
-       han.plot_frame[i] = (convert(UInt32,img2[i]) << 16) | (convert(UInt32,img2[i]) << 8) | img2[i]
+    for i=1:length(han.img2)
+       han.plot_frame[i] = (convert(UInt32,han.img2[i]) << 16) | (convert(UInt32,han.img2[i]) << 8) | han.img2[i]
     end
     stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
     surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
-                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                Ptr{Nothing}, (Ptr{Nothing},Int32,Int32,Int32,Int32),
                 han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
 
-    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Void},
-    (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
+    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Nothing},
+    (Ptr{Nothing},Ptr{Nothing},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
 
     rectangle(ctx, 0, 0, w, h)
 
@@ -811,6 +811,8 @@ function plot_image(han::Tracker_Handles,img::AbstractArray{UInt8,2})
     end
 
     reveal(han.c)
+
+    nothing
 end
 
 function draw_event(han::Tracker_Handles)
@@ -980,7 +982,7 @@ end
 function trace_cb(han::Tracker_Handles)
     try
 
-        han.send_frame[:,:] = han.current_frame'
+        han.send_frame[:] = han.current_frame'
         if sharpen_mode(han.b)
             han.send_frame = sharpen_image(han.send_frame,han.im_adj.sharpen_win,han.im_adj.sharpen_reps,han.im_adj.sharpen_filter)
         end
