@@ -158,18 +158,6 @@ function WT_length_constraint(whiskers::Array{Whisker1,1},min_length::Int)
     nothing
 end
 
-#Order anterior to posterior
-function reorder_whiskers(wt::Tracker)
-
-    for i=1:length(wt.all_whiskers)
-
-        xpos=[wt.all_whiskers[i][j].x[end] for j=1:length(wt.all_whiskers[i])]
-        wt.all_whiskers[i]=wt.all_whiskers[i][sortperm(xpos)]
-    end
-
-    nothing
-end
-
 function WT_reorder_whisker(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,Float32})
 
     #order whiskers so that the last index is closest to the whisker pad
