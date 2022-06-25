@@ -64,13 +64,9 @@ end
 
 function generate_mask(wt,myimg,min_val,max_val)
 
-    if VERSION > v"0.7-"
-        myimg[myimg.>max_val] .= 255
-        myimg[myimg.<min_val] .= 0
-    else
-        myimg[myimg.>max_val] = 255
-        myimg[myimg.<min_val] = 0
-    end
+    myimg[myimg.>max_val] .= 255
+    myimg[myimg.<min_val] .= 0
+
     wt.mask=myimg.==0
 
     #Find connected Regions
