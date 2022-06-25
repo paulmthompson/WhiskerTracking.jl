@@ -185,9 +185,6 @@ mutable struct Save_Paths
     DLC::String
 end
 
-mutable struct DLC_Wrapper
-end
-
 function Save_Paths(mypath,make_dirs=true)
 
     if make_dirs

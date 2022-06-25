@@ -98,41 +98,6 @@ function JT_measure(wt::Tracker,w::Whisker1,face_axis='x')
     JT_measure(w,facex,facey,face_axis)
 end
 
-function get_JT_measurements(wt::Tracker,face_axis='x')
-
-    mymeas=Array{JT_Measurements,1}(0)
-
-    for i=1:length(wt.all_whiskers)
-        for j=1:length(wt.all_whiskers[i])
-            xx=JT_measure(wt,i,j,face_axis)
-            push!(mymeas,xx)
-        end
-    end
-
-    mymeas
-end
-
-#Finds the best length threshold to discriminate whiskers and non whiskers for a known number
-#of whiskers to track
-function JT_Best_Threshold(wt,table,num_whisk)
-
-    n_rows=convert(Int32,size(wt.vid,3))
-    n_cols=convert(Int32,0)
-
-    #Ranges for length threshold (I'm basically making these giant and ignoring them)
-    low=1.0
-    high=600.0
-
-    is_gt=convert(Int32,1)
-
-    #Number of whiskers that should be in frame
-    target_count=convert(Int32,num_whisk)
-
-    ccall((:Measurements_Table_Estimate_Best_Threshold_For_Known_Count,WhiskerTracking.libwhisk_path),Float64,
-        (Ref{WhiskerTracking.JT_Measurements},Int32,Int32,Float64,Float64,Int32,Int32),
-        table,n_rows,n_cols,low,high,is_gt,target_count)
-end
-
 function JT_find_segments(img,h,th,s,facemask)
 
     ccall(Libdl.dlsym(libwhisk,:compute_seed_from_point_field_on_grid),Void,(Ref{WT_Image},Int32,Int32,Int32,Float32,Float32,Ref{WT_Image},Ref{WT_Image},Ref{WT_Image}),
