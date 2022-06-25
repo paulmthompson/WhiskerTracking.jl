@@ -1,25 +1,3 @@
-
-#=
-Only Whiskers are identified that are inside a region of interest (ROI)
-That ROI is a circle centered on the whisker pad of radius 100
-=#
-
-function apply_roi(whiskers::Array{Whisker1,1},pad_pos::Tuple{Float32,Float32})
-
-    remove_whiskers=Array{Int64,1}()
-
-    #for i=1:length(whiskers)
-
-        #if sqrt((pad_pos[1]-whiskers[i].x[end])^2+(pad_pos[2]-whiskers[i].y[end])^2)>100.0
-            #push!(remove_whiskers,i)
-        #end
-    #end
-
-    #deleteat!(whiskers,remove_whiskers)
-
-    nothing
-end
-
 function total_frames(tt,fps)
     h=Base.Dates.hour(tt)
     m=Base.Dates.minute(tt)

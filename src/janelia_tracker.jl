@@ -37,8 +37,6 @@ function WT_trace(iFrame::Int,image_data::AbstractArray{UInt8,2},min_length::Int
     #Apply mask
     apply_mask(whiskers,mask,min_length)
 
-    apply_roi(whiskers,pad_pos)
-
     eliminate_redundant(whiskers)
 
     whiskers
