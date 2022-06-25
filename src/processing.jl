@@ -48,46 +48,6 @@ function get_follicle(han::Tracker_Handles)
     (x,y)
 end
 
-#Need to optimize this significantly
-#Really we want this to be such that the length of each line is equal.
-#Probably can do this by interpolating along each segment or something
-#I also need to reverse these
-
-whisker_similarity(han) = whisker_similarity(han,1)
-
-function whisker_similarity(han::Tracker_Handles,prev)
-
-    cor_length=20
-
-    w2_x=han.woi[han.frame-prev].x
-    w2_y=han.woi[han.frame-prev].y
-    mincor=10000.0.*ones(length(han.wt.whiskers))
-    w_id = 0;
-    for i=1:length(han.wt.whiskers)
-        w1_x=han.wt.whiskers[i].x
-        w1_y=han.wt.whiskers[i].y
-
-        for j=1:(size(w1_x,1)-cor_length)
-            for k=1:(size(w2_x,1)-cor_length)
-                mycor=w_dist(w1_x,w2_x,w1_y,w2_y,j,k,cor_length)
-                if mycor < mincor[i]
-                    mincor[i]=mycor
-                end
-            end
-        end
-    end
-    findmin(mincor)
-end
-
-function w_dist(x1,x2,y1,y2,i1,i2,cor_length)
-
-    mysum=0.0
-    for jj=1:cor_length
-        mysum += sqrt((x2[i2+jj] - x1[i1+jj]) ^ 2 + (y2[i2+jj] - y1[i1+jj]) ^2)
-    end
-    mysum
-end
-
 function smooth(x, window_len=7)
     w = getfield(DSP.Windows, :lanczos)(window_len)
     DSP.filtfilt(w ./ sum(w), [1.0], x)
