@@ -1,8 +1,3 @@
-
-#=
-DLC import Methods
-=#
-
 #=
 Read data table and return julia arrays for x position, y position, and liklihood for each whisker point
 =#
@@ -60,37 +55,6 @@ function dlc_hd5_to_array(path,l_thres,pole=true)
     close(file)
 
     (xx,yy,ll)
-end
-
-#=
-Updates liklihood matrix to false if points jump past
-distance threshold from smoothed temporal traces
-=#
-function dlc_smooth_liklihood(xx::Array{Float64,2},yy::Array{Float64,2},kernel_size,ll,dist_thres)
-
-    #outlier removal
-    #smooth with gaussian kernel
-    #calculate residual distance threshold and set Threshold
-    x_smooth=zeros(Float64,size(xx))
-    y_smooth=zeros(Float64,size(yy))
-
-    for i=1:size(xx,1)
-        x_smooth[i,:]=smooth(xx[i,:],kernel_size)
-        y_smooth[i,:]=smooth(yy[i,:],kernel_size)
-    end
-
-    for i=1:size(xx,2)
-        for j=1:size(xx,1)
-            mydist=sqrt((xx[j,i]-x_smooth[j,i])^2+(yy[j,i]-y_smooth[j,i])^2)
-
-            if mydist>dist_thres
-                ll[j,i]=false
-            end
-
-        end
-    end
-
-    nothing
 end
 
 function convert_whisker_points_to_janelia(xx,yy,tracked)
@@ -153,8 +117,6 @@ end
 function read_whisker_hdf5(path;l_thres=0.5,pole=true)
 
     (xx,yy,ll)=dlc_hd5_to_array(path,l_thres,pole)
-
-    dlc_smooth_liklihood(xx,yy,15,ll,50.0)
 
     convert_whisker_points_to_janelia(xx,yy,ll)
 end

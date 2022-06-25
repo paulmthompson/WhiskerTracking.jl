@@ -9,11 +9,6 @@ function frames_between(tt1,tt2,fps)
     total_frames(tt2,fps)-total_frames(tt1,fps)
 end
 
-function smooth(x, window_len=7)
-    w = getfield(DSP.Windows, :lanczos)(window_len)
-    DSP.filtfilt(w ./ sum(w), [1.0], x)
-end
-
 function assign_woi(han::Tracker_Handles)
 
     han.woi[han.displayed_frame] = deepcopy(han.wt.whiskers[han.woi_id])
