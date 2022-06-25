@@ -41,6 +41,11 @@ function savitsky_golay(x::Vector, windowSize::Integer, polyOrder::Integer; deri
 
 end
 
+function smooth(x, window_len=7)
+    w = getfield(DSP.Windows, :lanczos)(window_len)
+    DSP.filtfilt(w ./ sum(w), [1.0], x)
+end
+
 #Central Differences
 #=
 One implementation only calculates if points are tracked on either side

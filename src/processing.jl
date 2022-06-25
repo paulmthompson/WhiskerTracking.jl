@@ -59,10 +59,6 @@ function get_woi_array(han::Tracker_Handles)
     [han.woi[i] for i in get_frame_list(han)]
 end
 
-function get_frame_index(woi,frame_num)
-    findfirst(sort(collect(keys(woi))).==frame_num)
-end
-
 function WT_length_constraint(whiskers::Array{Whisker1,1},min_length::Int)
 
     remove_whiskers=Array{Int64,1}()
