@@ -31,23 +31,6 @@ function frames_between(tt1,tt2,fps)
     total_frames(tt2,fps)-total_frames(tt1,fps)
 end
 
-function get_follicle(han::Tracker_Handles)
-    x=0.0
-    y=0.0
-    count=0
-
-    for i=1:length(han.tracked)
-        if han.tracked[i]
-            x+=han.woi[i].x[end]
-            y+=han.woi[i].y[end]
-            count+=1
-        end
-    end
-    x=x/count
-    y=y/count
-    (x,y)
-end
-
 function smooth(x, window_len=7)
     w = getfield(DSP.Windows, :lanczos)(window_len)
     DSP.filtfilt(w ./ sum(w), [1.0], x)
