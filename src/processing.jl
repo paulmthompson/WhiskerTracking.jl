@@ -9,51 +9,6 @@ function frames_between(tt1,tt2,fps)
     total_frames(tt2,fps)-total_frames(tt1,fps)
 end
 
-function assign_woi(han::Tracker_Handles)
-
-    han.woi[han.displayed_frame] = deepcopy(han.wt.whiskers[han.woi_id])
-
-    if get_gtk_property(han.b["tracked_whisker_toggle"],:active,Bool)
-        han.tracked_w.whiskers_x[han.displayed_frame] = deepcopy(han.woi[han.displayed_frame].x)
-        han.tracked_w.whiskers_y[han.displayed_frame] = deepcopy(han.woi[han.displayed_frame].y)
-
-        han.tracked_w.whiskers_l[han.displayed_frame] = 1.0 # Manual assignment is a loss of zero
-
-        correct_follicle(han.tracked_w.whiskers_x[han.displayed_frame],han.tracked_w.whiskers_y[han.displayed_frame],han.tracked_w.whisker_pad...)
-
-        x = han.tracked_w.whiskers_x[han.displayed_frame]
-        y = han.tracked_w.whiskers_y[han.displayed_frame]
-
-        if get_gtk_property(han.b["contact_angle_check"],:active,Bool)
-            ii = calc_p_dist(x,y,han.tracked_w.pole_x[han.displayed_frame],han.tracked_w.pole_y[han.displayed_frame])[2]
-            han.tracked_w.contact_angle[han.displayed_frame] = get_theta_contact(x,y,ii,true)
-
-            update_normal_angle(han,han.displayed_frame)
-        end
-
-        if get_gtk_property(han.b["follicle_location_check"],:active,Bool)
-            han.tracked_w.follicle_x[han.displayed_frame] = x[1]
-            han.tracked_w.follicle_y[han.displayed_frame] = y[1]
-        end
-
-        if get_gtk_property(han.b["follicle_angle_check"],:active,Bool)
-            han.tracked_w.follicle_angle[han.displayed_frame] = get_angle(x,y,10.0,30.0)
-        end
-    end
-
-    update_table(han)
-
-    nothing
-end
-
-function get_frame_list(han::Tracker_Handles)
-    sort(collect(keys(han.woi)))
-end
-
-function get_woi_array(han::Tracker_Handles)
-    [han.woi[i] for i in get_frame_list(han)]
-end
-
 function WT_length_constraint(whiskers::Array{Whisker1,1},min_length::Int)
 
     remove_whiskers=Array{Int64,1}()

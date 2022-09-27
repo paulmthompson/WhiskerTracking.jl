@@ -46,9 +46,6 @@ end
 #=
 Convert Discrete points to heatmap for deep learning
 =#
-function make_heatmap_labels(han::Tracker_Handles,real_w=640,real_h=480,label_img_size=64)
-    make_heatmap_labels(han.woi,han.wt.pad_pos,real_w,real_h,label_img_size)
-end
 
 function make_heatmap_labels(woi,pad_pos,real_w=640,real_h=480,label_img_size=64)
 
@@ -71,9 +68,6 @@ function make_heatmap_labels(woi,pad_pos,real_w=640,real_h=480,label_img_size=64
     labels
 end
 
-function get_labeled_frames(han::Tracker_Handles,out_hw=256)
-    get_labeled_frames(han.wt.vid_name,han.frame_list,out_hw=256)
-end
 
 function get_labeled_frames(vid_name,frame_list,out_hw=256)
 

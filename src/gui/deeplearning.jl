@@ -177,3 +177,190 @@ function create_config_cb(w::Ptr,user_data::Tuple{Tracker_Handles,Bool})
 
     nothing
 end
+
+function create_config(han::Tracker_Handles,training::Bool)
+
+    filepath=string(han.wt.data_path,"/predict_config.jld")
+    file=jldopen(filepath,"w")
+
+    write(file,"Video_Name",han.wt.vid_name)
+    write(file,"Tracking_Frames",han.frame_list)
+    write(file, "WOI",han.woi)
+    write(file,"Pad_Pos",han.wt.pad_pos)
+    write(file,"Training_Path",string(han.wt.data_path,"/labels.jld"))
+    write(file,"Data_Path",string(han.wt.data_path))
+    write(file,"Epochs",han.nn.epochs)
+    write(file,"Training",training)
+
+    close(file)
+
+    nothing
+end
+
+function get_labeled_frames(han::Tracker_Handles,out_hw=256)
+    get_labeled_frames(han.wt.vid_name,han.frame_list,out_hw=256)
+end
+
+function make_heatmap_labels(han::Tracker_Handles,real_w=640,real_h=480,label_img_size=64)
+    make_heatmap_labels(han.woi,han.wt.pad_pos,real_w,real_h,label_img_size)
+end
+
+function draw_prediction2(han::Tracker_Handles,hg::StackedHourglass.NN,conf)
+
+    colors=((1,0,0),(0,1,0),(0,1,1),(1,0,1))
+    atype = []
+    if CUDA.has_cuda_gpu()
+        atype = KnetArray
+    else
+        atype = Array
+    end
+    pred = calculate_whisker_predictions(han,hg,atype)
+    for i = 1:size(pred,3)
+        (x,y) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
+        draw_points_2(han,y,x,colors[i])
+
+        if (han.show_contact) & (i == han.class.w_id)
+            draw_touch_prediction(han,y,x)
+        end
+    end
+
+    reveal(han.c)
+end
+
+function draw_points_2(han::Tracker_Handles,x::Array{T,1},y::Array{T,1},cc) where T
+    ctx=Gtk.getgc(han.c)
+
+    set_source_rgb(ctx,cc...)
+
+    set_line_width(ctx, 1.0);
+    for i=1:length(x)
+        arc(ctx, x[i],y[i], 1.0, 0, 2*pi);
+        stroke(ctx);
+    end
+end
+
+function calculate_whisker_predictions(han::Tracker_Handles,hg::StackedHourglass.NN,atype=KnetArray)
+
+    output = han.current_frame ./ 255
+
+    if han.nn.flip_x
+        reverse!(output,dims=1)
+    end
+    if han.nn.flip_y
+        reverse!(output,dims=2)
+    end
+
+    pred=StackedHourglass.predict_single_frame(hg,output,atype)
+
+    if han.nn.flip_x
+        reverse!(pred,dims=1)
+    end
+    if han.nn.flip_y
+        reverse!(pred,dims=2)
+    end
+    pred
+end
+
+get_draw_predictions(b::Gtk.GtkBuilder)=get_gtk_property(b["dl_show_predictions"],:active,Bool)
+
+function draw_predictions(han::Tracker_Handles)
+    (preds,confidences) = predict_single_frame(han)
+    _draw_predicted_whisker(preds[:,1] ./ 64 .* han.w,preds[:,2] ./ 64 .* han.h,confidences,han.c,han.nn.confidence_thres)
+end
+
+function draw_predicted_whisker(han::Tracker_Handles)
+    d=han.displayed_frame
+    x=han.nn.predicted[:,1,d]; y=han.nn.predicted[:,2,d]; conf=han.nn.predicted[:,3,d]
+    _draw_predicted_whisker(x,y,conf,han.c,han.nn.confidence_thres)
+end
+
+function _draw_predicted_whisker(x,y,c,canvas,thres)
+
+    circ_rad=5.0
+
+    ctx=Gtk.getgc(canvas)
+    num_points = length(x)
+
+    for i=1:num_points
+        if c[i] > thres
+            Cairo.set_source_rgba(ctx,0,1,0,1-0.025*i)
+            Cairo.arc(ctx, x[i],y[i], circ_rad, 0, 2*pi);
+            Cairo.stroke(ctx);
+        end
+    end
+    reveal(canvas)
+end
+
+function save_training(han,mypath=string(han.paths.backup,"/labels.jld"))
+    save_training(mypath,han.frame_list,han.woi,han.nn)
+
+end
+
+function load_training(han::Tracker_Handles,path::String)
+
+    file = jldopen(path, "r")
+    frame_list = read(file, "frame_list")
+    woi = read(file, "woi")
+    if typeof(woi) <: Array
+        for i=1:length(frame_list)
+            han.woi[frame_list[i]]=woi[i]
+        end
+    else # New Version
+        han.woi = woi
+    end
+
+    han.frame_list = frame_list
+    set_gtk_property!(han.b["labeled_frame_adj"],:upper,length(han.frame_list))
+
+    tracked = [true for i=1:length(han.frame_list)]
+    han.tracked = Dict{Int64,Bool}(zip(frame_list,tracked))
+
+    pole_present = [false for i=1:length(han.frame_list)]
+    han.pole_present=Dict{Int64,Bool}(zip(frame_list,pole_present))
+
+    pole_loc = [zeros(Float32,2) for i=1:length(han.frame_list)]
+    han.pole_loc=Dict{Int64,Array{Float32,1}}(zip(frame_list,pole_loc))
+
+    han.nn.norm.mean_img = read(file, "mean_img")
+    han.nn.norm.std_img = read(file, "std_img")
+
+    close(file)
+
+end
+
+function set_up_training(han::Tracker_Handles,get_mean=true)
+    woi=get_woi_array(han)
+    set_up_training(han,han.nn,han.wt.vid_name,han.end_frame,woi,han.wt.pad_pos,han.frame_list,get_mean)
+end
+
+function set_up_training(han,nn,vid_name,max_frames,woi,pad_pos,frame_list,get_mean=false)
+
+    (w,h,fps)=get_vid_dims(vid_name)
+
+    #=
+    if get_mean
+        (mean_img,std_img)=mean_std_video_gpu(vid_name,max_frames)
+        nn.norm.min_ref = 0
+        nn.norm.max_ref = 255
+        nn.norm.mean_img = mean_img
+        nn.norm.std_img = std_img
+
+        #Rotate and Reshape to 256 256
+        nn.norm.mean_img = reshape(imresize(nn.norm.mean_img[:,:,1]',(256,256)),(256,256,1))
+    end
+    =#
+
+    (new_woi, new_frame_list) = check_whiskers(woi,frame_list,max_frames)
+
+    WT_reorder_whisker(new_woi,pad_pos)
+
+    #nn.labels = make_heatmap_labels(new_woi,pad_pos)
+    nn.labels = create_label_images(han)
+    nn.imgs = get_labeled_frames(vid_name,new_frame_list);
+
+    #Normalize
+    #=
+    nn.imgs = StackedHourglass.normalize_new_images(nn.imgs,nn.norm.mean_img);
+    =#
+    (nn.imgs,nn.labels)=augment_images(nn.imgs,nn.labels);
+end

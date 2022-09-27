@@ -24,23 +24,19 @@ function training_from_config(filepath)
 
 end
 
-function create_config(han::Tracker_Handles,training::Bool)
+function prediction_from_config(filepath)
 
-    filepath=string(han.wt.data_path,"/predict_config.jld")
-    file=jldopen(filepath,"w")
+    (vid_name,frame_list,woi,pad_pos,training_path,epochs,data_path,nn,max_frames) = load_config(filepath)
 
-    write(file,"Video_Name",han.wt.vid_name)
-    write(file,"Tracking_Frames",han.frame_list)
-    write(file, "WOI",han.woi)
-    write(file,"Pad_Pos",han.wt.pad_pos)
-    write(file,"Training_Path",string(han.wt.data_path,"/labels.jld"))
-    write(file,"Data_Path",string(han.wt.data_path))
-    write(file,"Epochs",han.nn.epochs)
-    write(file,"Training",training)
+    config_path = string(data_path,"/weights.jld")
+    load_hourglass_to_nn(nn,config_path)
 
-    close(file)
+    set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list) #heatmaps, labels, normalize, augment
+    save_training(training_path,frame_list,woi,nn)
 
-    nothing
+    nn.predicted = calculate_whiskers(nn,vid_name,total_frames)
+
+    #Save?
 end
 
 function read_training_config(filepath)
@@ -67,19 +63,4 @@ function load_config(filepath)
     max_frames = get_max_frames(vid_name)
 
     (vid_name,frame_list,woi,pad_pos,training_path,epochs,data_path,nn,max_frames)
-end
-
-function prediction_from_config(filepath)
-
-    (vid_name,frame_list,woi,pad_pos,training_path,epochs,data_path,nn,max_frames) = load_config(filepath)
-
-    config_path = string(data_path,"/weights.jld")
-    load_hourglass_to_nn(nn,config_path)
-
-    set_up_training(nn,vid_name,max_frames,woi,pad_pos,frame_list) #heatmaps, labels, normalize, augment
-    save_training(training_path,frame_list,woi,nn)
-
-    nn.predicted = calculate_whiskers(nn,vid_name,total_frames)
-
-    #Save?
 end

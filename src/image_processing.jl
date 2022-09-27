@@ -124,17 +124,6 @@ function local_contrast_enhance(img)
     img2
 end
 
-function subtract_background(han::Tracker_Handles)
-
-    mydiff = han.current_frame2 .- mean_image(han)
-    new_diff = (mydiff - minimum(mydiff))
-    new_diff = new_diff ./ maximum(new_diff)
-
-    han.current_frame = round.(UInt8,new_diff .* 255)
-
-    nothing
-end
-
 # https://web.stanford.edu/class/cs448f/lectures/2.1/Sharpening.pdf
 #=
 Filter type, 1 = median, 2 = gaussian

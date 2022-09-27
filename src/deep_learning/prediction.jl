@@ -1,35 +1,4 @@
 
-
-get_draw_predictions(b::Gtk.GtkBuilder)=get_gtk_property(b["dl_show_predictions"],:active,Bool)
-
-function draw_predictions(han::Tracker_Handles)
-    (preds,confidences) = predict_single_frame(han)
-    _draw_predicted_whisker(preds[:,1] ./ 64 .* han.w,preds[:,2] ./ 64 .* han.h,confidences,han.c,han.nn.confidence_thres)
-end
-
-function draw_predicted_whisker(han::Tracker_Handles)
-    d=han.displayed_frame
-    x=han.nn.predicted[:,1,d]; y=han.nn.predicted[:,2,d]; conf=han.nn.predicted[:,3,d]
-    _draw_predicted_whisker(x,y,conf,han.c,han.nn.confidence_thres)
-end
-
-function _draw_predicted_whisker(x,y,c,canvas,thres)
-
-    circ_rad=5.0
-
-    ctx=Gtk.getgc(canvas)
-    num_points = length(x)
-
-    for i=1:num_points
-        if c[i] > thres
-            Cairo.set_source_rgba(ctx,0,1,0,1-0.025*i)
-            Cairo.arc(ctx, x[i],y[i], circ_rad, 0, 2*pi);
-            Cairo.stroke(ctx);
-        end
-    end
-    reveal(canvas)
-end
-
 function calculate_whisker_fit(pred_1::AbstractArray{T,2},img::AbstractArray{N,2}) where {T,N}
 
     calculate_whisker_fit(pred_1,size(img))
@@ -156,28 +125,6 @@ function center_of_mass(x::AbstractArray{T,1},y::AbstractArray{T,1},conf::Abstra
     (out_x, out_y)
 end
 
-function calculate_whisker_predictions(han::Tracker_Handles,hg::StackedHourglass.NN,atype=KnetArray)
-
-    output = han.current_frame ./ 255
-
-    if han.nn.flip_x
-        reverse!(output,dims=1)
-    end
-    if han.nn.flip_y
-        reverse!(output,dims=2)
-    end
-
-    pred=StackedHourglass.predict_single_frame(hg,output,atype)
-
-    if han.nn.flip_x
-        reverse!(pred,dims=1)
-    end
-    if han.nn.flip_y
-        reverse!(pred,dims=2)
-    end
-    pred
-end
-
 #=
 Rotate matrices about specified angle
 =#
@@ -215,40 +162,6 @@ function rotate_mat(x::Real,y::Real,theta::Real)
     x_out = x * cos(theta) - y * sin(theta)
     y_out = y * cos(theta) + x * sin(theta)
     (x_out,y_out)
-end
-
-function draw_prediction2(han::Tracker_Handles,hg::StackedHourglass.NN,conf)
-
-    colors=((1,0,0),(0,1,0),(0,1,1),(1,0,1))
-    atype = []
-    if CUDA.has_cuda_gpu()
-        atype = KnetArray
-    else
-        atype = Array
-    end
-    pred = calculate_whisker_predictions(han,hg,atype)
-    for i = 1:size(pred,3)
-        (x,y) = calculate_whisker_fit(pred[:,:,i,1],han.current_frame)
-        draw_points_2(han,y,x,colors[i])
-
-        if (han.show_contact) & (i == han.class.w_id)
-            draw_touch_prediction(han,y,x)
-        end
-    end
-
-    reveal(han.c)
-end
-
-function draw_points_2(han::Tracker_Handles,x::Array{T,1},y::Array{T,1},cc) where T
-    ctx=Gtk.getgc(han.c)
-
-    set_source_rgb(ctx,cc...)
-
-    set_line_width(ctx, 1.0);
-    for i=1:length(x)
-        arc(ctx, x[i],y[i], 1.0, 0, 2*pi);
-        stroke(ctx);
-    end
 end
 
 function get_whisker(upsampled::AbstractArray{T,2},rot_angle::Real,n_points=100) where T

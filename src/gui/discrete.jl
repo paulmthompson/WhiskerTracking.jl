@@ -101,3 +101,51 @@ function discrete_delete_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
 
     nothing
 end
+
+function make_discrete_all_whiskers(han::Tracker_Handles,spacing=15.0)
+    woi=get_woi_array(han)
+    make_discrete_all_whiskers(woi,han.wt.pad_pos,spacing)
+end
+
+function draw_discrete(han::Tracker_Handles)
+
+    x1 = han.woi[han.displayed_frame].x
+    y1 = han.woi[han.displayed_frame].y
+
+    w_length = total_length(x1,y1)
+    d_vec=range(0.1,0.9,step=0.02)
+
+    (w1_theta,w1_theta_absolute,last_ind) = convert_to_angular_coordinates(x1,y1,d_vec.*w_length)
+
+    ctx=Gtk.getgc(han.c)
+
+    (x_p2,y_p2) = get_ind_at_dist_exact(x1,y1,(d_vec.*w_length)[1])
+    draw_discrete(ctx,w1_theta_absolute,d_vec.*w_length,(x_p2,y_p2))
+
+    nothing
+end
+
+function draw_discrete(ctx,theta,l,origin = (0.0,0.0))
+
+    (x1,y1) = origin
+    x2 = 0.0
+    y2 = 0.0
+    
+    t_length = 0.0
+    
+    circ_rad=5.0
+
+    for i=2:length(theta)
+        y2 = sin(theta[i])*(l[i]-l[i-1]) + y1
+        x2 = cos(theta[i])*(l[i]-l[i-1]) + x1
+
+        arc(ctx, x2,y2, circ_rad, 0, 2*pi);
+        stroke(ctx);
+        
+        t_length += sqrt((x2-x1)^2+(y2-y1)^2)
+        y1 = y2
+        x1 = x2
+    end
+    println(t_length)
+
+end
