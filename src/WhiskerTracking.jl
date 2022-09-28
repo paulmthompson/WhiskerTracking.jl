@@ -46,7 +46,7 @@ module GUI
     #export WhiskerTracking
     include("gui/types.jl")
     include("gui/save_load.jl")
-    include("gui.jl")
+    include("gui/gui.jl")
     include("gui/manual.jl")
     include("gui/analog.jl")
     include("gui/whisker_pad.jl")
