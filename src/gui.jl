@@ -44,27 +44,27 @@ end
 
 function add_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
-    signal_connect(frame_slider_cb, b["frame_slider"], "value-changed", Void, (), false, (handles,))
-    signal_connect(trace_cb,b["trace_button"], "clicked", Void, (), false, (handles,))
+    signal_connect(frame_slider_cb, b["frame_slider"], "value-changed", Nothing, (), false, (handles,))
+    signal_connect(trace_cb,b["trace_button"], "clicked", Nothing, (), false, (handles,))
 
-    signal_connect(erase_cb,b["erase_button"], "clicked",Void,(),false,(handles,))
-    signal_connect(whisker_select_cb,handles.c,"button-press-event",Void,(Ptr{Gtk.GdkEventButton},),false,(handles,))
+    signal_connect(erase_cb,b["erase_button"], "clicked",Nothing,(),false,(handles,))
+    signal_connect(whisker_select_cb,handles.c,"button-press-event",Nothing,(Ptr{Gtk.GdkEventButton},),false,(handles,))
 
-    signal_connect(advance_slider_cb,b["win"],"key-press-event",Void,(Ptr{Gtk.GdkEventKey},),false,(handles,))
-    signal_connect(advance_slider_cb_mouse,b["win"],"scroll-event",Void,(Ptr{Gtk.GdkEventScroll},),false,(handles,))
+    signal_connect(advance_slider_cb,b["win"],"key-press-event",Nothing,(Ptr{Gtk.GdkEventKey},),false,(handles,))
+    signal_connect(advance_slider_cb_mouse,b["win"],"scroll-event",Nothing,(Ptr{Gtk.GdkEventScroll},),false,(handles,))
 
-    signal_connect(draw_cb,b["draw_button"],"clicked",Void,(),false,(handles,))
+    signal_connect(draw_cb,b["draw_button"],"clicked",Nothing,(),false,(handles,))
 
-    signal_connect(touch_override_cb,b["contact_button"],"clicked",Void,(),false,(handles,1))
-    signal_connect(touch_override_cb,b["no_contact_button"],"clicked",Void,(),false,(handles,0))
+    signal_connect(touch_override_cb,b["contact_button"],"clicked",Nothing,(),false,(handles,1))
+    signal_connect(touch_override_cb,b["no_contact_button"],"clicked",Nothing,(),false,(handles,0))
 
-    signal_connect(add_frame_cb,b["add_frame_button"],"clicked",Void,(),false,(handles,))
-    signal_connect(delete_frame_cb,b["delete_frame_button"],"clicked",Void,(),false,(handles,))
+    signal_connect(add_frame_cb,b["add_frame_button"],"clicked",Nothing,(),false,(handles,))
+    signal_connect(delete_frame_cb,b["delete_frame_button"],"clicked",Nothing,(),false,(handles,))
 
-    #signal_connect(num_whiskers_cb,b["num_whiskers_sb"],"value-changed",Void,(),false,(handles,))
+    #signal_connect(num_whiskers_cb,b["num_whiskers_sb"],"value-changed",Nothing,(),false,(handles,))
 
     #File Callbacks
-    signal_connect(load_video_cb, b["load_video_"], "activate",Void,(),false,(handles,))
+    signal_connect(load_video_cb, b["load_video_"], "activate",Nothing,(),false,(handles,))
 
     add_additional_callbacks(b,handles)
 end
@@ -128,8 +128,8 @@ end
 
 function make_menu_callbacks(menu::Gtk.GtkMenuItem,win::Gtk.GtkWindowLeaf)
 
-    signal_connect(open_window_cb,menu,"activate",Void,(),false,(win,))
-    signal_connect(delete_makes_invisible_cb,win,"delete-event",Void,(),false,())
+    signal_connect(open_window_cb,menu,"activate",Nothing,(),false,(win,))
+    signal_connect(delete_makes_invisible_cb,win,"delete-event",Nothing,(),false,())
 end
 
 function open_window_cb(w::Ptr,user_data)
@@ -626,7 +626,7 @@ function save_cb(w::Ptr,user_data::Tuple{Tracker_Handles})
                                     ("_Save",   Gtk.GConstants.GtkResponseType.ACCEPT));)
        dlgp = Gtk.GtkFileChooser(dlg)
 
-       ccall((:gtk_file_chooser_set_do_overwrite_confirmation, Gtk.libgtk), Void, (Ptr{Gtk.GObject}, Cint), dlg, true)
+       ccall((:gtk_file_chooser_set_do_overwrite_confirmation, Gtk.libgtk), Nothing, (Ptr{Gtk.GObject}, Cint), dlg, true)
        Gtk.GAccessor.current_folder(dlgp,string(han.wt.tracking_path,"/tracking"))
        Gtk.GAccessor.current_name(dlgp, han.wt.tracking_name)
        response = run(dlg)
@@ -1128,11 +1128,11 @@ function draw_woi2(han::Tracker_Handles,ctx)
     stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
     @assert stride == 4*w
     surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
-                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                Ptr{Nothing}, (Ptr{Nothing},Int32,Int32,Int32,Int32),
                 han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
 
-    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Void},
-    (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
+    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Nothing},
+    (Ptr{Nothing},Ptr{Nothing},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
 
     rectangle(ctx, 0, 0, w, h)
 

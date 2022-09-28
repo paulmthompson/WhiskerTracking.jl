@@ -1,9 +1,9 @@
 
 function add_mask_callbacks(b::Gtk.GtkBuilder,handles::Tracker_Handles)
 
-    signal_connect(mask_min_cb,b["mask_min_button"],"value-changed",Void,(),false,(handles,))
-    signal_connect(mask_max_cb,b["mask_max_button"],"value-changed",Void,(),false,(handles,))
-    signal_connect(mask_gen_cb,b["mask_gen_button"],"clicked",Void,(),false,(handles,))
+    signal_connect(mask_min_cb,b["mask_min_button"],"value-changed",Nothing,(),false,(handles,))
+    signal_connect(mask_max_cb,b["mask_max_button"],"value-changed",Nothing,(),false,(handles,))
+    signal_connect(mask_gen_cb,b["mask_gen_button"],"clicked",Nothing,(),false,(handles,))
 
     nothing
 end
@@ -158,11 +158,11 @@ function plot_mask(han::Tracker_Handles)
     stride = Cairo.format_stride_for_width(Cairo.FORMAT_RGB24, w)
     @assert stride == 4*w
     surface_ptr = ccall((:cairo_image_surface_create_for_data,Cairo._jl_libcairo),
-                Ptr{Void}, (Ptr{Void},Int32,Int32,Int32,Int32),
+                Ptr{Nothing}, (Ptr{Nothing},Int32,Int32,Int32,Int32),
                 han.plot_frame, Cairo.FORMAT_RGB24, w, h, stride)
 
-    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Void},
-    (Ptr{Void},Ptr{Void},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
+    ccall((:cairo_set_source_surface,Cairo._jl_libcairo), Ptr{Nothing},
+    (Ptr{Nothing},Ptr{Nothing},Float64,Float64), ctx.ptr, surface_ptr, 0, 0)
 
     rectangle(ctx, 0, 0, w, h)
 

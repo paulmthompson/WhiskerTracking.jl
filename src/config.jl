@@ -1,4 +1,4 @@
-if is_unix()
+if Sys.isunix()
     jt_parameters = string(dirname(Base.source_path()),"/../lib/default.parameters")
     const libwhisk_path=string(dirname(Base.source_path()),"/../deps/whisk/lib/whisk/libwhisk.so")
 
@@ -12,7 +12,7 @@ end
 
 #libwhisk = Libdl.dlopen(libwhisk_path,Libdl.RTLD_NOW)
 
-if is_unix()
+if Sys.isunix()
     #const ffmpeg_path = string(homedir(),"/Programs/ffmpeg/ffmpeg")
     #const ffprobe_path = string(homedir(),"/Programs/ffmpeg/ffprobe")
 else
@@ -20,7 +20,7 @@ else
     #const ffprobe_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffprobe")
 end
 
-if is_unix()
+if Sys.isunix()
     #const hourglass_path = string(homedir(),"/Programs/ffmpeg/ffmpeg")
 else
     #const hourglass_path = string(homedir(),"\\Documents\\ffmpeg\\bin\\ffmpeg")

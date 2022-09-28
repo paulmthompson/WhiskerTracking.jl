@@ -122,7 +122,7 @@ mutable struct Tracker_Handles
     
 
     woi_id::Int64 #Index in array of displayed whiskers which is whisker of interest.
-    woi::Dict{Int64,WhiskerTracking.Whisker1} #Dictionary of properties for whisker of interest for every frame
+    woi::Dict{Int64,Whisker1} #Dictionary of properties for whisker of interest for every frame
     num_whiskers::Int64
     sw::Int64 #Selected Whisker
 

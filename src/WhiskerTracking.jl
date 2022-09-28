@@ -8,19 +8,8 @@ using Statistics,Random,Distributed,SharedArrays,DelimitedFiles,LinearAlgebra, L
 #using CuArrays, CuArrays.CUFFT, CUDAnative, Knet
 using CUDA, Knet
 
-using Gtk.ShortNames, Cairo, Images, ImageFiltering, MAT, JLD2, Interpolations, DSP,
+using Images, ImageFiltering, MAT, JLD2, Interpolations, DSP,
 FFTW, IterTools, FFMPEG, StackedHourglass, Polynomials, StatsBase
-
-if VERSION > v"0.7-"
-    const Void = Nothing
-    const setproperty! = set_gtk_property!
-    const getproperty = get_gtk_property
-    const unshift! = pushfirst!
-    const is_windows() = Sys.iswindows()
-    const is_unix() = Sys.isunix()
-    const find = findall
-    const indmax = argmax
-end
 
 include("config.jl")
 
@@ -49,9 +38,12 @@ include("analysis/forces.jl")
 include("analysis/touch.jl")
 include("analysis/math.jl")
 
-#module GUI
-#    using ..WhiskerTracking
-#    export WhiskerTracking
+module GUI
+    using ..WhiskerTracking
+    using Gtk.ShortNames, Cairo, FFMPEG, StackedHourglass
+    import ..WhiskerTracking: Whisker1, Tracker, Tracked_Whisker, classifier, NeuralNetwork,
+        Manual_Class
+    #export WhiskerTracking
     include("gui/types.jl")
     include("gui/save_load.jl")
     include("gui.jl")
@@ -74,8 +66,8 @@ include("analysis/math.jl")
     include("drawing_tools/draw.jl")
     include("drawing_tools/erase.jl")
     include("drawing_tools/shapes.jl")
-#end
-#using .GUI
+end
+using .GUI
 #include("precompile.jl")
 #_precompile()
 

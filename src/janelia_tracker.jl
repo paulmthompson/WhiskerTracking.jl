@@ -21,7 +21,7 @@ function JT_trace(iFrame::Int,image_data::AbstractArray{UInt8,2},background_img=
         #push!(wts,Whisker1(unsafe_load(data,i)))
     end
 
-    ccall((:Free_Whisker_Seg_Vec,libwhisk_path),Void,(Ptr{Whisker2}, Int32),data,pnseg[])
+    ccall((:Free_Whisker_Seg_Vec,libwhisk_path),Nothing,(Ptr{Whisker2}, Int32),data,pnseg[])
 
     wts
 end
