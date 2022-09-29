@@ -147,3 +147,46 @@ function get_p_pos(p,new_thres=50.0)
 
     (pos_labels, pos_x[non_zero_labels], pos_y[non_zero_labels])
 end
+
+#=
+C is a boolean array of contact assigned to each frame. true = contact
+exclude is a boolean list of frames to exclude. Exclude = true
+c_dur_min is the minimum number of frames to count as a contact
+=#
+
+function get_contact_indexes(c,exclude,c_dur_min = 4)
+
+    c_ind=Array{Int64,1}()
+    c_off=Array{Int64,1}()
+
+    i=1
+    while (i < length(c) - c_dur_min)
+
+        if exclude[i] != true
+            if ((c[i] - c[i+1])==-1)
+                push!(c_ind,i)
+                myoff=findnext(c.==false,i+1)
+                if typeof(myoff) == Nothing #single frame contact
+                    myoff = i+1
+                end
+
+                push!(c_off,myoff)
+
+                i=myoff + 1
+            else
+                i+=1
+            end
+        else
+            i+= 1
+        end
+    end
+
+    keep=trues(length(c_ind))
+    for i=1:length(c_ind)
+        if (c_off[i] - c_ind[i]) < c_dur_min
+            keep[i] = false
+        end
+    end
+
+    (c_ind[keep], c_off[keep])
+end
