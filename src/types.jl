@@ -32,6 +32,7 @@ mutable struct Tracker
     tracking_name::String
     min_length::Int64 #Minimum size of traced element from Janelia tracker, in pixels
     mask::BitArray{2}
+    extended_mask::BitArray{2}
     whiskers::Array{Whisker1,1} #Properties of whiskers in active frame
     pad_pos::Tuple{Float32,Float32}
     h::Int64

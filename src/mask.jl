@@ -28,3 +28,31 @@ function extend_mask(mask,dist)
     end
     out_mask
 end
+
+function load_mask_into_tracker(wt::Tracker,path::String,extend=30)
+    wt.mask = load_mask_png(path)
+    wt.extended_mask = extend_mask(wt.mask,extend)
+    nothing
+end
+
+#=
+Find first ind that is not masked in whisker
+=#
+function mask_tracked_whisker(w_x,w_y,wt::Tracker)
+
+    out_ind = 1
+    for i=1:length(w_x)
+        x_ind = round(Int,w_x[i])
+        y_ind = round(Int,w_y[i])
+        if (!wt.extended_mask[y_ind,x_ind]) #Find first index without a mask
+            out_ind = i
+            break
+        end
+    end
+
+    #v_x = w_x[out_ind] - w_x[out_ind + 1]
+    #v_y = w_y[out_ind] - w_y[out_ind + 1]
+
+
+    out_ind
+end
