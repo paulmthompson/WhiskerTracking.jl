@@ -38,9 +38,11 @@ end
 #=
 Find first ind that is not masked in whisker
 =#
-function mask_tracked_whisker(w_x,w_y,wt::Tracker)
+function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
 
     out_ind = 1
+    x_ind = round(Int,w_x[1])
+    y_ind = round(Int,w_y[1])
     for i=1:length(w_x)
         x_ind = round(Int,w_x[i])
         y_ind = round(Int,w_y[i])
@@ -50,9 +52,28 @@ function mask_tracked_whisker(w_x,w_y,wt::Tracker)
         end
     end
 
-    #v_x = w_x[out_ind] - w_x[out_ind + 1]
-    #v_y = w_y[out_ind] - w_y[out_ind + 1]
+    theta = atan(w_y[out_ind] - w_y[out_ind + 1],w_x[out_ind] - w_x[out_ind + 1])
 
+    x = w_x[out_ind]
+    y = w_y[out_ind]
+    while (!wt.mask[y_ind,x_ind]) #loop until we hit fur
 
-    out_ind
+        x += cos(theta)
+        y += sin(theta)
+
+        x_ind = round(Int,x)
+        y_ind = round(Int,y)
+    end
+
+    d = 0.0
+    x_0 = x
+    y_0 = y
+    while (d < thres)
+        x += cos(theta + pi)
+        y += sin(theta + pi)
+
+        d = sqrt((x - x_0)^2 + (y-y_0)^2)
+    end
+
+    (out_ind,x_0,y_0,x,y)
 end
