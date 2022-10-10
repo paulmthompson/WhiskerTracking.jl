@@ -264,3 +264,24 @@ function load_mask(filepath)
     close(file)
     mask
 end
+
+function load_mask_png(path,mask_val = 0.0)
+    mask = load(path)
+    Float64.(Gray.(mask)) .== mask_val
+end
+
+#=
+HDF5 whisker methods
+Tracked whisker is saved in folder with whisker name
+=#
+
+function save_tracked_whisker_hdf5(path::String,whisker_name::String,tracked::Dict{Int,Tuple{Array{Float64,1},Array{Float64,1},Float64}})
+
+
+
+    for key in keys(tracked)
+
+
+    end
+
+end
