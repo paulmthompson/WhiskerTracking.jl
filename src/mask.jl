@@ -35,6 +35,16 @@ function load_mask_into_tracker(wt::Tracker,path::String,extend=30)
     nothing
 end
 
+function check_mask_bounds(x_ind,y_ind,mask)
+    if (x_ind < 1) || (y_ind < 1)
+        return false
+    end
+    if (y_ind > size(mask,1)) || (x_ind > size(mask,2))
+        return false
+    end
+    return true
+end
+
 #=
 Find first ind that is not masked in whisker
 =#
@@ -46,6 +56,11 @@ function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
     for i=1:length(w_x)
         x_ind = round(Int,w_x[i])
         y_ind = round(Int,w_y[i])
+
+        if !check_mask_bounds(x_ind,y_ind,wt.extended_mask)
+            break
+        end
+
         if (!wt.extended_mask[y_ind,x_ind]) #Find first index without a mask
             out_ind = i
             break
@@ -66,6 +81,10 @@ function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
 
         x_ind = round(Int,x)
         y_ind = round(Int,y)
+
+        if !check_mask_bounds(x_ind,y_ind,wt.mask)
+            break
+        end
     end
 
     d = 0.0
