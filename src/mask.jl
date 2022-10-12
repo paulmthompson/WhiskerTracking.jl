@@ -58,6 +58,7 @@ function find_angle_clipping(w_x,w_y,wt::WhiskerTracking.Tracker,angle_samples=5
         y_ind = round(Int,w_y[i])
 
         if !check_mask_bounds(x_ind,y_ind,wt.extended_mask)
+            out_ind = angle_samples
             break
         end
 
@@ -65,6 +66,10 @@ function find_angle_clipping(w_x,w_y,wt::WhiskerTracking.Tracker,angle_samples=5
             out_ind = i
             break
         end
+    end
+
+    if (out_ind == 1)
+        out_ind = 2
     end
 
     n0=0
