@@ -46,10 +46,10 @@ function check_mask_bounds(x_ind,y_ind,mask)
 end
 
 #=
-Find first ind that is not masked in whisker
+Calculates the whisker angle at the intersection of the extended mask
 =#
-function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
-
+function find_angle_clipping(w_x,w_y,wt::WhiskerTracking.Tracker,angle_samples=5)
+    
     out_ind = 1
     x_ind = round(Int,w_x[1])
     y_ind = round(Int,w_y[1])
@@ -67,17 +67,50 @@ function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
         end
     end
 
-    #=
-    This is inaccurate because it is calculating the angle from just two points.
-    =#
-    theta = atan(w_y[out_ind] - w_y[out_ind + 1],w_x[out_ind] - w_x[out_ind + 1])
+    n0=0
+    n1=0
+    v_x1 = 0.0
+    v_y1 = 0.0
+    v_x0 = 0.0
+    v_y0 = 0.0
+
+    for i=1:angle_samples
+        if (out_ind + i) < length(w_x)
+            v_y1 += (w_y[out_ind + i])
+            v_x1 += (w_x[out_ind + i])
+            n1 += 1
+        end
+        if (out_ind - i + 1) > 0
+            v_y0 += w_y[out_ind - i + 1]
+            v_x0 += w_x[out_ind - i + 1]
+            n0 += 1
+        end
+    end
+
+    yy = v_y1 / n1 - v_y0 / n0 
+    xx = v_x1 / n1 - v_x0 / n0
+    theta = atan(yy, xx)
+
+    (theta,out_ind,xx,yy)
+end
+
+#=
+Find first ind that is not masked in whisker
+=#
+function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
+
+    (theta,out_ind,xx,yy) = find_angle_clipping(w_x,w_y,wt)
 
     x = w_x[out_ind]
     y = w_y[out_ind]
+
+    x_ind = round(Int,x)
+    y_ind = round(Int,y)
+
     while (!wt.mask[y_ind,x_ind]) #loop until we hit fur
 
-        x += cos(theta)
-        y += sin(theta)
+        x += cos(theta + pi)
+        y += sin(theta + pi)
 
         x_ind = round(Int,x)
         y_ind = round(Int,y)
@@ -91,8 +124,8 @@ function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
     x_0 = x
     y_0 = y
     while (d < thres)
-        x += cos(theta + pi)
-        y += sin(theta + pi)
+        x += cos(theta)
+        y += sin(theta)
 
         d = sqrt((x - x_0)^2 + (y-y_0)^2)
     end
