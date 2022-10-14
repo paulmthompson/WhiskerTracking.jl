@@ -108,21 +108,21 @@ end
 Find first ind that is not masked in whisker
 =#
 
-function mask_tracked_whisker(w_x,w_y,mask,extended_mask,thres=30.0)
+function mask_tracked_whisker(w_x::Array,w_y::Array,mask::BitArray{2},extended_mask::BitArray{2},thres=30.0)
 
     (theta,out_ind,xx,yy) = find_angle_clipping(w_x,w_y,extended_mask)
 
     mask_tracked_whisker(w_x,w_y,theta,out_ind,mask,thres)
 end
 
-function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
+function mask_tracked_whisker(w_x::Array,w_y::Array,wt::WhiskerTracking.Tracker,thres=30.0)
 
     (theta,out_ind,xx,yy) = find_angle_clipping(w_x,w_y,wt)
 
     mask_tracked_whisker(w_x,w_y,theta,out_ind,wt.mask,thres)
 end
 
-function mask_tracked_whisker(w_x,w_y,theta,out_ind,mask,thres=30.0)
+function mask_tracked_whisker(w_x::Array,w_y::Array,theta::Real,out_ind::Int,mask::BitArray{2},thres=30.0)
 
     x = w_x[out_ind]
     y = w_y[out_ind]
