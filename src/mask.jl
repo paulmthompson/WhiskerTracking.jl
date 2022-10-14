@@ -48,7 +48,12 @@ end
 #=
 Calculates the whisker angle at the intersection of the extended mask
 =#
+
 function find_angle_clipping(w_x,w_y,wt::WhiskerTracking.Tracker,angle_samples=5)
+    find_angle_clipping(w_x,w_y,wt.extended_mask,angle_samples)
+end
+
+function find_angle_clipping(w_x,w_y,extended_mask,angle_samples=5)
     
     out_ind = 1
     x_ind = round(Int,w_x[1])
@@ -57,12 +62,12 @@ function find_angle_clipping(w_x,w_y,wt::WhiskerTracking.Tracker,angle_samples=5
         x_ind = round(Int,w_x[i])
         y_ind = round(Int,w_y[i])
 
-        if !check_mask_bounds(x_ind,y_ind,wt.extended_mask)
+        if !check_mask_bounds(x_ind,y_ind,extended_mask)
             out_ind = angle_samples
             break
         end
 
-        if (!wt.extended_mask[y_ind,x_ind]) #Find first index without a mask
+        if (!extended_mask[y_ind,x_ind]) #Find first index without a mask
             out_ind = i
             break
         end
@@ -102,9 +107,15 @@ end
 #=
 Find first ind that is not masked in whisker
 =#
+
 function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
 
     (theta,out_ind,xx,yy) = find_angle_clipping(w_x,w_y,wt)
+
+    mask_tracked_whisker(w_x,w_y,theta,out_ind,xx,yy,wt.mask,thres=30.0)
+end
+
+function mask_tracked_whisker(w_x,w_y,theta,out_ind,xx,yy,mask,thres=30.0)
 
     x = w_x[out_ind]
     y = w_y[out_ind]
@@ -112,7 +123,7 @@ function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
     x_ind = round(Int,x)
     y_ind = round(Int,y)
 
-    while (!wt.mask[y_ind,x_ind]) #loop until we hit fur
+    while (!mask[y_ind,x_ind]) #loop until we hit fur
 
         x += cos(theta + pi)
         y += sin(theta + pi)
@@ -120,7 +131,7 @@ function mask_tracked_whisker(w_x,w_y,wt::WhiskerTracking.Tracker,thres=30.0)
         x_ind = round(Int,x)
         y_ind = round(Int,y)
 
-        if !check_mask_bounds(x_ind,y_ind,wt.mask)
+        if !check_mask_bounds(x_ind,y_ind,mask)
             break
         end
     end
