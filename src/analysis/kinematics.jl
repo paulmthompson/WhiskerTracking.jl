@@ -335,16 +335,8 @@ function convert_to_angular_coordinates(x,y,d_vec_abs)
             w_dx2 = x_p2 - x_p1
             w_dy2 = y_p2 - y_p1
 
-            a_mag = sqrt(w_dx2^2 + w_dy2^2)
-            b_mag = sqrt(w_dx1^2 + w_dy1^2)
-
-            #Dot product fails for angles approaching 0 degrees if rounding error pushes the inner product to slightly greater than 1.
-            scaled_dot = dot([w_dx2;w_dy2],[w_dx1;w_dy1]) / (a_mag * b_mag)
-            if abs(scaled_dot) > 1.0
-                scaled_dot = 1.0
-            end
-            
-            w_theta[j] = acos(scaled_dot)
+            #Signed relative angle between two vectors
+            w_theta[j] = atan(w_dx1 * w_dy2 - w_dy1*w_dx2, w_dx1*w_dx2 + w_dy1 * w_dy2)
         end
         w_theta_absolute[j] = atan(w_dy2,w_dx2)
         x_p1 = x_p2; y_p1 = y_p2;
