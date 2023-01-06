@@ -285,3 +285,45 @@ function save_tracked_whisker_hdf5(path::String,whisker_name::String,tracked::Di
     end
 
 end
+
+#=
+Save and Load manual class
+=#
+
+function save_manual_class(man::Manual_Class,path)
+
+    file = jldopen(path,"w")
+    write(file,"Max_Frames",man.max_frames)
+    write(file,"Contact_Block",man.contact_block)
+    write(file,"No_Contact_Block",man.no_contact_block)
+    write(file,"Contact",man.contact)
+
+    write(file,"Pro_Re",man.pro_re)
+    write(file,"Pro_Re_Block",man.pro_re_block)
+
+    write(file, "Exclude",man.exclude)
+    write(file, "Exclude_Block",man.exclude_block)
+
+    close(file)
+    nothing
+end
+
+function load_manual_class(man::Manual_Class,path)
+
+    file = jldopen(path,"r")
+    man.max_frames = read(file,"Max_Frames")
+
+    man.contact_block = read(file,"Contact_Block")
+    man.no_contact_block = read(file,"No_Contact_Block")
+    man.contact = read(file,"Contact")
+
+    man.pro_re = read(file,"Pro_Re")
+    man.pro_re_block = read(file,"Pro_Re_Block")
+
+    man.exclude = read(file, "Exclude")
+    man.exclude_block = read(file, "Exclude_Block")
+
+    close(file)
+    nothing
+end
+
