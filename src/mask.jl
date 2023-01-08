@@ -20,7 +20,12 @@ and marching forward point by point
 to the fur mask at the angle determined above
 
 6) A second point, (x_m,y_m) is determined by marching forward from (x_f,y_f) at the above angle for 
-*thres* points (default = 30).
+*thres* points (default = 30). This threshold should be the same as the extended mask distance.
+If the whisker is intercepting the extended mask at a mostly right angle, this point (x_m,y_m) should 
+be nearly identical to the first point of the clipped whisker. However, if the whisker is is intercepting 
+the extended mask at an angle that is much more acute, then there can be some distance between these two 
+points. So this point can be used as a guide as being the position of the whisker that is 30 points
+from the follicle, instead of assuming that the clipping point is a fixed distance away.
 
 =#
 
