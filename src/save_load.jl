@@ -265,11 +265,6 @@ function load_mask(filepath)
     mask
 end
 
-function load_mask_png(path,mask_val = 0.0)
-    mask = load(path)
-    Float64.(Gray.(mask)) .== mask_val
-end
-
 #=
 HDF5 whisker methods
 Tracked whisker is saved in folder with whisker name

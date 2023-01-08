@@ -1,3 +1,31 @@
+#=
+Whisker tracking is less accurate nearest to the face because of short fur hairs
+near the whisker. The process can be greatly aided with a handdrawn mask of the face
+location to indicate the location of the face. Additionally, it is best to discard
+parts of the whisker nearest the face mask, in what we will the *extended mask*. 
+
+This is a multi-part process.
+1) Load in a PNG file that should be binary where one color specifies the location of the face.
+The "mask" portion is determined as being equal to the *mask_val* (0 or black by default)
+
+2) Then the "extended mask" is calculated as being *extend* pixels away from the mask (30 by default)
+
+3) Now the point of intersection with the extended mask is determined by starting at the base of the whisker
+and marching forward point by point
+
+4) The angle of the whisker at this location is determined by moving forward *angle_samples* whisker points
+(default = 5)
+
+5) Now the position of the follicle (x_0,y_0) is determined by moving from the point of intersection back 
+to the fur mask at the angle determined above
+
+6) A second point, (x_m,y_m) is determined by marching forward from (x_f,y_f) at the above angle for 
+*thres* points (default = 30).
+
+=#
+
+
+
 
 function extend_mask(mask,dist)
 
@@ -34,6 +62,12 @@ function load_mask_into_tracker(wt::Tracker,path::String,extend=30)
     wt.extended_mask = extend_mask(wt.mask,extend)
     nothing
 end
+
+function load_mask_png(path,mask_val = 0.0)
+    mask = load(path)
+    Float64.(Gray.(mask)) .== mask_val
+end
+
 
 function check_mask_bounds(x_ind,y_ind,mask)
     if (x_ind < 1) || (y_ind < 1)
