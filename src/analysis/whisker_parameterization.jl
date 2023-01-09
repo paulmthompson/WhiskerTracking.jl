@@ -154,6 +154,16 @@ function find_incident_angle(w_x,w_y,out_ind,angle_samples)
 
     yy = v_y1 / n1 - v_y0 / n0 
     xx = v_x1 / n1 - v_x0 / n0
+    
+    #If point was at the end, it will cause errors
+    if (n1 == 0)
+        yy = w_y[out_ind] - v_y0 / n0 
+        xx = w_x[out_ind] - v_x0 / n0
+    elseif (n0 == 0)
+        yy = v_y1 / n1 - w_y[out_ind]
+        xx = v_x1 / n1 - w_x[out_ind]
+    end
+
     theta = atan(yy, xx)
 
     (theta,xx,yy)
