@@ -92,6 +92,18 @@ end
 
 function find_angle_clipping(w_x,w_y,extended_mask,angle_samples=5)
     
+    out_ind = intersect_mask(w_x,w_y,extended_mask,angle_samples)
+
+    (theta,xx,yy) = find_incident_angle(w_x,w_y,out_ind,angle_samples)
+
+    (theta,out_ind,xx,yy)
+end
+
+#=
+Finds where whisker intersects extended mask
+=#
+function intersect_mask(w_x,w_y,extended_mask,default_minimum)
+
     out_ind = 1
     x_ind = round(Int,w_x[1])
     y_ind = round(Int,w_y[1])
@@ -100,7 +112,7 @@ function find_angle_clipping(w_x,w_y,extended_mask,angle_samples=5)
         y_ind = round(Int,w_y[i])
 
         if !check_mask_bounds(x_ind,y_ind,extended_mask)
-            out_ind = angle_samples
+            out_ind = default_minimum
             break
         end
 
@@ -113,6 +125,16 @@ function find_angle_clipping(w_x,w_y,extended_mask,angle_samples=5)
     if (out_ind == 1)
         out_ind = 2
     end
+
+    out_ind
+end
+
+#=
+on whisker described by w_x,w_y at index *out_ind*, move forward and backward by 
+*angle_samples* to determine the angle at (w_x[out_ind],w_y[out_ind])
+=#
+
+function find_incident_angle(w_x,w_y,out_ind,angle_samples)
 
     n0=0
     n1=0
@@ -138,7 +160,7 @@ function find_angle_clipping(w_x,w_y,extended_mask,angle_samples=5)
     xx = v_x1 / n1 - v_x0 / n0
     theta = atan(yy, xx)
 
-    (theta,out_ind,xx,yy)
+    (theta,xx,yy)
 end
 
 #=

@@ -76,6 +76,7 @@ function find_nearest_on_whisker(x::Array{T,1},y::Array{T,1},x_p,y_p) where T
 
     x_closest = x[1]
     y_closest = y[1]
+    ind = 1
 
     closest_dist = dist(x[1],y[1],x_p,y_p)
 
@@ -107,17 +108,19 @@ function find_nearest_on_whisker(x::Array{T,1},y::Array{T,1},x_p,y_p) where T
                 closest_dist = min_dist 
                 x_closest = t_x 
                 y_closest = t_y
+                ind = i
             end
         else
             if (B_dist < closest_dist) 
                 closest_dist = B_dist 
                 x_closest = Bx 
                 y_closest = By
+                ind = i
             end
         end
 
         A_dist = B_dist
     end
 
-    (x_closest,y_closest)
+    (x_closest,y_closest,ind)
 end

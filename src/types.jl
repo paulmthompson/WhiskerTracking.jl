@@ -76,7 +76,7 @@ mutable struct Manual_Class
     calc_contact_block::Array{Tuple,1}
 
     pro_re::Dict{Int,Int}
-    pro_re_block::Array{Int64,1}
+    pro_re_block::Array{Int64,1} # 1 = protraction, 2 = retraction touch
 
     exclude::Array{Tuple,1}
     exclude_block::BitArray{1}
