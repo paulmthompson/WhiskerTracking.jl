@@ -33,6 +33,7 @@ include("save_load.jl")
 include("discrete.jl")
 include("mask.jl")
 
+include("analysis/whisker_parameterization.jl")
 include("analysis/follicle.jl")
 include("analysis/kinematics.jl")
 include("analysis/forces.jl")
