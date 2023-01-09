@@ -40,15 +40,17 @@ the whisker is greater than *thres*
 It then interpolates to find the exaction position (x_out,y_out) along the position
 that is equal to *thres* path length and returns (x_out,y_out), along with *ind* 
 which is the first index of the whisker where the path length is greater than *thres*
+
+The user may also supply the starting culmative distance s0, as well as the starting index, which
+can be useful for things like masked whiskers
 =#
 
-function get_ind_at_dist_exact(x,y,thres)
+function get_ind_at_dist_exact(x::Array{T,1},y::Array{T,1},thres; s0 = 0.0, start_ind = 2) where T
     ind = length(x)
     s1=0.0
-    s0=0.0
     x_out = x[end]
     y_out = y[end]
-    for i=2:length(x)
+    for i=start_ind:length(x)
         s1 = WhiskerTracking.distance_along(x,y,i) + s0
         if s1 > thres
             x_out = x[i-1] + (thres - s0) * (x[i] - x[i-1]) / (s1 - s0)
