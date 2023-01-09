@@ -282,7 +282,7 @@ function convert_to_angular_coordinates(x,y,d_vec_abs)
     
     for j=1:last_ind
     
-        (x_p2,y_p2) = get_ind_at_dist_exact(x,y,d_vec_abs[j])
+        (x_p2,y_p2,out_ind) = get_ind_at_dist_exact(x,y,d_vec_abs[j])
 
         if j==1
             w_dx2 = x_p2 - x[1]

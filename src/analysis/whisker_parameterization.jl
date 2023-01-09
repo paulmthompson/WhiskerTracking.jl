@@ -38,7 +38,8 @@ This finds the first point (x_i,y_i) where the culmative path length along
 the whisker is greater than *thres*
 
 It then interpolates to find the exaction position (x_out,y_out) along the position
-that is equal to *thres* path length and returns (x_out,y_out)
+that is equal to *thres* path length and returns (x_out,y_out), along with *ind* 
+which is the first index of the whisker where the path length is greater than *thres*
 =#
 
 function get_ind_at_dist_exact(x,y,thres)
@@ -52,11 +53,12 @@ function get_ind_at_dist_exact(x,y,thres)
         if s1 > thres
             x_out = x[i-1] + (thres - s0) * (x[i] - x[i-1]) / (s1 - s0)
             y_out = y[i-1] + (thres - s0) * (y[i] - y[i-1]) / (s1 - s0)
+            ind = i
             break
         end
         s0 = s1
     end
-    (x_out,y_out)
+    (x_out,y_out,ind)
 end
 
 
