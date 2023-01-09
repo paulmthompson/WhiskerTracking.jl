@@ -79,7 +79,7 @@ mutable struct Manual_Class
     pro_re_block::Array{Int64,1} # 1 = protraction, 2 = retraction touch
 
     exclude::Array{Tuple,1}
-    exclude_block::BitArray{1}
+    exclude_block::BitArray{1} # true = exclude
 end
 
 Manual_Class() = Manual_Class(0,1,Array{Tuple,1}(),Array{Tuple,1}(),Array{Int64,1}(),Array{Tuple,1}(),Dict{Int,Int}(),Array{Int64,1}(),Array{Tuple,1}(),falses(1))

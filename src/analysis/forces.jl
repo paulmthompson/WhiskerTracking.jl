@@ -60,6 +60,16 @@ function get_theta_contact(x,y,ii,forward_dir=false)
     theta_contact
 end
 
+#=
+Calculates the force using the method in Pammer et al 2013 from Svoboda group
+delta_kappa is the change in curvature of some high SNR segment of the whisker
+p is some point (x_p,y_p) at the center of the high SNR segment
+c is the point of contact (x_c,y_c)
+f is the follicle (x_f,y_f)
+theta_contact is the angle of contact, which should be the angle the whisker is pointing at (x_c,y_c)
+theta_f is the angle of the whisker at the follicle (x_f,y_f)
+I_p is the moment of inertia at point p (x_p,y_p) in the middle of the high SNR segment
+=#
 function calc_force(delta_kappa::Real,p::Tuple,c::Tuple,f::Tuple,theta_contact::Real,theta_f::Real,I_p::Real; E = 2600.0)
 
     (theta_0,r_0) = calc_r_theta(f[1],c[1],f[2],c[2])
