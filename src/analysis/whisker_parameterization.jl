@@ -124,3 +124,37 @@ function find_nearest_on_whisker(x::Array{T,1},y::Array{T,1},x_p,y_p) where T
 
     (x_closest,y_closest,ind)
 end
+
+#=
+on whisker described by w_x,w_y at index *out_ind*, move forward and backward by 
+*angle_samples* to determine the angle at (w_x[out_ind],w_y[out_ind])
+=#
+
+function find_incident_angle(w_x,w_y,out_ind,angle_samples)
+
+    n0=0
+    n1=0
+    v_x1 = 0.0
+    v_y1 = 0.0
+    v_x0 = 0.0
+    v_y0 = 0.0
+
+    for i=1:angle_samples
+        if (out_ind + i) < length(w_x)
+            v_y1 += (w_y[out_ind + i])
+            v_x1 += (w_x[out_ind + i])
+            n1 += 1
+        end
+        if (out_ind - i + 1) > 0
+            v_y0 += w_y[out_ind - i + 1]
+            v_x0 += w_x[out_ind - i + 1]
+            n0 += 1
+        end
+    end
+
+    yy = v_y1 / n1 - v_y0 / n0 
+    xx = v_x1 / n1 - v_x0 / n0
+    theta = atan(yy, xx)
+
+    (theta,xx,yy)
+end
