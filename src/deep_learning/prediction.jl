@@ -173,3 +173,30 @@ function get_whisker(upsampled::AbstractArray{T,2},rot_angle::Real,n_points=100)
 
     (x_out,y_out) = WhiskerTracking.calculate_whisker_fit(xx,yy,confs,n_points,rot_angle)
 end
+
+function calculate_whisker_predictions(output::Array,hg::StackedHourglass.NN,flip_x=false,flip_y=false)
+
+    atype = []
+    if CUDA.has_cuda_gpu()
+        atype = KnetArray
+    else
+        atype = Array
+    end
+
+    if flip_x
+        reverse!(output,dims=1)
+    end
+    if flip_y
+        reverse!(output,dims=2)
+    end
+
+    pred=StackedHourglass.predict_single_frame(hg,output,atype)
+
+    if flip_x
+        reverse!(pred,dims=1)
+    end
+    if flip_y
+        reverse!(pred,dims=2)
+    end
+    pred
+end

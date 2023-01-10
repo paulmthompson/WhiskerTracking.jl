@@ -142,7 +142,8 @@ function force_moment(delta_kappa::Real,r_p::Real,r_0::Real,theta_p::Real,
     contact. Ideally, we should not be using different point Ps through because the moment of inertia and
     modulus are position dependent.
     =#
-    F = abs(delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact)))
+    #F = abs(delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact)))
+    F = delta_kappa * E * I_p / (r_p * cos(theta_p - theta_contact))
 
     M_0 = r_0 * F * cos(theta_0 - theta_contact)
 

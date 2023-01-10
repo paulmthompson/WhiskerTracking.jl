@@ -13,6 +13,18 @@ function total_length(x::Array{T,1},y::Array{T,1}) where T
     s
 end
 
+function total_length_mask(x::Array{T,1},y::Array{T,1},mask,extended_mask) where T
+
+    (mask_index,x_f,y_f,x_m,y_m) = mask_tracked_whisker(x,y,mask,extended_mask)
+
+    d = sqrt((x_m - x_f)^2 + (y_m - y_f)^2) + sqrt((x[mask_index] - x_m)^2 + (y[mask_index] - y_m )^2 ) 
+
+    for i=(mask_index+1):length(x)
+        d += distance_along(x,y,i)
+    end
+    d
+end
+
 #=
 Given a whisker parameterized by points (x_1,y_1), (x_2,y_2), ... (x_n, y_n), 
 This finds the first point (x_i,y_i) where the culmative path length along 
