@@ -1,17 +1,32 @@
 
+function bandpass_filter(input_array::Array{T,1},frequency_low,frequency_high,sampling_rate) where T
+
+    filter_order = 4
+
+    responsetype = Bandpass(frequency_low,frequency_high; fs=sampling_rate)
+    designmethod=Butterworth(filter_order)
+    df1=digitalfilter(responsetype,designmethod)
+
+    #Zero lag filtering to make sure there is no phase shift.
+    filtered_array=filtfilt(df1,input_array)
+
+    return filtered_array
+end
+
+
 #=
 Finds the phase over time for a given angle vs time array
 using the Hilbert Transform
 
 Kleinfeld and Deschenes 2011
 =#
-function get_phase(aa;bp_l=8.0,bp_h=30.0,sampling_rate=500.0)
+function get_phase(input_angle;bp_l=8.0,bp_h=30.0,sampling_rate=500.0)
     responsetype = Bandpass(bp_l,bp_h; fs=sampling_rate)
     designmethod=Butterworth(4)
     df1=digitalfilter(responsetype,designmethod)
 
     #Zero lag filtering to make sure there is no phase shift.
-    filter_aa=filtfilt(df1,aa)
+    filter_aa=filtfilt(df1,input_angle)
 
     hh=hilbert(filter_aa)
 
